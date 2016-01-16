@@ -324,6 +324,7 @@ struct bootSession_s {
 	int				bodyPartIMayLose;
 	int				lastSaberClashTime;
 	vec3_t			lastViewAngle;
+	gentity_t		*lastPersonWhoHitMe;
 };
 
 extern bootSession_t bootSession[MAX_CLIENTS];

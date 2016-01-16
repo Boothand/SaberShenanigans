@@ -10845,7 +10845,7 @@ import G_SpawnString
 export bootSession
 align 4
 LABELV bootSession
-skip 1792
+skip 1920
 import g2SaberInstance
 import precachedKyle
 import forcePowerDarkLight
@@ -13697,7 +13697,7 @@ char 1 97
 char 1 110
 char 1 32
 char 1 49
-char 1 53
+char 1 54
 char 1 32
 char 1 50
 char 1 48

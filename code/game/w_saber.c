@@ -1280,6 +1280,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 
 			if (dmg > IDLE_SABER_DMG)
 			{
+				bootOther->lastPersonWhoHitMe = self;
 				bootOther->bodyPartIMayLose = G_GetHitLocation(&g_entities[tr.entityNum], saberEnd);
 				switch (bootOther->bodyPartIMayLose) //G_GetHitQuad(&g_entities[tr.entityNum], saberEnd))
 				{
@@ -1297,7 +1298,8 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 					
 					if (boot_screenShakeOnHeadChop.integer &&
 						(g_entities[tr.entityNum].health + g_entities[tr.entityNum].client->ps.stats[STAT_ARMOR]) - dmg <= 0 &&
-						!(g_entities[tr.entityNum].flags & FL_GODMODE))
+						!(g_entities[tr.entityNum].flags & FL_GODMODE) &&
+						self->client->ps.saberMove != LS_A_T2B)
 					{
 						G_ScreenShake(vec3_origin, self, 1.0f, 800, qfalse);	//Boot
 						G_ScreenShake(vec3_origin, &g_entities[tr.entityNum], 1.0f, 800, qfalse);
@@ -2407,7 +2409,7 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 
 		if (self->client->ps.dualBlade)
 		{
-			self->client->ps.saberIdleWound = 0;
+			self->client->ps.saberIdleWound = 0;					//Boot - this is a problem.
 			self->client->ps.saberAttackWound = 0;
 		}
 
@@ -2430,7 +2432,7 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 			VectorMA( boltOrigin, -12, rawAngles, otherOrg );
 			VectorMA( otherOrg, -40, rawAngles, otherEnd );
 
-			self->client->ps.saberIdleWound = 0;
+			self->client->ps.saberIdleWound = 0;			//Boot - this is a problem.
 			self->client->ps.saberAttackWound = 0;
 
 			CheckSaberDamage(self, otherOrg, otherEnd, qfalse);

@@ -6458,7 +6458,7 @@ ASGNI4
 line 1022
 ;1022:	bootSession_t *boot = &bootSession[self - g_entities];
 ADDRLP4 1108
-CNSTI4 56
+CNSTI4 60
 ADDRFP4 0
 INDIRP4
 CVPU4 4
@@ -7370,7 +7370,7 @@ ASGNI4
 line 1139
 ;1139:		bootOther = &bootSession[tr.entityNum];
 ADDRLP4 1112
-CNSTI4 56
+CNSTI4 60
 ADDRLP4 0+52
 INDIRI4
 MULI4
@@ -7903,7 +7903,16 @@ LEI4 $610
 line 1282
 ;1282:			{
 line 1283
-;1283:				bootOther->bodyPartIMayLose = G_GetHitLocation(&g_entities[tr.entityNum], saberEnd);
+;1283:				bootOther->lastPersonWhoHitMe = self;
+ADDRLP4 1112
+INDIRP4
+CNSTI4 56
+ADDP4
+ADDRFP4 0
+INDIRP4
+ASGNP4
+line 1284
+;1284:				bootOther->bodyPartIMayLose = G_GetHitLocation(&g_entities[tr.entityNum], saberEnd);
 CNSTI4 828
 ADDRLP4 0+52
 INDIRI4
@@ -7925,8 +7934,8 @@ ADDP4
 ADDRLP4 1192
 INDIRI4
 ASGNI4
-line 1284
-;1284:				switch (bootOther->bodyPartIMayLose) //G_GetHitQuad(&g_entities[tr.entityNum], saberEnd))
+line 1285
+;1285:				switch (bootOther->bodyPartIMayLose) //G_GetHitQuad(&g_entities[tr.entityNum], saberEnd))
 ADDRLP4 1196
 ADDRLP4 1112
 INDIRP4
@@ -7966,43 +7975,43 @@ CNSTI4 16
 EQI4 $618
 ADDRGP4 $613
 JUMPV
-line 1285
-;1285:				{
+line 1286
+;1286:				{
 LABELV $616
-line 1290
-;1286:				case HL_FOOT_RT:
-;1287:				case HL_LEG_RT:
-;1288:				case HL_FOOT_LT:
-;1289:				case HL_LEG_LT:
-;1290:					dmg = 50;
+line 1291
+;1287:				case HL_FOOT_RT:
+;1288:				case HL_LEG_RT:
+;1289:				case HL_FOOT_LT:
+;1290:				case HL_LEG_LT:
+;1291:					dmg = 50;
 ADDRLP4 1080
 CNSTI4 50
 ASGNI4
-line 1291
-;1291:					break;
+line 1292
+;1292:					break;
 ADDRGP4 $614
 JUMPV
 LABELV $617
-line 1293
-;1292:				case HL_WAIST:
-;1293:					dmg = 80;
+line 1294
+;1293:				case HL_WAIST:
+;1294:					dmg = 80;
 ADDRLP4 1080
 CNSTI4 80
 ASGNI4
-line 1294
-;1294:					break;
+line 1295
+;1295:					break;
 ADDRGP4 $614
 JUMPV
 LABELV $618
-line 1296
-;1295:				case HL_HEAD:
-;1296:					dmg = 125;
+line 1297
+;1296:				case HL_HEAD:
+;1297:					dmg = 125;
 ADDRLP4 1080
 CNSTI4 125
 ASGNI4
-line 1298
-;1297:					
-;1298:					if (boot_screenShakeOnHeadChop.integer &&
+line 1299
+;1298:					
+;1299:					if (boot_screenShakeOnHeadChop.integer &&
 ADDRLP4 1204
 CNSTI4 0
 ASGNI4
@@ -8053,12 +8062,23 @@ BANDI4
 ADDRLP4 1204
 INDIRI4
 NEI4 $614
-line 1301
-;1299:						(g_entities[tr.entityNum].health + g_entities[tr.entityNum].client->ps.stats[STAT_ARMOR]) - dmg <= 0 &&
-;1300:						!(g_entities[tr.entityNum].flags & FL_GODMODE))
-;1301:					{
-line 1302
-;1302:						G_ScreenShake(vec3_origin, self, 1.0f, 800, qfalse);	//Boot
+ADDRFP4 0
+INDIRP4
+CNSTI4 408
+ADDP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+CNSTI4 10
+EQI4 $614
+line 1303
+;1300:						(g_entities[tr.entityNum].health + g_entities[tr.entityNum].client->ps.stats[STAT_ARMOR]) - dmg <= 0 &&
+;1301:						!(g_entities[tr.entityNum].flags & FL_GODMODE) &&
+;1302:						self->client->ps.saberMove != LS_A_T2B)
+;1303:					{
+line 1304
+;1304:						G_ScreenShake(vec3_origin, self, 1.0f, 800, qfalse);	//Boot
 ADDRGP4 vec3_origin
 ARGP4
 ADDRFP4 0
@@ -8073,8 +8093,8 @@ ARGI4
 ADDRGP4 G_ScreenShake
 CALLP4
 pop
-line 1303
-;1303:						G_ScreenShake(vec3_origin, &g_entities[tr.entityNum], 1.0f, 800, qfalse);
+line 1305
+;1305:						G_ScreenShake(vec3_origin, &g_entities[tr.entityNum], 1.0f, 800, qfalse);
 ADDRGP4 vec3_origin
 ARGP4
 CNSTI4 828
@@ -8093,48 +8113,48 @@ ARGI4
 ADDRGP4 G_ScreenShake
 CALLP4
 pop
-line 1304
-;1304:					}
-line 1305
-;1305:					break;
+line 1306
+;1306:					}
+line 1307
+;1307:					break;
 ADDRGP4 $614
 JUMPV
 LABELV $613
-line 1307
-;1306:				default:
-;1307:					dmg = 80;
+line 1309
+;1308:				default:
+;1309:					dmg = 80;
 ADDRLP4 1080
 CNSTI4 80
 ASGNI4
-line 1308
-;1308:				}
-LABELV $614
 line 1310
-;1309:
-;1310:				if (boot_trainingMode.integer > 0)
+;1310:				}
+LABELV $614
+line 1312
+;1311:
+;1312:				if (boot_trainingMode.integer > 0)
 ADDRGP4 boot_trainingMode+12
 INDIRI4
 CNSTI4 0
 LEI4 $632
-line 1311
-;1311:				{
-line 1312
-;1312:					dmg /= 3;
+line 1313
+;1313:				{
+line 1314
+;1314:					dmg /= 3;
 ADDRLP4 1080
 ADDRLP4 1080
 INDIRI4
 CNSTI4 3
 DIVI4
 ASGNI4
-line 1313
-;1313:				}
+line 1315
+;1315:				}
 LABELV $632
-line 1314
-;1314:			}
-LABELV $610
 line 1316
-;1315:
-;1316:			G_Damage(&g_entities[tr.entityNum], self, self, dir, tr.endpos, dmg, 0, MOD_SABER);
+;1316:			}
+LABELV $610
+line 1318
+;1317:
+;1318:			G_Damage(&g_entities[tr.entityNum], self, self, dir, tr.endpos, dmg, 0, MOD_SABER);
 CNSTI4 828
 ADDRLP4 0+52
 INDIRI4
@@ -8166,10 +8186,10 @@ ARGI4
 ADDRGP4 G_Damage
 CALLV
 pop
-line 1319
-;1317:			
-;1318:
-;1319:			te = G_TempEntity( tr.endpos, EV_SABER_HIT );
+line 1321
+;1319:			
+;1320:
+;1321:			te = G_TempEntity( tr.endpos, EV_SABER_HIT );
 ADDRLP4 0+12
 ARGP4
 CNSTI4 27
@@ -8182,8 +8202,8 @@ ADDRLP4 1140
 ADDRLP4 1196
 INDIRP4
 ASGNP4
-line 1320
-;1320:			VectorCopy(tr.endpos, te->s.origin);
+line 1322
+;1322:			VectorCopy(tr.endpos, te->s.origin);
 ADDRLP4 1140
 INDIRP4
 CNSTI4 92
@@ -8191,8 +8211,8 @@ ADDP4
 ADDRLP4 0+12
 INDIRB
 ASGNB 12
-line 1321
-;1321:			VectorCopy(tr.plane.normal, te->s.angles);
+line 1323
+;1323:			VectorCopy(tr.plane.normal, te->s.angles);
 ADDRLP4 1140
 INDIRP4
 CNSTI4 116
@@ -8200,9 +8220,9 @@ ADDP4
 ADDRLP4 0+24
 INDIRB
 ASGNB 12
-line 1323
-;1322:			
-;1323:			if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
+line 1325
+;1324:			
+;1325:			if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
 ADDRLP4 1200
 ADDRLP4 1140
 INDIRP4
@@ -8234,22 +8254,22 @@ INDIRF4
 ADDRLP4 1204
 INDIRF4
 NEF4 $640
-line 1324
-;1324:			{ //don't let it play with no direction
-line 1325
-;1325:				te->s.angles[1] = 1;
+line 1326
+;1326:			{ //don't let it play with no direction
+line 1327
+;1327:				te->s.angles[1] = 1;
 ADDRLP4 1140
 INDIRP4
 CNSTI4 120
 ADDP4
 CNSTF4 1065353216
 ASGNF4
-line 1326
-;1326:			}
-LABELV $640
 line 1328
-;1327:
-;1328:			if (g_entities[tr.entityNum].client)
+;1328:			}
+LABELV $640
+line 1330
+;1329:
+;1330:			if (g_entities[tr.entityNum].client)
 CNSTI4 828
 ADDRLP4 0+52
 INDIRI4
@@ -8260,38 +8280,38 @@ INDIRP4
 CVPU4 4
 CNSTU4 0
 EQU4 $642
-line 1329
-;1329:			{
-line 1330
-;1330:				te->s.eventParm = 1;
+line 1331
+;1331:			{
+line 1332
+;1332:				te->s.eventParm = 1;
 ADDRLP4 1140
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1331
-;1331:			}
+line 1333
+;1333:			}
 ADDRGP4 $643
 JUMPV
 LABELV $642
-line 1333
-;1332:			else
-;1333:			{
-line 1334
-;1334:				te->s.eventParm = 0;
+line 1335
+;1334:			else
+;1335:			{
+line 1336
+;1336:				te->s.eventParm = 0;
 ADDRLP4 1140
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1335
-;1335:			}
-LABELV $643
 line 1337
-;1336:
-;1337:			self->client->ps.saberAttackWound = level.time + 800;//100; Boot - no more double hits.
+;1337:			}
+LABELV $643
+line 1339
+;1338:
+;1339:			self->client->ps.saberAttackWound = level.time + 800;//100; Boot - no more double hits.
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8304,15 +8324,15 @@ INDIRI4
 CNSTI4 800
 ADDI4
 ASGNI4
-line 1338
-;1338:		}
-line 1339
-;1339:	}
+line 1340
+;1340:		}
+line 1341
+;1341:	}
 ADDRGP4 $562
 JUMPV
 LABELV $561
-line 1340
-;1340:	else if ((tr.fraction != 1 || tr.startsolid) &&
+line 1342
+;1342:	else if ((tr.fraction != 1 || tr.startsolid) &&
 ADDRLP4 0+8
 INDIRF4
 CNSTF4 1065353216
@@ -8357,14 +8377,14 @@ INDIRI4
 CNSTI4 400
 ADDI4
 LEI4 $647
-line 1344
-;1341:		(g_entities[tr.entityNum].r.contents & CONTENTS_LIGHTSABER) &&
-;1342:		g_entities[tr.entityNum].r.contents != -1 &&
-;1343:		level.time > boot->lastSaberClashTime + 400)	//<-- Boot - don't repeat attack clashes against idle saber so often
-;1344:	{ //saber clash
 line 1346
-;1345:		gentity_t *te;
-;1346:		gentity_t *otherOwner = &g_entities[g_entities[tr.entityNum].r.ownerNum];
+;1343:		(g_entities[tr.entityNum].r.contents & CONTENTS_LIGHTSABER) &&
+;1344:		g_entities[tr.entityNum].r.contents != -1 &&
+;1345:		level.time > boot->lastSaberClashTime + 400)	//<-- Boot - don't repeat attack clashes against idle saber so often
+;1346:	{ //saber clash
+line 1348
+;1347:		gentity_t *te;
+;1348:		gentity_t *otherOwner = &g_entities[g_entities[tr.entityNum].r.ownerNum];
 ADDRLP4 1152
 CNSTI4 828
 ASGNI4
@@ -8383,9 +8403,9 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1348
-;1347:
-;1348:		if (otherOwner &&
+line 1350
+;1349:
+;1350:		if (otherOwner &&
 ADDRLP4 1160
 CNSTU4 0
 ASGNU4
@@ -8434,23 +8454,23 @@ INDIRI4
 ADDRLP4 1168
 INDIRI4
 NEI4 $662
-line 1353
-;1349:			otherOwner->inuse &&
-;1350:			otherOwner->client &&
-;1351:			OnSameTeam(self, otherOwner) &&
-;1352:			!g_friendlySaber.integer)
-;1353:		{
-line 1354
-;1354:			return qfalse;
+line 1355
+;1351:			otherOwner->inuse &&
+;1352:			otherOwner->client &&
+;1353:			OnSameTeam(self, otherOwner) &&
+;1354:			!g_friendlySaber.integer)
+;1355:		{
+line 1356
+;1356:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $504
 JUMPV
 LABELV $662
-line 1357
-;1355:		}
-;1356:
-;1357:		if (otherOwner && otherOwner->client &&
+line 1359
+;1357:		}
+;1358:
+;1359:		if (otherOwner && otherOwner->client &&
 ADDRLP4 1176
 CNSTU4 0
 ASGNU4
@@ -8489,21 +8509,21 @@ ADDRFP4 0
 INDIRP4
 INDIRI4
 EQI4 $665
-line 1360
-;1358:			otherOwner->client->ps.duelInProgress &&
-;1359:			otherOwner->client->ps.duelIndex != self->s.number)
-;1360:		{
-line 1361
-;1361:			return qfalse;
+line 1362
+;1360:			otherOwner->client->ps.duelInProgress &&
+;1361:			otherOwner->client->ps.duelIndex != self->s.number)
+;1362:		{
+line 1363
+;1363:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $504
 JUMPV
 LABELV $665
-line 1364
-;1362:		}
-;1363:
-;1364:		if (otherOwner && otherOwner->client &&
+line 1366
+;1364:		}
+;1365:
+;1366:		if (otherOwner && otherOwner->client &&
 ADDRLP4 1188
 CNSTU4 0
 ASGNU4
@@ -8550,27 +8570,27 @@ ADDRLP4 1144
 INDIRP4
 INDIRI4
 EQI4 $667
-line 1367
-;1365:			self->client->ps.duelInProgress &&
-;1366:			self->client->ps.duelIndex != otherOwner->s.number)
-;1367:		{
-line 1368
-;1368:			return qfalse;
+line 1369
+;1367:			self->client->ps.duelInProgress &&
+;1368:			self->client->ps.duelIndex != otherOwner->s.number)
+;1369:		{
+line 1370
+;1370:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $504
 JUMPV
 LABELV $667
-line 1371
-;1369:		}
-;1370:
-;1371:		didHit = qtrue;
+line 1373
+;1371:		}
+;1372:
+;1373:		didHit = qtrue;
 ADDRLP4 1096
 CNSTI4 1
 ASGNI4
-line 1373
-;1372:
-;1373:		te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
+line 1375
+;1374:
+;1375:		te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 ADDRLP4 0+12
 ARGP4
 CNSTI4 28
@@ -8583,9 +8603,9 @@ ADDRLP4 1148
 ADDRLP4 1200
 INDIRP4
 ASGNP4
-line 1375
-;1374:
-;1375:		VectorCopy(tr.endpos, te->s.origin);
+line 1377
+;1376:
+;1377:		VectorCopy(tr.endpos, te->s.origin);
 ADDRLP4 1148
 INDIRP4
 CNSTI4 92
@@ -8593,8 +8613,8 @@ ADDP4
 ADDRLP4 0+12
 INDIRB
 ASGNB 12
-line 1376
-;1376:		VectorCopy(tr.plane.normal, te->s.angles);
+line 1378
+;1378:		VectorCopy(tr.plane.normal, te->s.angles);
 ADDRLP4 1148
 INDIRP4
 CNSTI4 116
@@ -8602,19 +8622,19 @@ ADDP4
 ADDRLP4 0+24
 INDIRB
 ASGNB 12
-line 1377
-;1377:		te->s.eventParm = 1;
+line 1379
+;1379:		te->s.eventParm = 1;
 ADDRLP4 1148
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1381
-;1378:
-;1379:		//WP_SaberBlockNonRandom(self, tr.endpos, qfalse);
+line 1383
 ;1380:
-;1381:		if (otherOwner && otherOwner->client && otherOwner->client->ps.saberInFlight)
+;1381:		//WP_SaberBlockNonRandom(self, tr.endpos, qfalse);
+;1382:
+;1383:		if (otherOwner && otherOwner->client && otherOwner->client->ps.saberInFlight)
 ADDRLP4 1208
 CNSTU4 0
 ASGNU4
@@ -8644,20 +8664,20 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $672
-line 1382
-;1382:		{
-line 1383
-;1383:			return qfalse;
+line 1384
+;1384:		{
+line 1385
+;1385:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $504
 JUMPV
 LABELV $672
-line 1387
-;1384:		}
-;1385:
-;1386:		//Boot - if you attack at the same time, clash.
-;1387:		if (otherOwner->client->ps.saberMove >= LS_A_TL2BR && otherOwner->client->ps.saberMove <= LS_S_T2B)	
+line 1389
+;1386:		}
+;1387:
+;1388:		//Boot - if you attack at the same time, clash.
+;1389:		if (otherOwner->client->ps.saberMove >= LS_A_TL2BR && otherOwner->client->ps.saberMove <= LS_S_T2B)	
 ADDRLP4 1216
 ADDRLP4 1144
 INDIRP4
@@ -8676,10 +8696,10 @@ ADDRLP4 1216
 INDIRI4
 CNSTI4 24
 GTI4 $674
-line 1388
-;1388:		{
-line 1389
-;1389:			self->client->ps.weaponTime = 0;
+line 1390
+;1390:		{
+line 1391
+;1391:			self->client->ps.weaponTime = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8689,8 +8709,8 @@ CNSTI4 44
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1390
-;1390:			self->client->ps.weaponstate = WEAPON_READY;
+line 1392
+;1392:			self->client->ps.weaponstate = WEAPON_READY;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8700,8 +8720,8 @@ CNSTI4 152
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1391
-;1391:			self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+line 1393
+;1393:			self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8711,16 +8731,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1392
-;1392:		}
+line 1394
+;1394:		}
 ADDRGP4 $675
 JUMPV
 LABELV $674
-line 1394
-;1393:		else// if (dmg > 5)
-;1394:		{
-line 1395
-;1395:			if (Boot_BlockMatchesAttack(self->client->ps.saberMove, otherOwner->client->ps.saberBlocked))
+line 1396
+;1395:		else// if (dmg > 5)
+;1396:		{
+line 1397
+;1397:			if (Boot_BlockMatchesAttack(self->client->ps.saberMove, otherOwner->client->ps.saberBlocked))
 ADDRLP4 1220
 CNSTI4 408
 ASGNI4
@@ -8752,10 +8772,10 @@ ADDRLP4 1224
 INDIRI4
 CNSTI4 0
 EQI4 $676
-line 1396
-;1396:			{
-line 1397
-;1397:				WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 2);
+line 1398
+;1398:			{
+line 1399
+;1399:				WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 2);
 ADDRLP4 1144
 INDIRP4
 ARGP4
@@ -8780,8 +8800,8 @@ ARGI4
 ADDRGP4 WP_SaberCanBlock
 CALLI4
 pop
-line 1398
-;1398:				self->client->ps.weaponTime = 0;
+line 1400
+;1400:				self->client->ps.weaponTime = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8791,8 +8811,8 @@ CNSTI4 44
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1399
-;1399:				self->client->ps.weaponstate = WEAPON_READY;
+line 1401
+;1401:				self->client->ps.weaponstate = WEAPON_READY;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8802,8 +8822,8 @@ CNSTI4 152
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1400
-;1400:				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+line 1402
+;1402:				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -8813,16 +8833,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1401
-;1401:			}
+line 1403
+;1403:			}
 ADDRGP4 $677
 JUMPV
 LABELV $676
-line 1403
-;1402:			else
-;1403:			{
-line 1404
-;1404:				otherOwner->client->ps.weaponTime = 0;
+line 1405
+;1404:			else
+;1405:			{
+line 1406
+;1406:				otherOwner->client->ps.weaponTime = 0;
 ADDRLP4 1144
 INDIRP4
 CNSTI4 408
@@ -8832,8 +8852,8 @@ CNSTI4 44
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1405
-;1405:				otherOwner->client->ps.weaponstate = WEAPON_READY;
+line 1407
+;1407:				otherOwner->client->ps.weaponstate = WEAPON_READY;
 ADDRLP4 1144
 INDIRP4
 CNSTI4 408
@@ -8843,8 +8863,8 @@ CNSTI4 152
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1406
-;1406:				otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+line 1408
+;1408:				otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 ADDRLP4 1144
 INDIRP4
 CNSTI4 408
@@ -8854,45 +8874,45 @@ CNSTI4 520
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1407
-;1407:			}
+line 1409
+;1409:			}
 LABELV $677
-line 1408
-;1408:		}
+line 1410
+;1410:		}
 LABELV $675
-line 1440
-;1409:
-;1410:		//if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)	//Boot - won't be necessary. Not like this.
-;1411:		//{
-;1412:		//	self->client->ps.weaponTime = 0;
-;1413:		//	self->client->ps.weaponstate = WEAPON_READY;
-;1414:		//	self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-;1415:		//	self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-;1416:
-;1417:		//	if (otherOwner && otherOwner->client)
-;1418:		//	{
-;1419:		//		if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-;1420:		//		{
-;1421:		//			WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1);
-;1422:		//		}
-;1423:		//	}
-;1424:		//}
-;1425:		//else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)	//Boot - won't be necessary
-;1426:		//{ //block
-;1427:		//	if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-;1428:		//	{
-;1429:		//		if (WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
-;1430:		//		{
-;1431:		//			otherOwner->client->ps.weaponTime = 0;
-;1432:		//			otherOwner->client->ps.weaponstate = WEAPON_READY;
-;1433:		//			otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-;1434:		//			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-;1435:		//		}
-;1436:		//	}
-;1437:		//}
-;1438:
-;1439:		//self->client->ps.saberAttackWound = level.time + 300;	//<-- Boot. That thing saved him from getting damaged if sabers clashed.
-;1440:		boot->lastSaberClashTime = level.time;
+line 1442
+;1411:
+;1412:		//if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)	//Boot - won't be necessary. Not like this.
+;1413:		//{
+;1414:		//	self->client->ps.weaponTime = 0;
+;1415:		//	self->client->ps.weaponstate = WEAPON_READY;
+;1416:		//	self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+;1417:		//	self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+;1418:
+;1419:		//	if (otherOwner && otherOwner->client)
+;1420:		//	{
+;1421:		//		if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+;1422:		//		{
+;1423:		//			WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1);
+;1424:		//		}
+;1425:		//	}
+;1426:		//}
+;1427:		//else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)	//Boot - won't be necessary
+;1428:		//{ //block
+;1429:		//	if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+;1430:		//	{
+;1431:		//		if (WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
+;1432:		//		{
+;1433:		//			otherOwner->client->ps.weaponTime = 0;
+;1434:		//			otherOwner->client->ps.weaponstate = WEAPON_READY;
+;1435:		//			otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+;1436:		//			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+;1437:		//		}
+;1438:		//	}
+;1439:		//}
+;1440:
+;1441:		//self->client->ps.saberAttackWound = level.time + 300;	//<-- Boot. That thing saved him from getting damaged if sabers clashed.
+;1442:		boot->lastSaberClashTime = level.time;
 ADDRLP4 1108
 INDIRP4
 CNSTI4 40
@@ -8900,47 +8920,47 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1475
-;1441:
-;1442:		//if (dmg > 5)	//Boot - won't be necessary.
-;1443:		//{
-;1444:		//	if (Q_irand(1, 10) < 9) //used to be < 7
-;1445:		//	{
-;1446:		//		if (WP_SabersCheckLock(self, otherOwner))
-;1447:		//		{
-;1448:		//			self->client->ps.saberBlocked = BLOCKED_NONE;
-;1449:		//			otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
-;1450:		//			return didHit;
-;1451:		//		}
-;1452:		//	}
-;1453:		//}
-;1454:
-;1455:		//if (dmg > 5)	//Boot - not necessary. Yet.
-;1456:		//{ //we clashed into this person's saber while attacking, so make them feel it too
-;1457:		//	if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)// &&
-;1458:		//		//(otherOwner->client->ps.saberMove >= LS_A_TL2BR && self->client->ps.saberMove >= LS_A_TL2BR))	//Boot
-;1459:		//	{
-;1460:		//	//	WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
-;1461:		//		//trap_SendServerCommand(-1, va("\print \"Saberclash\n\""));
-;1462:		//		/*otherOwner->client->ps.weaponTime = 0;
-;1463:		//		otherOwner->client->ps.weaponstate = WEAPON_READY;
-;1464:		//		otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;*/
-;1465:
-;1466:		//		//self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-;1467:		//		//self->client->ps.weaponstate = WEAPON_READY;	//Boot
-;1468:		//		//self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-;1469:		//		//self->client->ps.weaponTime = 0;
-;1470:
-;1471:
-;1472:		//		//otherOwner->client->ps.saberAttackWound = level.time + 300;
-;1473:		//	}
-;1474:		//}
-;1475:	}
+line 1477
+;1443:
+;1444:		//if (dmg > 5)	//Boot - won't be necessary.
+;1445:		//{
+;1446:		//	if (Q_irand(1, 10) < 9) //used to be < 7
+;1447:		//	{
+;1448:		//		if (WP_SabersCheckLock(self, otherOwner))
+;1449:		//		{
+;1450:		//			self->client->ps.saberBlocked = BLOCKED_NONE;
+;1451:		//			otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
+;1452:		//			return didHit;
+;1453:		//		}
+;1454:		//	}
+;1455:		//}
+;1456:
+;1457:		//if (dmg > 5)	//Boot - not necessary. Yet.
+;1458:		//{ //we clashed into this person's saber while attacking, so make them feel it too
+;1459:		//	if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)// &&
+;1460:		//		//(otherOwner->client->ps.saberMove >= LS_A_TL2BR && self->client->ps.saberMove >= LS_A_TL2BR))	//Boot
+;1461:		//	{
+;1462:		//	//	WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
+;1463:		//		//trap_SendServerCommand(-1, va("\print \"Saberclash\n\""));
+;1464:		//		/*otherOwner->client->ps.weaponTime = 0;
+;1465:		//		otherOwner->client->ps.weaponstate = WEAPON_READY;
+;1466:		//		otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;*/
+;1467:
+;1468:		//		//self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+;1469:		//		//self->client->ps.weaponstate = WEAPON_READY;	//Boot
+;1470:		//		//self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+;1471:		//		//self->client->ps.weaponTime = 0;
+;1472:
+;1473:
+;1474:		//		//otherOwner->client->ps.saberAttackWound = level.time + 300;
+;1475:		//	}
+;1476:		//}
+;1477:	}
 LABELV $647
 LABELV $562
-line 1477
-;1476:
-;1477:	return didHit;
+line 1479
+;1478:
+;1479:	return didHit;
 ADDRLP4 1096
 INDIRI4
 RETI4
@@ -8948,26 +8968,26 @@ LABELV $504
 endproc CheckSaberDamage 1232 32
 export CheckThrownSaberDamaged
 proc CheckThrownSaberDamaged 1240 32
-line 1490
-;1478:}
-;1479:
-;1480:#define MIN_SABER_SLICE_DISTANCE 50
+line 1492
+;1480:}
 ;1481:
-;1482:#define MIN_SABER_SLICE_RETURN_DISTANCE 30
+;1482:#define MIN_SABER_SLICE_DISTANCE 50
 ;1483:
-;1484:#define SABER_THROWN_HIT_DAMAGE 30
-;1485:#define SABER_THROWN_RETURN_HIT_DAMAGE 5
-;1486:
-;1487:void thrownSaberTouch (gentity_t *saberent, gentity_t *other, trace_t *trace);
+;1484:#define MIN_SABER_SLICE_RETURN_DISTANCE 30
+;1485:
+;1486:#define SABER_THROWN_HIT_DAMAGE 30
+;1487:#define SABER_THROWN_RETURN_HIT_DAMAGE 5
 ;1488:
-;1489:qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *saberOwner, gentity_t *ent, int dist, int returning)
-;1490:{
-line 1495
-;1491:	vec3_t vecsub;
-;1492:	float veclen;
-;1493:	gentity_t *te;
-;1494:
-;1495:	if (saberOwner && saberOwner->client && saberOwner->client->ps.saberAttackWound > level.time)
+;1489:void thrownSaberTouch (gentity_t *saberent, gentity_t *other, trace_t *trace);
+;1490:
+;1491:qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *saberOwner, gentity_t *ent, int dist, int returning)
+;1492:{
+line 1497
+;1493:	vec3_t vecsub;
+;1494:	float veclen;
+;1495:	gentity_t *te;
+;1496:
+;1497:	if (saberOwner && saberOwner->client && saberOwner->client->ps.saberAttackWound > level.time)
 ADDRLP4 20
 ADDRFP4 4
 INDIRP4
@@ -9002,19 +9022,19 @@ INDIRI4
 ADDRGP4 level+32
 INDIRI4
 LEI4 $681
-line 1496
-;1496:	{
-line 1497
-;1497:		return qfalse;
+line 1498
+;1498:	{
+line 1499
+;1499:		return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $680
 JUMPV
 LABELV $681
-line 1500
-;1498:	}
-;1499:
-;1500:	if (ent && ent->client && ent->inuse && ent->s.number != saberOwner->s.number &&
+line 1502
+;1500:	}
+;1501:
+;1502:	if (ent && ent->client && ent->inuse && ent->s.number != saberOwner->s.number &&
 ADDRLP4 32
 ADDRFP4 8
 INDIRP4
@@ -9119,14 +9139,14 @@ INDIRI4
 ADDRLP4 52
 INDIRI4
 EQI4 $684
-line 1505
-;1501:		ent->health > 0 && ent->takedamage &&
-;1502:		trap_InPVS(ent->client->ps.origin, saberent->r.currentOrigin) &&
-;1503:		ent->client->sess.sessionTeam != TEAM_SPECTATOR &&
-;1504:		ent->client->pers.connected)
-;1505:	{
-line 1506
-;1506:		if (ent->inuse && ent->client &&
+line 1507
+;1503:		ent->health > 0 && ent->takedamage &&
+;1504:		trap_InPVS(ent->client->ps.origin, saberent->r.currentOrigin) &&
+;1505:		ent->client->sess.sessionTeam != TEAM_SPECTATOR &&
+;1506:		ent->client->pers.connected)
+;1507:	{
+line 1508
+;1508:		if (ent->inuse && ent->client &&
 ADDRLP4 60
 ADDRFP4 8
 INDIRP4
@@ -9171,21 +9191,21 @@ ADDRFP4 4
 INDIRP4
 INDIRI4
 EQI4 $686
-line 1509
-;1507:			ent->client->ps.duelInProgress &&
-;1508:			ent->client->ps.duelIndex != saberOwner->s.number)
-;1509:		{
-line 1510
-;1510:			return qfalse;
+line 1511
+;1509:			ent->client->ps.duelInProgress &&
+;1510:			ent->client->ps.duelIndex != saberOwner->s.number)
+;1511:		{
+line 1512
+;1512:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $680
 JUMPV
 LABELV $686
-line 1513
-;1511:		}
-;1512:
-;1513:		if (ent->inuse && ent->client &&
+line 1515
+;1513:		}
+;1514:
+;1515:		if (ent->inuse && ent->client &&
 ADDRLP4 72
 ADDRFP4 8
 INDIRP4
@@ -9238,21 +9258,21 @@ ADDRLP4 72
 INDIRP4
 INDIRI4
 EQI4 $688
-line 1516
-;1514:			saberOwner->client->ps.duelInProgress &&
-;1515:			saberOwner->client->ps.duelIndex != ent->s.number)
-;1516:		{
-line 1517
-;1517:			return qfalse;
+line 1518
+;1516:			saberOwner->client->ps.duelInProgress &&
+;1517:			saberOwner->client->ps.duelIndex != ent->s.number)
+;1518:		{
+line 1519
+;1519:			return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $680
 JUMPV
 LABELV $688
-line 1520
-;1518:		}
-;1519:
-;1520:		VectorSubtract(saberent->r.currentOrigin, ent->client->ps.origin, vecsub);
+line 1522
+;1520:		}
+;1521:
+;1522:		VectorSubtract(saberent->r.currentOrigin, ent->client->ps.origin, vecsub);
 ADDRLP4 88
 ADDRFP4 0
 INDIRP4
@@ -9307,8 +9327,8 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 1521
-;1521:		veclen = VectorLength(vecsub);
+line 1523
+;1523:		veclen = VectorLength(vecsub);
 ADDRLP4 0
 ARGP4
 ADDRLP4 96
@@ -9319,21 +9339,21 @@ ADDRLP4 12
 ADDRLP4 96
 INDIRF4
 ASGNF4
-line 1523
-;1522:
-;1523:		if (veclen < dist)
+line 1525
+;1524:
+;1525:		if (veclen < dist)
 ADDRLP4 12
 INDIRF4
 ADDRFP4 12
 INDIRI4
 CVIF4 4
 GEF4 $685
-line 1524
-;1524:		{
-line 1527
-;1525:			trace_t tr;
-;1526:
-;1527:			trap_Trace(&tr, saberent->r.currentOrigin, NULL, NULL, ent->client->ps.origin, saberent->s.number, MASK_SHOT);
+line 1526
+;1526:		{
+line 1529
+;1527:			trace_t tr;
+;1528:
+;1529:			trap_Trace(&tr, saberent->r.currentOrigin, NULL, NULL, ent->client->ps.origin, saberent->s.number, MASK_SHOT);
 ADDRLP4 100
 ARGP4
 ADDRLP4 1180
@@ -9371,21 +9391,21 @@ ARGI4
 ADDRGP4 trap_Trace
 CALLV
 pop
-line 1541
-;1528:
-;1529:			/*
-;1530:			if (tr.startsolid || tr.allsolid)
-;1531:			{
-;1532:				if (!returning)
-;1533:				{ //return to owner if startsolid
-;1534:					thrownSaberTouch(saberent, saberent, NULL);
-;1535:				}
-;1536:
-;1537:				return qfalse;
-;1538:			}
-;1539:			*/
-;1540:
-;1541:			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
+line 1543
+;1530:
+;1531:			/*
+;1532:			if (tr.startsolid || tr.allsolid)
+;1533:			{
+;1534:				if (!returning)
+;1535:				{ //return to owner if startsolid
+;1536:					thrownSaberTouch(saberent, saberent, NULL);
+;1537:				}
+;1538:
+;1539:				return qfalse;
+;1540:			}
+;1541:			*/
+;1542:
+;1543:			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
 ADDRLP4 100+8
 INDIRF4
 CNSTF4 1065353216
@@ -9397,10 +9417,10 @@ INDIRP4
 INDIRI4
 NEI4 $685
 LABELV $698
-line 1542
-;1542:			{ //Slice them
-line 1543
-;1543:				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, saberent, tr.endpos, 0, MOD_SABER, qfalse, 8))
+line 1544
+;1544:			{ //Slice them
+line 1545
+;1545:				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, saberent, tr.endpos, 0, MOD_SABER, qfalse, 8))
 ADDRLP4 1188
 CNSTI4 0
 ASGNI4
@@ -9441,10 +9461,10 @@ ADDRLP4 1192
 INDIRI4
 CNSTI4 0
 EQI4 $699
-line 1544
-;1544:				{
-line 1545
-;1545:					te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
+line 1546
+;1546:				{
+line 1547
+;1547:					te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 ADDRLP4 100+12
 ARGP4
 CNSTI4 28
@@ -9457,8 +9477,8 @@ ADDRLP4 16
 ADDRLP4 1196
 INDIRP4
 ASGNP4
-line 1546
-;1546:					VectorCopy(tr.endpos, te->s.origin);
+line 1548
+;1548:					VectorCopy(tr.endpos, te->s.origin);
 ADDRLP4 16
 INDIRP4
 CNSTI4 92
@@ -9466,8 +9486,8 @@ ADDP4
 ADDRLP4 100+12
 INDIRB
 ASGNB 12
-line 1547
-;1547:					VectorCopy(tr.plane.normal, te->s.angles);
+line 1549
+;1549:					VectorCopy(tr.plane.normal, te->s.angles);
 ADDRLP4 16
 INDIRP4
 CNSTI4 116
@@ -9475,8 +9495,8 @@ ADDP4
 ADDRLP4 100+24
 INDIRB
 ASGNB 12
-line 1548
-;1548:					if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
+line 1550
+;1550:					if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
 ADDRLP4 1200
 ADDRLP4 16
 INDIRP4
@@ -9508,38 +9528,38 @@ INDIRF4
 ADDRLP4 1204
 INDIRF4
 NEF4 $705
-line 1549
-;1549:					{
-line 1550
-;1550:						te->s.angles[1] = 1;
+line 1551
+;1551:					{
+line 1552
+;1552:						te->s.angles[1] = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 120
 ADDP4
 CNSTF4 1065353216
 ASGNF4
-line 1551
-;1551:					}
+line 1553
+;1553:					}
 LABELV $705
-line 1552
-;1552:					te->s.eventParm = 1;
+line 1554
+;1554:					te->s.eventParm = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1554
-;1553:
-;1554:					if (!returning)
+line 1556
+;1555:
+;1556:					if (!returning)
 ADDRFP4 16
 INDIRI4
 CNSTI4 0
 NEI4 $707
-line 1555
-;1555:					{ //return to owner if blocked
-line 1556
-;1556:						thrownSaberTouch(saberent, saberent, NULL);
+line 1557
+;1557:					{ //return to owner if blocked
+line 1558
+;1558:						thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 1208
 ADDRFP4 0
 INDIRP4
@@ -9555,12 +9575,12 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 1557
-;1557:					}
-LABELV $707
 line 1559
-;1558:
-;1559:					saberOwner->client->ps.saberAttackWound = level.time + 500;
+;1559:					}
+LABELV $707
+line 1561
+;1560:
+;1561:					saberOwner->client->ps.saberAttackWound = level.time + 500;
 ADDRFP4 4
 INDIRP4
 CNSTI4 408
@@ -9573,21 +9593,21 @@ INDIRI4
 CNSTI4 500
 ADDI4
 ASGNI4
-line 1560
-;1560:					return qfalse;
+line 1562
+;1562:					return qfalse;
 CNSTI4 0
 RETI4
 ADDRGP4 $680
 JUMPV
 LABELV $699
-line 1563
-;1561:				}
-;1562:				else
-;1563:				{
-line 1566
-;1564:					vec3_t dir;
-;1565:
-;1566:					VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
+line 1565
+;1563:				}
+;1564:				else
+;1565:				{
+line 1568
+;1566:					vec3_t dir;
+;1567:
+;1568:					VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
 ADDRLP4 1208
 ADDRFP4 0
 INDIRP4
@@ -9622,16 +9642,16 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 1567
-;1567:					VectorNormalize(dir);
+line 1569
+;1569:					VectorNormalize(dir);
 ADDRLP4 1196
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 1569
-;1568:
-;1569:					if (!dir[0] && !dir[1] && !dir[2])
+line 1571
+;1570:
+;1571:					if (!dir[0] && !dir[1] && !dir[2])
 ADDRLP4 1212
 CNSTF4 0
 ASGNF4
@@ -9650,19 +9670,19 @@ INDIRF4
 ADDRLP4 1212
 INDIRF4
 NEF4 $717
-line 1570
-;1570:					{
-line 1571
-;1571:						dir[1] = 1;
+line 1572
+;1572:					{
+line 1573
+;1573:						dir[1] = 1;
 ADDRLP4 1196+4
 CNSTF4 1065353216
 ASGNF4
-line 1572
-;1572:					}
-LABELV $717
 line 1574
-;1573:
-;1574:					if (saberOwner->client->ps.isJediMaster)
+;1574:					}
+LABELV $717
+line 1576
+;1575:
+;1576:					if (saberOwner->client->ps.isJediMaster)
 ADDRFP4 4
 INDIRP4
 CNSTI4 408
@@ -9673,10 +9693,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $722
-line 1575
-;1575:					{ //2x damage for the Jedi Master
-line 1576
-;1576:						G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, saberent->damage*2, 0, MOD_SABER);
+line 1577
+;1577:					{ //2x damage for the Jedi Master
+line 1578
+;1578:						G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, saberent->damage*2, 0, MOD_SABER);
 ADDRFP4 8
 INDIRP4
 ARGP4
@@ -9709,16 +9729,16 @@ ARGI4
 ADDRGP4 G_Damage
 CALLV
 pop
-line 1577
-;1577:					}
+line 1579
+;1579:					}
 ADDRGP4 $723
 JUMPV
 LABELV $722
-line 1579
-;1578:					else
-;1579:					{
-line 1580
-;1580:						G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, saberent->damage, 0, MOD_SABER);
+line 1581
+;1580:					else
+;1581:					{
+line 1582
+;1582:						G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, saberent->damage, 0, MOD_SABER);
 ADDRFP4 8
 INDIRP4
 ARGP4
@@ -9749,12 +9769,12 @@ ARGI4
 ADDRGP4 G_Damage
 CALLV
 pop
-line 1581
-;1581:					}
-LABELV $723
 line 1583
-;1582:
-;1583:					te = G_TempEntity( tr.endpos, EV_SABER_HIT );
+;1583:					}
+LABELV $723
+line 1585
+;1584:
+;1585:					te = G_TempEntity( tr.endpos, EV_SABER_HIT );
 ADDRLP4 100+12
 ARGP4
 CNSTI4 27
@@ -9767,8 +9787,8 @@ ADDRLP4 16
 ADDRLP4 1216
 INDIRP4
 ASGNP4
-line 1584
-;1584:					VectorCopy(tr.endpos, te->s.origin);
+line 1586
+;1586:					VectorCopy(tr.endpos, te->s.origin);
 ADDRLP4 16
 INDIRP4
 CNSTI4 92
@@ -9776,8 +9796,8 @@ ADDP4
 ADDRLP4 100+12
 INDIRB
 ASGNB 12
-line 1585
-;1585:					VectorCopy(tr.plane.normal, te->s.angles);
+line 1587
+;1587:					VectorCopy(tr.plane.normal, te->s.angles);
 ADDRLP4 16
 INDIRP4
 CNSTI4 116
@@ -9785,8 +9805,8 @@ ADDP4
 ADDRLP4 100+24
 INDIRB
 ASGNB 12
-line 1586
-;1586:					if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
+line 1588
+;1588:					if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
 ADDRLP4 1220
 ADDRLP4 16
 INDIRP4
@@ -9818,39 +9838,39 @@ INDIRF4
 ADDRLP4 1224
 INDIRF4
 NEF4 $729
-line 1587
-;1587:					{
-line 1588
-;1588:						te->s.angles[1] = 1;
+line 1589
+;1589:					{
+line 1590
+;1590:						te->s.angles[1] = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 120
 ADDP4
 CNSTF4 1065353216
 ASGNF4
-line 1589
-;1589:					}
-LABELV $729
 line 1591
-;1590:
-;1591:					te->s.eventParm = 1;
+;1591:					}
+LABELV $729
+line 1593
+;1592:
+;1593:					te->s.eventParm = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1593
-;1592:
-;1593:					if (!returning)
+line 1595
+;1594:
+;1595:					if (!returning)
 ADDRFP4 16
 INDIRI4
 CNSTI4 0
 NEI4 $731
-line 1594
-;1594:					{ //return to owner if blocked
-line 1595
-;1595:						thrownSaberTouch(saberent, saberent, NULL);
+line 1596
+;1596:					{ //return to owner if blocked
+line 1597
+;1597:						thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 1228
 ADDRFP4 0
 INDIRP4
@@ -9866,14 +9886,14 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 1596
-;1596:					}
+line 1598
+;1598:					}
 LABELV $731
-line 1597
-;1597:				}
 line 1599
-;1598:
-;1599:				saberOwner->client->ps.saberAttackWound = level.time + 500;
+;1599:				}
+line 1601
+;1600:
+;1601:				saberOwner->client->ps.saberAttackWound = level.time + 500;
 ADDRFP4 4
 INDIRP4
 CNSTI4 408
@@ -9886,17 +9906,17 @@ INDIRI4
 CNSTI4 500
 ADDI4
 ASGNI4
-line 1600
-;1600:			}
-line 1601
-;1601:		}
 line 1602
-;1602:	}
+;1602:			}
+line 1603
+;1603:		}
+line 1604
+;1604:	}
 ADDRGP4 $685
 JUMPV
 LABELV $684
-line 1603
-;1603:	else if (ent && !ent->client && ent->inuse && ent->takedamage && ent->health > 0 && ent->s.number != saberOwner->s.number &&
+line 1605
+;1605:	else if (ent && !ent->client && ent->inuse && ent->takedamage && ent->health > 0 && ent->s.number != saberOwner->s.number &&
 ADDRLP4 60
 ADDRFP4 8
 INDIRP4
@@ -9990,11 +10010,11 @@ ADDRLP4 84
 INDIRI4
 CNSTI4 0
 EQI4 $734
-line 1605
-;1604:		ent->s.number != saberent->s.number && trap_InPVS(ent->r.currentOrigin, saberent->r.currentOrigin))
-;1605:	{
-line 1606
-;1606:		VectorSubtract(saberent->r.currentOrigin, ent->r.currentOrigin, vecsub);
+line 1607
+;1606:		ent->s.number != saberent->s.number && trap_InPVS(ent->r.currentOrigin, saberent->r.currentOrigin))
+;1607:	{
+line 1608
+;1608:		VectorSubtract(saberent->r.currentOrigin, ent->r.currentOrigin, vecsub);
 ADDRLP4 88
 ADDRFP4 0
 INDIRP4
@@ -10057,8 +10077,8 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 1607
-;1607:		veclen = VectorLength(vecsub);
+line 1609
+;1609:		veclen = VectorLength(vecsub);
 ADDRLP4 0
 ARGP4
 ADDRLP4 108
@@ -10069,21 +10089,21 @@ ADDRLP4 12
 ADDRLP4 108
 INDIRF4
 ASGNF4
-line 1609
-;1608:
-;1609:		if (veclen < dist)
+line 1611
+;1610:
+;1611:		if (veclen < dist)
 ADDRLP4 12
 INDIRF4
 ADDRFP4 12
 INDIRI4
 CVIF4 4
 GEF4 $738
-line 1610
-;1610:		{
-line 1613
-;1611:			trace_t tr;
-;1612:
-;1613:			trap_Trace(&tr, saberent->r.currentOrigin, NULL, NULL, ent->r.currentOrigin, saberent->s.number, MASK_SHOT);
+line 1612
+;1612:		{
+line 1615
+;1613:			trace_t tr;
+;1614:
+;1615:			trap_Trace(&tr, saberent->r.currentOrigin, NULL, NULL, ent->r.currentOrigin, saberent->s.number, MASK_SHOT);
 ADDRLP4 112
 ARGP4
 ADDRLP4 1192
@@ -10123,9 +10143,9 @@ ARGI4
 ADDRGP4 trap_Trace
 CALLV
 pop
-line 1615
-;1614:
-;1615:			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
+line 1617
+;1616:
+;1617:			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
 ADDRLP4 112+8
 INDIRF4
 CNSTF4 1065353216
@@ -10137,12 +10157,12 @@ INDIRP4
 INDIRI4
 NEI4 $740
 LABELV $744
-line 1616
-;1616:			{
-line 1619
-;1617:				vec3_t dir;
-;1618:
-;1619:				VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
+line 1618
+;1618:			{
+line 1621
+;1619:				vec3_t dir;
+;1620:
+;1621:				VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
 ADDRLP4 1216
 ADDRFP4 0
 INDIRP4
@@ -10177,16 +10197,16 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 1620
-;1620:				VectorNormalize(dir);
+line 1622
+;1622:				VectorNormalize(dir);
 ADDRLP4 1204
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 1622
-;1621:
-;1622:				G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, 5, 0, MOD_SABER);
+line 1624
+;1623:
+;1624:				G_Damage(ent, saberOwner, saberOwner, dir, tr.endpos, 5, 0, MOD_SABER);
 ADDRFP4 8
 INDIRP4
 ARGP4
@@ -10213,9 +10233,9 @@ ARGI4
 ADDRGP4 G_Damage
 CALLV
 pop
-line 1624
-;1623:
-;1624:				te = G_TempEntity( tr.endpos, EV_SABER_HIT );
+line 1626
+;1625:
+;1626:				te = G_TempEntity( tr.endpos, EV_SABER_HIT );
 ADDRLP4 112+12
 ARGP4
 CNSTI4 27
@@ -10228,8 +10248,8 @@ ADDRLP4 16
 ADDRLP4 1224
 INDIRP4
 ASGNP4
-line 1625
-;1625:				VectorCopy(tr.endpos, te->s.origin);
+line 1627
+;1627:				VectorCopy(tr.endpos, te->s.origin);
 ADDRLP4 16
 INDIRP4
 CNSTI4 92
@@ -10237,8 +10257,8 @@ ADDP4
 ADDRLP4 112+12
 INDIRB
 ASGNB 12
-line 1626
-;1626:				VectorCopy(tr.plane.normal, te->s.angles);
+line 1628
+;1628:				VectorCopy(tr.plane.normal, te->s.angles);
 ADDRLP4 16
 INDIRP4
 CNSTI4 116
@@ -10246,8 +10266,8 @@ ADDP4
 ADDRLP4 112+24
 INDIRB
 ASGNB 12
-line 1627
-;1627:				if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
+line 1629
+;1629:				if (!te->s.angles[0] && !te->s.angles[1] && !te->s.angles[2])
 ADDRLP4 1228
 ADDRLP4 16
 INDIRP4
@@ -10279,39 +10299,39 @@ INDIRF4
 ADDRLP4 1232
 INDIRF4
 NEF4 $756
-line 1628
-;1628:				{
-line 1629
-;1629:					te->s.angles[1] = 1;
+line 1630
+;1630:				{
+line 1631
+;1631:					te->s.angles[1] = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 120
 ADDP4
 CNSTF4 1065353216
 ASGNF4
-line 1630
-;1630:				}
-LABELV $756
 line 1632
-;1631:
-;1632:				te->s.eventParm = 1;
+;1632:				}
+LABELV $756
+line 1634
+;1633:
+;1634:				te->s.eventParm = 1;
 ADDRLP4 16
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1634
-;1633:
-;1634:				if (!returning)
+line 1636
+;1635:
+;1636:				if (!returning)
 ADDRFP4 16
 INDIRI4
 CNSTI4 0
 NEI4 $758
-line 1635
-;1635:				{ //return to owner if blocked
-line 1636
-;1636:					thrownSaberTouch(saberent, saberent, NULL);
+line 1637
+;1637:				{ //return to owner if blocked
+line 1638
+;1638:					thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 1236
 ADDRFP4 0
 INDIRP4
@@ -10327,12 +10347,12 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 1637
-;1637:				}
-LABELV $758
 line 1639
-;1638:
-;1639:				saberOwner->client->ps.saberAttackWound = level.time + 500;
+;1639:				}
+LABELV $758
+line 1641
+;1640:
+;1641:				saberOwner->client->ps.saberAttackWound = level.time + 500;
 ADDRFP4 4
 INDIRP4
 CNSTI4 408
@@ -10345,43 +10365,43 @@ INDIRI4
 CNSTI4 500
 ADDI4
 ASGNI4
-line 1640
-;1640:			}
-LABELV $740
-line 1641
-;1641:		}
-LABELV $738
 line 1642
-;1642:	}
+;1642:			}
+LABELV $740
+line 1643
+;1643:		}
+LABELV $738
+line 1644
+;1644:	}
 LABELV $734
 LABELV $685
-line 1644
-;1643:
-;1644:	return qtrue;
+line 1646
+;1645:
+;1646:	return qtrue;
 CNSTI4 1
 RETI4
 LABELV $680
 endproc CheckThrownSaberDamaged 1240 32
 export saberCheckRadiusDamage
 proc saberCheckRadiusDamage 28 20
-line 1648
-;1645:}
-;1646:
-;1647:void saberCheckRadiusDamage(gentity_t *saberent, int returning)
-;1648:{ //we're going to cheat and damage players within the saber's radius, just for the sake of doing things more "efficiently"
-line 1649
-;1649:	int i = 0;
+line 1650
+;1647:}
+;1648:
+;1649:void saberCheckRadiusDamage(gentity_t *saberent, int returning)
+;1650:{ //we're going to cheat and damage players within the saber's radius, just for the sake of doing things more "efficiently"
+line 1651
+;1651:	int i = 0;
 ADDRLP4 0
 CNSTI4 0
 ASGNI4
-line 1650
-;1650:	int dist = 0;
+line 1652
+;1652:	int dist = 0;
 ADDRLP4 12
 CNSTI4 0
 ASGNI4
-line 1652
-;1651:	gentity_t *ent;
-;1652:	gentity_t *saberOwner = &g_entities[saberent->r.ownerNum];
+line 1654
+;1653:	gentity_t *ent;
+;1654:	gentity_t *saberOwner = &g_entities[saberent->r.ownerNum];
 ADDRLP4 8
 CNSTI4 828
 ADDRFP4 0
@@ -10393,9 +10413,9 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1654
-;1653:
-;1654:	if (returning && returning != 2)
+line 1656
+;1655:
+;1656:	if (returning && returning != 2)
 ADDRLP4 16
 ADDRFP4 4
 INDIRI4
@@ -10408,32 +10428,32 @@ ADDRLP4 16
 INDIRI4
 CNSTI4 2
 EQI4 $762
-line 1655
-;1655:	{
-line 1656
-;1656:		dist = MIN_SABER_SLICE_RETURN_DISTANCE;
+line 1657
+;1657:	{
+line 1658
+;1658:		dist = MIN_SABER_SLICE_RETURN_DISTANCE;
 ADDRLP4 12
 CNSTI4 30
 ASGNI4
-line 1657
-;1657:	}
+line 1659
+;1659:	}
 ADDRGP4 $763
 JUMPV
 LABELV $762
-line 1659
-;1658:	else
-;1659:	{
-line 1660
-;1660:		dist = MIN_SABER_SLICE_DISTANCE;
+line 1661
+;1660:	else
+;1661:	{
+line 1662
+;1662:		dist = MIN_SABER_SLICE_DISTANCE;
 ADDRLP4 12
 CNSTI4 50
 ASGNI4
-line 1661
-;1661:	}
-LABELV $763
 line 1663
-;1662:
-;1663:	if (!saberOwner || !saberOwner->client)
+;1663:	}
+LABELV $763
+line 1665
+;1664:
+;1665:	if (!saberOwner || !saberOwner->client)
 ADDRLP4 24
 CNSTU4 0
 ASGNU4
@@ -10453,17 +10473,17 @@ ADDRLP4 24
 INDIRU4
 NEU4 $764
 LABELV $766
-line 1664
-;1664:	{
-line 1665
-;1665:		return;
+line 1666
+;1666:	{
+line 1667
+;1667:		return;
 ADDRGP4 $761
 JUMPV
 LABELV $764
-line 1668
-;1666:	}
-;1667:
-;1668:	if (saberOwner->client->ps.saberAttackWound > level.time)
+line 1670
+;1668:	}
+;1669:
+;1670:	if (saberOwner->client->ps.saberAttackWound > level.time)
 ADDRLP4 8
 INDIRP4
 CNSTI4 408
@@ -10475,20 +10495,20 @@ INDIRI4
 ADDRGP4 level+32
 INDIRI4
 LEI4 $771
-line 1669
-;1669:	{
-line 1670
-;1670:		return;
+line 1671
+;1671:	{
+line 1672
+;1672:		return;
 ADDRGP4 $761
 JUMPV
 LABELV $770
-line 1674
-;1671:	}
-;1672:
-;1673:	while (i < /*MAX_CLIENTS*/MAX_GENTITIES)
-;1674:	{
-line 1675
-;1675:		ent = &g_entities[i];
+line 1676
+;1673:	}
+;1674:
+;1675:	while (i < /*MAX_CLIENTS*/MAX_GENTITIES)
+;1676:	{
+line 1677
+;1677:		ent = &g_entities[i];
 ADDRLP4 4
 CNSTI4 828
 ADDRLP4 0
@@ -10497,9 +10517,9 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1677
-;1676:
-;1677:		CheckThrownSaberDamaged(saberent, saberOwner, ent, dist, returning);
+line 1679
+;1678:
+;1679:		CheckThrownSaberDamaged(saberent, saberOwner, ent, dist, returning);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -10518,48 +10538,48 @@ ARGI4
 ADDRGP4 CheckThrownSaberDamaged
 CALLI4
 pop
-line 1679
-;1678:
-;1679:		i++;
+line 1681
+;1680:
+;1681:		i++;
 ADDRLP4 0
 ADDRLP4 0
 INDIRI4
 CNSTI4 1
 ADDI4
 ASGNI4
-line 1680
-;1680:	}
+line 1682
+;1682:	}
 LABELV $771
-line 1673
+line 1675
 ADDRLP4 0
 INDIRI4
 CNSTI4 1024
 LTI4 $770
-line 1681
-;1681:}
+line 1683
+;1683:}
 LABELV $761
 endproc saberCheckRadiusDamage 28 20
 export saberMoveBack
 proc saberMoveBack 28 12
-line 1686
-;1682:
-;1683://#define THROWN_SABER_COMP
+line 1688
 ;1684:
-;1685:void saberMoveBack( gentity_t *ent, qboolean goingBack ) 
-;1686:{
-line 1689
-;1687:	vec3_t		origin, oldOrg;
-;1688:
-;1689:	ent->s.pos.trType = TR_LINEAR;
+;1685://#define THROWN_SABER_COMP
+;1686:
+;1687:void saberMoveBack( gentity_t *ent, qboolean goingBack ) 
+;1688:{
+line 1691
+;1689:	vec3_t		origin, oldOrg;
+;1690:
+;1691:	ent->s.pos.trType = TR_LINEAR;
 ADDRFP4 0
 INDIRP4
 CNSTI4 12
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1691
-;1690:
-;1691:	VectorCopy( ent->r.currentOrigin, oldOrg );
+line 1693
+;1692:
+;1693:	VectorCopy( ent->r.currentOrigin, oldOrg );
 ADDRLP4 12
 ADDRFP4 0
 INDIRP4
@@ -10567,9 +10587,9 @@ CNSTI4 368
 ADDP4
 INDIRB
 ASGNB 12
-line 1693
-;1692:	// get current position
-;1693:	BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
+line 1695
+;1694:	// get current position
+;1695:	BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
 ADDRFP4 0
 INDIRP4
 CNSTI4 12
@@ -10583,9 +10603,9 @@ ARGP4
 ADDRGP4 BG_EvaluateTrajectory
 CALLV
 pop
-line 1695
-;1694:	//Get current angles?
-;1695:	BG_EvaluateTrajectory( &ent->s.apos, level.time, ent->r.currentAngles );
+line 1697
+;1696:	//Get current angles?
+;1697:	BG_EvaluateTrajectory( &ent->s.apos, level.time, ent->r.currentAngles );
 ADDRLP4 24
 ADDRFP4 0
 INDIRP4
@@ -10606,48 +10626,48 @@ ARGP4
 ADDRGP4 BG_EvaluateTrajectory
 CALLV
 pop
-line 1736
-;1696:
-;1697:	//compensation test code..
-;1698:#ifdef THROWN_SABER_COMP
-;1699:	if (!goingBack)
-;1700:	{ //acts as a fallback in case touch code fails, keeps saber from going through things between predictions
-;1701:		float originalLength = 0;
-;1702:		int iCompensationLength = 32;
-;1703:		trace_t tr;
-;1704:		vec3_t mins, maxs;
-;1705:		vec3_t calcComp, compensatedOrigin;
-;1706:		VectorSet( mins, -24.0f, -24.0f, -8.0f );
-;1707:		VectorSet( maxs, 24.0f, 24.0f, 8.0f );
-;1708:
-;1709:		VectorSubtract(origin, oldOrg, calcComp);
-;1710:		originalLength = VectorLength(calcComp);
-;1711:
-;1712:		VectorNormalize(calcComp);
+line 1738
+;1698:
+;1699:	//compensation test code..
+;1700:#ifdef THROWN_SABER_COMP
+;1701:	if (!goingBack)
+;1702:	{ //acts as a fallback in case touch code fails, keeps saber from going through things between predictions
+;1703:		float originalLength = 0;
+;1704:		int iCompensationLength = 32;
+;1705:		trace_t tr;
+;1706:		vec3_t mins, maxs;
+;1707:		vec3_t calcComp, compensatedOrigin;
+;1708:		VectorSet( mins, -24.0f, -24.0f, -8.0f );
+;1709:		VectorSet( maxs, 24.0f, 24.0f, 8.0f );
+;1710:
+;1711:		VectorSubtract(origin, oldOrg, calcComp);
+;1712:		originalLength = VectorLength(calcComp);
 ;1713:
-;1714:		compensatedOrigin[0] = oldOrg[0] + calcComp[0]*(originalLength+iCompensationLength);		
-;1715:		compensatedOrigin[1] = oldOrg[1] + calcComp[1]*(originalLength+iCompensationLength);
-;1716:		compensatedOrigin[2] = oldOrg[2] + calcComp[2]*(originalLength+iCompensationLength);
-;1717:
-;1718:		trap_Trace(&tr, oldOrg, mins, maxs, compensatedOrigin, ent->r.ownerNum, MASK_PLAYERSOLID);
+;1714:		VectorNormalize(calcComp);
+;1715:
+;1716:		compensatedOrigin[0] = oldOrg[0] + calcComp[0]*(originalLength+iCompensationLength);		
+;1717:		compensatedOrigin[1] = oldOrg[1] + calcComp[1]*(originalLength+iCompensationLength);
+;1718:		compensatedOrigin[2] = oldOrg[2] + calcComp[2]*(originalLength+iCompensationLength);
 ;1719:
-;1720:		if ((tr.fraction != 1 || tr.startsolid || tr.allsolid) && tr.entityNum != ent->r.ownerNum)
-;1721:		{
-;1722:			VectorClear(ent->s.pos.trDelta);
-;1723:
-;1724:			//Unfortunately doing this would defeat the purpose of the compensation. We will have to settle for a jerk on the client.
-;1725:			//VectorCopy( origin, ent->r.currentOrigin );
-;1726:
-;1727:			CheckThrownSaberDamaged(ent, &g_entities[ent->r.ownerNum], &g_entities[tr.entityNum], 256, 0);
+;1720:		trap_Trace(&tr, oldOrg, mins, maxs, compensatedOrigin, ent->r.ownerNum, MASK_PLAYERSOLID);
+;1721:
+;1722:		if ((tr.fraction != 1 || tr.startsolid || tr.allsolid) && tr.entityNum != ent->r.ownerNum)
+;1723:		{
+;1724:			VectorClear(ent->s.pos.trDelta);
+;1725:
+;1726:			//Unfortunately doing this would defeat the purpose of the compensation. We will have to settle for a jerk on the client.
+;1727:			//VectorCopy( origin, ent->r.currentOrigin );
 ;1728:
-;1729:			tr.startsolid = 0;
-;1730:			thrownSaberTouch(ent, &g_entities[tr.entityNum], &tr);
-;1731:			return;
-;1732:		}
-;1733:	}
-;1734:#endif
-;1735:
-;1736:	VectorCopy( origin, ent->r.currentOrigin );
+;1729:			CheckThrownSaberDamaged(ent, &g_entities[ent->r.ownerNum], &g_entities[tr.entityNum], 256, 0);
+;1730:
+;1731:			tr.startsolid = 0;
+;1732:			thrownSaberTouch(ent, &g_entities[tr.entityNum], &tr);
+;1733:			return;
+;1734:		}
+;1735:	}
+;1736:#endif
+;1737:
+;1738:	VectorCopy( origin, ent->r.currentOrigin );
 ADDRFP4 0
 INDIRP4
 CNSTI4 368
@@ -10655,18 +10675,18 @@ ADDP4
 ADDRLP4 0
 INDIRB
 ASGNB 12
-line 1737
-;1737:}
+line 1739
+;1739:}
 LABELV $773
 endproc saberMoveBack 28 12
 export SaberBounceSound
 proc SaberBounceSound 4 0
-line 1740
-;1738:
-;1739:void SaberBounceSound( gentity_t *self, gentity_t *other, trace_t *trace )
-;1740:{
-line 1741
-;1741:	VectorCopy(self->r.currentAngles, self->s.apos.trBase);
+line 1742
+;1740:
+;1741:void SaberBounceSound( gentity_t *self, gentity_t *other, trace_t *trace )
+;1742:{
+line 1743
+;1743:	VectorCopy(self->r.currentAngles, self->s.apos.trBase);
 ADDRLP4 0
 ADDRFP4 0
 INDIRP4
@@ -10681,26 +10701,26 @@ CNSTI4 380
 ADDP4
 INDIRB
 ASGNB 12
-line 1742
-;1742:	self->s.apos.trBase[PITCH] = 90;
+line 1744
+;1744:	self->s.apos.trBase[PITCH] = 90;
 ADDRFP4 0
 INDIRP4
 CNSTI4 60
 ADDP4
 CNSTF4 1119092736
 ASGNF4
-line 1743
-;1743:}
+line 1745
+;1745:}
 LABELV $776
 endproc SaberBounceSound 4 0
 export DeadSaberThink
 proc DeadSaberThink 0 4
-line 1746
-;1744:
-;1745:void DeadSaberThink(gentity_t *saberent)
-;1746:{
-line 1747
-;1747:	if (saberent->speed < level.time)
+line 1748
+;1746:
+;1747:void DeadSaberThink(gentity_t *saberent)
+;1748:{
+line 1749
+;1749:	if (saberent->speed < level.time)
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -10710,18 +10730,18 @@ ADDRGP4 level+32
 INDIRI4
 CVIF4 4
 GEF4 $778
-line 1748
-;1748:	{
-line 1749
-;1749:		saberent->think = G_FreeEntity;
+line 1750
+;1750:	{
+line 1751
+;1751:		saberent->think = G_FreeEntity;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 G_FreeEntity
 ASGNP4
-line 1750
-;1750:		saberent->nextthink = level.time;
+line 1752
+;1752:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -10729,46 +10749,46 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1751
-;1751:		return;
+line 1753
+;1753:		return;
 ADDRGP4 $777
 JUMPV
 LABELV $778
-line 1754
-;1752:	}
-;1753:
-;1754:	G_RunObject(saberent);
+line 1756
+;1754:	}
+;1755:
+;1756:	G_RunObject(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 G_RunObject
 CALLV
 pop
-line 1755
-;1755:}
+line 1757
+;1757:}
 LABELV $777
 endproc DeadSaberThink 0 4
 export MakeDeadSaber
 proc MakeDeadSaber 52 12
-line 1758
-;1756:
-;1757:void MakeDeadSaber(gentity_t *ent)
-;1758:{	//spawn a "dead" saber entity here so it looks like the saber fell out of the air.
-line 1764
-;1759:	//This entity will remove itself after a very short time period.
-;1760:	vec3_t startorg;
-;1761:	vec3_t startang;
-;1762:	gentity_t *saberent;
-;1763:	
-;1764:	if (g_gametype.integer == GT_JEDIMASTER)
+line 1760
+;1758:
+;1759:void MakeDeadSaber(gentity_t *ent)
+;1760:{	//spawn a "dead" saber entity here so it looks like the saber fell out of the air.
+line 1766
+;1761:	//This entity will remove itself after a very short time period.
+;1762:	vec3_t startorg;
+;1763:	vec3_t startang;
+;1764:	gentity_t *saberent;
+;1765:	
+;1766:	if (g_gametype.integer == GT_JEDIMASTER)
 ADDRGP4 g_gametype+12
 INDIRI4
 CNSTI4 2
 NEI4 $783
-line 1765
-;1765:	{ //never spawn a dead saber in JM, because the only saber on the level is really a world object
-line 1766
-;1766:		G_Sound(ent, CHAN_AUTO, saberOffSound);
+line 1767
+;1767:	{ //never spawn a dead saber in JM, because the only saber on the level is really a world object
+line 1768
+;1768:		G_Sound(ent, CHAN_AUTO, saberOffSound);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -10780,15 +10800,15 @@ ARGI4
 ADDRGP4 G_Sound
 CALLV
 pop
-line 1767
-;1767:		return;
+line 1769
+;1769:		return;
 ADDRGP4 $782
 JUMPV
 LABELV $783
-line 1770
-;1768:	}
-;1769:
-;1770:	saberent = G_Spawn();
+line 1772
+;1770:	}
+;1771:
+;1772:	saberent = G_Spawn();
 ADDRLP4 28
 ADDRGP4 G_Spawn
 CALLP4
@@ -10797,9 +10817,9 @@ ADDRLP4 0
 ADDRLP4 28
 INDIRP4
 ASGNP4
-line 1772
-;1771:
-;1772:	VectorCopy(ent->r.currentOrigin, startorg);
+line 1774
+;1773:
+;1774:	VectorCopy(ent->r.currentOrigin, startorg);
 ADDRLP4 4
 ADDRFP4 0
 INDIRP4
@@ -10807,8 +10827,8 @@ CNSTI4 368
 ADDP4
 INDIRB
 ASGNB 12
-line 1773
-;1773:	VectorCopy(ent->r.currentAngles, startang);
+line 1775
+;1775:	VectorCopy(ent->r.currentAngles, startang);
 ADDRLP4 16
 ADDRFP4 0
 INDIRP4
@@ -10816,26 +10836,26 @@ CNSTI4 380
 ADDP4
 INDIRB
 ASGNB 12
-line 1775
-;1774:
-;1775:	saberent->classname = "deadsaber";
+line 1777
+;1776:
+;1777:	saberent->classname = "deadsaber";
 ADDRLP4 0
 INDIRP4
 CNSTI4 416
 ADDP4
 ADDRGP4 $786
 ASGNP4
-line 1777
-;1776:			
-;1777:	saberent->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+line 1779
+;1778:			
+;1779:	saberent->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 ADDRLP4 0
 INDIRP4
 CNSTI4 304
 ADDP4
 CNSTI4 128
 ASGNI4
-line 1778
-;1778:	saberent->r.ownerNum = ent->s.number;
+line 1780
+;1780:	saberent->r.ownerNum = ent->s.number;
 ADDRLP4 0
 INDIRP4
 CNSTI4 396
@@ -10844,26 +10864,26 @@ ADDRFP4 0
 INDIRP4
 INDIRI4
 ASGNI4
-line 1780
-;1779:
-;1780:	saberent->clipmask = MASK_PLAYERSOLID;
+line 1782
+;1781:
+;1782:	saberent->clipmask = MASK_PLAYERSOLID;
 ADDRLP4 0
 INDIRP4
 CNSTI4 508
 ADDP4
 CNSTI4 273
 ASGNI4
-line 1781
-;1781:	saberent->r.contents = CONTENTS_TRIGGER;//0;
+line 1783
+;1783:	saberent->r.contents = CONTENTS_TRIGGER;//0;
 ADDRLP4 0
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 1024
 ASGNI4
-line 1783
-;1782:
-;1783:	VectorSet( saberent->r.mins, -3.0f, -3.0f, -3.0f );
+line 1785
+;1784:
+;1785:	VectorSet( saberent->r.mins, -3.0f, -3.0f, -3.0f );
 ADDRLP4 0
 INDIRP4
 CNSTI4 316
@@ -10882,8 +10902,8 @@ CNSTI4 324
 ADDP4
 CNSTF4 3225419776
 ASGNF4
-line 1784
-;1784:	VectorSet( saberent->r.maxs, 3.0f, 3.0f, 3.0f );
+line 1786
+;1786:	VectorSet( saberent->r.maxs, 3.0f, 3.0f, 3.0f );
 ADDRLP4 0
 INDIRP4
 CNSTI4 328
@@ -10902,28 +10922,28 @@ CNSTI4 336
 ADDP4
 CNSTF4 1077936128
 ASGNF4
-line 1788
-;1785:
-;1786:	//saberent->mass = 10;
+line 1790
 ;1787:
-;1788:	saberent->touch = SaberBounceSound;
+;1788:	//saberent->mass = 10;
+;1789:
+;1790:	saberent->touch = SaberBounceSound;
 ADDRLP4 0
 INDIRP4
 CNSTI4 648
 ADDP4
 ADDRGP4 SaberBounceSound
 ASGNP4
-line 1790
-;1789:
-;1790:	saberent->think = DeadSaberThink;
+line 1792
+;1791:
+;1792:	saberent->think = DeadSaberThink;
 ADDRLP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 DeadSaberThink
 ASGNP4
-line 1791
-;1791:	saberent->nextthink = level.time;
+line 1793
+;1793:	saberent->nextthink = level.time;
 ADDRLP4 0
 INDIRP4
 CNSTI4 632
@@ -10931,9 +10951,9 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1793
-;1792:
-;1793:	VectorCopy(startorg, saberent->s.pos.trBase);
+line 1795
+;1794:
+;1795:	VectorCopy(startorg, saberent->s.pos.trBase);
 ADDRLP4 0
 INDIRP4
 CNSTI4 24
@@ -10941,8 +10961,8 @@ ADDP4
 ADDRLP4 4
 INDIRB
 ASGNB 12
-line 1794
-;1794:	VectorCopy(startang, saberent->s.apos.trBase);
+line 1796
+;1796:	VectorCopy(startang, saberent->s.apos.trBase);
 ADDRLP4 0
 INDIRP4
 CNSTI4 60
@@ -10950,9 +10970,9 @@ ADDP4
 ADDRLP4 16
 INDIRB
 ASGNB 12
-line 1796
-;1795:
-;1796:	VectorCopy(startorg, saberent->s.origin);
+line 1798
+;1797:
+;1798:	VectorCopy(startorg, saberent->s.origin);
 ADDRLP4 0
 INDIRP4
 CNSTI4 92
@@ -10960,8 +10980,8 @@ ADDP4
 ADDRLP4 4
 INDIRB
 ASGNB 12
-line 1797
-;1797:	VectorCopy(startang, saberent->s.angles);
+line 1799
+;1799:	VectorCopy(startang, saberent->s.angles);
 ADDRLP4 0
 INDIRP4
 CNSTI4 116
@@ -10969,9 +10989,9 @@ ADDP4
 ADDRLP4 16
 INDIRB
 ASGNB 12
-line 1799
-;1798:
-;1799:	VectorCopy(startorg, saberent->r.currentOrigin);
+line 1801
+;1800:
+;1801:	VectorCopy(startorg, saberent->r.currentOrigin);
 ADDRLP4 0
 INDIRP4
 CNSTI4 368
@@ -10979,8 +10999,8 @@ ADDP4
 ADDRLP4 4
 INDIRB
 ASGNB 12
-line 1800
-;1800:	VectorCopy(startang, saberent->r.currentAngles);
+line 1802
+;1802:	VectorCopy(startang, saberent->r.currentAngles);
 ADDRLP4 0
 INDIRP4
 CNSTI4 380
@@ -10988,17 +11008,17 @@ ADDP4
 ADDRLP4 16
 INDIRB
 ASGNB 12
-line 1802
-;1801:
-;1802:	saberent->s.apos.trType = TR_GRAVITY;
+line 1804
+;1803:
+;1804:	saberent->s.apos.trType = TR_GRAVITY;
 ADDRLP4 0
 INDIRP4
 CNSTI4 48
 ADDP4
 CNSTI4 5
 ASGNI4
-line 1803
-;1803:	saberent->s.apos.trDelta[0] = Q_irand(200, 800);
+line 1805
+;1805:	saberent->s.apos.trDelta[0] = Q_irand(200, 800);
 CNSTI4 200
 ARGI4
 CNSTI4 800
@@ -11015,8 +11035,8 @@ ADDRLP4 32
 INDIRI4
 CVIF4 4
 ASGNF4
-line 1804
-;1804:	saberent->s.apos.trDelta[1] = Q_irand(200, 800);
+line 1806
+;1806:	saberent->s.apos.trDelta[1] = Q_irand(200, 800);
 CNSTI4 200
 ARGI4
 CNSTI4 800
@@ -11033,8 +11053,8 @@ ADDRLP4 36
 INDIRI4
 CVIF4 4
 ASGNF4
-line 1805
-;1805:	saberent->s.apos.trDelta[2] = Q_irand(200, 800);
+line 1807
+;1807:	saberent->s.apos.trDelta[2] = Q_irand(200, 800);
 CNSTI4 200
 ARGI4
 CNSTI4 800
@@ -11051,8 +11071,8 @@ ADDRLP4 40
 INDIRI4
 CVIF4 4
 ASGNF4
-line 1806
-;1806:	saberent->s.apos.trTime = level.time-50;
+line 1808
+;1808:	saberent->s.apos.trTime = level.time-50;
 ADDRLP4 0
 INDIRP4
 CNSTI4 52
@@ -11062,17 +11082,17 @@ INDIRI4
 CNSTI4 50
 SUBI4
 ASGNI4
-line 1808
-;1807:
-;1808:	saberent->s.pos.trType = TR_GRAVITY;
+line 1810
+;1809:
+;1810:	saberent->s.pos.trType = TR_GRAVITY;
 ADDRLP4 0
 INDIRP4
 CNSTI4 12
 ADDP4
 CNSTI4 5
 ASGNI4
-line 1809
-;1809:	saberent->s.pos.trTime = level.time-50;
+line 1811
+;1811:	saberent->s.pos.trTime = level.time-50;
 ADDRLP4 0
 INDIRP4
 CNSTI4 16
@@ -11082,16 +11102,16 @@ INDIRI4
 CNSTI4 50
 SUBI4
 ASGNI4
-line 1810
-;1810:	saberent->s.eFlags = EF_BOUNCE_HALF;
+line 1812
+;1812:	saberent->s.eFlags = EF_BOUNCE_HALF;
 ADDRLP4 0
 INDIRP4
 CNSTI4 8
 ADDP4
 CNSTI4 32
 ASGNI4
-line 1811
-;1811:	saberent->s.modelindex = G_ModelIndex("models/weapons2/saber/saber_w.glm");
+line 1813
+;1813:	saberent->s.modelindex = G_ModelIndex("models/weapons2/saber/saber_w.glm");
 ADDRGP4 $790
 ARGP4
 ADDRLP4 44
@@ -11105,42 +11125,42 @@ ADDP4
 ADDRLP4 44
 INDIRI4
 ASGNI4
-line 1812
-;1812:	saberent->s.modelGhoul2 = 1;
+line 1814
+;1814:	saberent->s.modelGhoul2 = 1;
 ADDRLP4 0
 INDIRP4
 CNSTI4 204
 ADDP4
 CNSTI4 1
 ASGNI4
-line 1813
-;1813:	saberent->s.g2radius = 20;
+line 1815
+;1815:	saberent->s.g2radius = 20;
 ADDRLP4 0
 INDIRP4
 CNSTI4 208
 ADDP4
 CNSTI4 20
 ASGNI4
-line 1815
-;1814:
-;1815:	saberent->s.eType = ET_MISSILE;
+line 1817
+;1816:
+;1817:	saberent->s.eType = ET_MISSILE;
 ADDRLP4 0
 INDIRP4
 CNSTI4 4
 ADDP4
 CNSTI4 3
 ASGNI4
-line 1816
-;1816:	saberent->s.weapon = WP_SABER;
+line 1818
+;1818:	saberent->s.weapon = WP_SABER;
 ADDRLP4 0
 INDIRP4
 CNSTI4 276
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1818
-;1817:
-;1818:	saberent->speed = level.time + 4000;
+line 1820
+;1819:
+;1820:	saberent->speed = level.time + 4000;
 ADDRLP4 0
 INDIRP4
 CNSTI4 608
@@ -11151,19 +11171,19 @@ CNSTI4 4000
 ADDI4
 CVIF4 4
 ASGNF4
-line 1820
-;1819:
-;1820:	saberent->bounceCount = 12;
+line 1822
+;1821:
+;1822:	saberent->bounceCount = 12;
 ADDRLP4 0
 INDIRP4
 CNSTI4 716
 ADDP4
 CNSTI4 12
 ASGNI4
-line 1823
-;1821:
-;1822:	//fall off in the direction the real saber was headed
-;1823:	VectorCopy(ent->s.pos.trDelta, saberent->s.pos.trDelta);
+line 1825
+;1823:
+;1824:	//fall off in the direction the real saber was headed
+;1825:	VectorCopy(ent->s.pos.trDelta, saberent->s.pos.trDelta);
 ADDRLP4 48
 CNSTI4 36
 ASGNI4
@@ -11179,9 +11199,9 @@ INDIRI4
 ADDP4
 INDIRB
 ASGNB 12
-line 1825
-;1824:
-;1825:	saberMoveBack(saberent, qtrue);
+line 1827
+;1826:
+;1827:	saberMoveBack(saberent, qtrue);
 ADDRLP4 0
 INDIRP4
 ARGP4
@@ -11190,35 +11210,35 @@ ARGI4
 ADDRGP4 saberMoveBack
 CALLV
 pop
-line 1826
-;1826:	saberent->s.pos.trType = TR_GRAVITY;
+line 1828
+;1828:	saberent->s.pos.trType = TR_GRAVITY;
 ADDRLP4 0
 INDIRP4
 CNSTI4 12
 ADDP4
 CNSTI4 5
 ASGNI4
-line 1828
-;1827:
-;1828:	trap_LinkEntity(saberent);	
+line 1830
+;1829:
+;1830:	trap_LinkEntity(saberent);	
 ADDRLP4 0
 INDIRP4
 ARGP4
 ADDRGP4 trap_LinkEntity
 CALLV
 pop
-line 1829
-;1829:}
+line 1831
+;1831:}
 LABELV $782
 endproc MakeDeadSaber 52 12
 export saberBackToOwner
 proc saberBackToOwner 48 8
-line 1832
-;1830:
-;1831:void saberBackToOwner(gentity_t *saberent)
-;1832:{
-line 1833
-;1833:	gentity_t *saberOwner = &g_entities[saberent->r.ownerNum];
+line 1834
+;1832:
+;1833:void saberBackToOwner(gentity_t *saberent)
+;1834:{
+line 1835
+;1835:	gentity_t *saberOwner = &g_entities[saberent->r.ownerNum];
 ADDRLP4 16
 CNSTI4 828
 ADDRFP4 0
@@ -11230,11 +11250,11 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1837
-;1834:	vec3_t dir;
-;1835:	float ownerLen;
-;1836:
-;1837:	if (saberent->r.ownerNum == ENTITYNUM_NONE)
+line 1839
+;1836:	vec3_t dir;
+;1837:	float ownerLen;
+;1838:
+;1839:	if (saberent->r.ownerNum == ENTITYNUM_NONE)
 ADDRFP4 0
 INDIRP4
 CNSTI4 396
@@ -11242,27 +11262,27 @@ ADDP4
 INDIRI4
 CNSTI4 1023
 NEI4 $793
-line 1838
-;1838:	{
-line 1839
-;1839:		MakeDeadSaber(saberent);
+line 1840
+;1840:	{
+line 1841
+;1841:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 1841
-;1840:
-;1841:		saberent->think = G_FreeEntity;
+line 1843
+;1842:
+;1843:		saberent->think = G_FreeEntity;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 G_FreeEntity
 ASGNP4
-line 1842
-;1842:		saberent->nextthink = level.time;
+line 1844
+;1844:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -11270,15 +11290,15 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1843
-;1843:		return;
+line 1845
+;1845:		return;
 ADDRGP4 $792
 JUMPV
 LABELV $793
-line 1846
-;1844:	}
-;1845:
-;1846:	if (!g_entities[saberent->r.ownerNum].inuse ||
+line 1848
+;1846:	}
+;1847:
+;1848:	if (!g_entities[saberent->r.ownerNum].inuse ||
 ADDRLP4 20
 CNSTI4 828
 ADDRFP4 0
@@ -11314,29 +11334,29 @@ INDIRI4
 CNSTI4 3
 NEI4 $796
 LABELV $802
-line 1849
-;1847:		!g_entities[saberent->r.ownerNum].client ||
-;1848:		g_entities[saberent->r.ownerNum].client->sess.sessionTeam == TEAM_SPECTATOR)
-;1849:	{
-line 1850
-;1850:		MakeDeadSaber(saberent);
+line 1851
+;1849:		!g_entities[saberent->r.ownerNum].client ||
+;1850:		g_entities[saberent->r.ownerNum].client->sess.sessionTeam == TEAM_SPECTATOR)
+;1851:	{
+line 1852
+;1852:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 1852
-;1851:
-;1852:		saberent->think = G_FreeEntity;
+line 1854
+;1853:
+;1854:		saberent->think = G_FreeEntity;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 G_FreeEntity
 ASGNP4
-line 1853
-;1853:		saberent->nextthink = level.time;
+line 1855
+;1855:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -11344,15 +11364,15 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1854
-;1854:		return;
+line 1856
+;1856:		return;
 ADDRGP4 $792
 JUMPV
 LABELV $796
-line 1857
-;1855:	}
-;1856:
-;1857:	if (g_entities[saberent->r.ownerNum].health < 1 || !g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERATTACK] || !g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERTHROW])
+line 1859
+;1857:	}
+;1858:
+;1859:	if (g_entities[saberent->r.ownerNum].health < 1 || !g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERATTACK] || !g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERTHROW])
 ADDRLP4 24
 CNSTI4 828
 ADDRFP4 0
@@ -11395,26 +11415,26 @@ ADDRLP4 28
 INDIRI4
 NEI4 $804
 LABELV $810
-line 1858
-;1858:	{ //He's dead, just go back to our normal saber status
-line 1859
-;1859:		saberent->touch = SaberGotHit;
+line 1860
+;1860:	{ //He's dead, just go back to our normal saber status
+line 1861
+;1861:		saberent->touch = SaberGotHit;
 ADDRFP4 0
 INDIRP4
 CNSTI4 648
 ADDP4
 ADDRGP4 SaberGotHit
 ASGNP4
-line 1860
-;1860:		saberent->think = SaberUpdateSelf;
+line 1862
+;1862:		saberent->think = SaberUpdateSelf;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 SaberUpdateSelf
 ASGNP4
-line 1861
-;1861:		saberent->nextthink = level.time;
+line 1863
+;1863:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -11422,18 +11442,18 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1863
-;1862:
-;1863:		MakeDeadSaber(saberent);
+line 1865
+;1864:
+;1865:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 1865
-;1864:
-;1865:		saberent->r.svFlags |= (SVF_NOCLIENT);
+line 1867
+;1866:
+;1867:		saberent->r.svFlags |= (SVF_NOCLIENT);
 ADDRLP4 32
 ADDRFP4 0
 INDIRP4
@@ -11448,16 +11468,16 @@ INDIRI4
 CNSTI4 1
 BORI4
 ASGNI4
-line 1866
-;1866:		saberent->r.contents = CONTENTS_LIGHTSABER;
+line 1868
+;1868:		saberent->r.contents = CONTENTS_LIGHTSABER;
 ADDRFP4 0
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 262144
 ASGNI4
-line 1867
-;1867:		VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
+line 1869
+;1869:		VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
 ADDRFP4 0
 INDIRP4
 CNSTI4 316
@@ -11476,8 +11496,8 @@ CNSTI4 324
 ADDP4
 CNSTF4 3238002688
 ASGNF4
-line 1868
-;1868:		VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
+line 1870
+;1870:		VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
 ADDRFP4 0
 INDIRP4
 CNSTI4 328
@@ -11496,17 +11516,17 @@ CNSTI4 336
 ADDP4
 CNSTF4 1090519040
 ASGNF4
-line 1869
-;1869:		saberent->s.loopSound = 0;
+line 1871
+;1871:		saberent->s.loopSound = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 200
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1871
-;1870:
-;1871:		g_entities[saberent->r.ownerNum].client->ps.saberInFlight = qfalse;
+line 1873
+;1872:
+;1873:		g_entities[saberent->r.ownerNum].client->ps.saberInFlight = qfalse;
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -11521,8 +11541,8 @@ CNSTI4 504
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1872
-;1872:		g_entities[saberent->r.ownerNum].client->ps.saberThrowDelay = level.time + 500;
+line 1874
+;1874:		g_entities[saberent->r.ownerNum].client->ps.saberThrowDelay = level.time + 500;
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -11540,8 +11560,8 @@ INDIRI4
 CNSTI4 500
 ADDI4
 ASGNI4
-line 1873
-;1873:		g_entities[saberent->r.ownerNum].client->ps.saberCanThrow = qfalse;
+line 1875
+;1875:		g_entities[saberent->r.ownerNum].client->ps.saberCanThrow = qfalse;
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -11556,27 +11576,27 @@ CNSTI4 560
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1875
-;1874:
-;1875:		return;
+line 1877
+;1876:
+;1877:		return;
 ADDRGP4 $792
 JUMPV
 LABELV $804
-line 1878
-;1876:	}
-;1877:
-;1878:	saberent->r.contents = CONTENTS_LIGHTSABER;
+line 1880
+;1878:	}
+;1879:
+;1880:	saberent->r.contents = CONTENTS_LIGHTSABER;
 ADDRFP4 0
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 262144
 ASGNI4
-line 1882
-;1879:
-;1880:	//saberent->s.apos.trDelta[1] = 0;
+line 1884
 ;1881:
-;1882:	VectorSubtract(saberent->pos1, saberent->r.currentOrigin, dir);
+;1882:	//saberent->s.apos.trDelta[1] = 0;
+;1883:
+;1884:	VectorSubtract(saberent->pos1, saberent->r.currentOrigin, dir);
 ADDRLP4 32
 ADDRFP4 0
 INDIRP4
@@ -11624,9 +11644,9 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 1884
-;1883:
-;1884:	ownerLen = VectorLength(dir);
+line 1886
+;1885:
+;1886:	ownerLen = VectorLength(dir);
 ADDRLP4 0
 ARGP4
 ADDRLP4 40
@@ -11637,9 +11657,9 @@ ADDRLP4 12
 ADDRLP4 40
 INDIRF4
 ASGNF4
-line 1886
-;1885:
-;1886:	if (saberent->speed < level.time)
+line 1888
+;1887:
+;1888:	if (saberent->speed < level.time)
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -11649,18 +11669,18 @@ ADDRGP4 level+32
 INDIRI4
 CVIF4 4
 GEF4 $818
-line 1887
-;1887:	{
-line 1888
-;1888:		VectorNormalize(dir);
+line 1889
+;1889:	{
+line 1890
+;1890:		VectorNormalize(dir);
 ADDRLP4 0
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 1890
-;1889:
-;1890:		saberMoveBack(saberent, qtrue);
+line 1892
+;1891:
+;1892:		saberMoveBack(saberent, qtrue);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -11669,8 +11689,8 @@ ARGI4
 ADDRGP4 saberMoveBack
 CALLV
 pop
-line 1891
-;1891:		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
+line 1893
+;1893:		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
 ADDRLP4 44
 ADDRFP4 0
 INDIRP4
@@ -11685,9 +11705,9 @@ CNSTI4 368
 ADDP4
 INDIRB
 ASGNB 12
-line 1893
-;1892:
-;1893:		if (g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
+line 1895
+;1894:
+;1895:		if (g_entities[saberent->r.ownerNum].client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -11703,10 +11723,10 @@ ADDP4
 INDIRI4
 CNSTI4 3
 LTI4 $821
-line 1894
-;1894:		{ //allow players with high saber throw rank to control the return speed of the saber
-line 1895
-;1895:			if (g_entities[saberent->r.ownerNum].client->buttons & BUTTON_ATTACK)
+line 1896
+;1896:		{ //allow players with high saber throw rank to control the return speed of the saber
+line 1897
+;1897:			if (g_entities[saberent->r.ownerNum].client->buttons & BUTTON_ATTACK)
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -11724,10 +11744,10 @@ CNSTI4 1
 BANDI4
 CNSTI4 0
 EQI4 $824
-line 1896
-;1896:			{
-line 1897
-;1897:				VectorScale(dir, 1200, saberent->s.pos.trDelta );
+line 1898
+;1898:			{
+line 1899
+;1899:				VectorScale(dir, 1200, saberent->s.pos.trDelta );
 ADDRFP4 0
 INDIRP4
 CNSTI4 36
@@ -11755,8 +11775,8 @@ ADDRLP4 0+8
 INDIRF4
 MULF4
 ASGNF4
-line 1898
-;1898:				saberent->speed = level.time + 50;
+line 1900
+;1900:				saberent->speed = level.time + 50;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -11767,16 +11787,16 @@ CNSTI4 50
 ADDI4
 CVIF4 4
 ASGNF4
-line 1899
-;1899:			}
+line 1901
+;1901:			}
 ADDRGP4 $822
 JUMPV
 LABELV $824
-line 1901
-;1900:			else
-;1901:			{
-line 1902
-;1902:				VectorScale(dir, 700, saberent->s.pos.trDelta );
+line 1903
+;1902:			else
+;1903:			{
+line 1904
+;1904:				VectorScale(dir, 700, saberent->s.pos.trDelta );
 ADDRFP4 0
 INDIRP4
 CNSTI4 36
@@ -11804,8 +11824,8 @@ ADDRLP4 0+8
 INDIRF4
 MULF4
 ASGNF4
-line 1903
-;1903:				saberent->speed = level.time + 200;
+line 1905
+;1905:				saberent->speed = level.time + 200;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -11816,18 +11836,18 @@ CNSTI4 200
 ADDI4
 CVIF4 4
 ASGNF4
-line 1904
-;1904:			}
-line 1905
-;1905:		}
+line 1906
+;1906:			}
+line 1907
+;1907:		}
 ADDRGP4 $822
 JUMPV
 LABELV $821
-line 1907
-;1906:		else
-;1907:		{
-line 1908
-;1908:			VectorScale(dir, 700, saberent->s.pos.trDelta );
+line 1909
+;1908:		else
+;1909:		{
+line 1910
+;1910:			VectorScale(dir, 700, saberent->s.pos.trDelta );
 ADDRFP4 0
 INDIRP4
 CNSTI4 36
@@ -11855,8 +11875,8 @@ ADDRLP4 0+8
 INDIRF4
 MULF4
 ASGNF4
-line 1909
-;1909:			saberent->speed = level.time + 200;
+line 1911
+;1911:			saberent->speed = level.time + 200;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -11867,11 +11887,11 @@ CNSTI4 200
 ADDI4
 CVIF4 4
 ASGNF4
-line 1910
-;1910:		}
+line 1912
+;1912:		}
 LABELV $822
-line 1911
-;1911:		saberent->s.pos.trTime = level.time;
+line 1913
+;1913:		saberent->s.pos.trTime = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 16
@@ -11879,28 +11899,28 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1912
-;1912:	}
-LABELV $818
 line 1914
-;1913:
-;1914:	if (ownerLen <= 512)
+;1914:	}
+LABELV $818
+line 1916
+;1915:
+;1916:	if (ownerLen <= 512)
 ADDRLP4 12
 INDIRF4
 CNSTF4 1140850688
 GTF4 $837
-line 1915
-;1915:	{
-line 1916
-;1916:		saberent->s.saberInFlight = qfalse;
+line 1917
+;1917:	{
+line 1918
+;1918:		saberent->s.saberInFlight = qfalse;
 ADDRFP4 0
 INDIRP4
 CNSTI4 228
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1917
-;1917:		saberent->s.loopSound = saberHumSound;
+line 1919
+;1919:		saberent->s.loopSound = saberHumSound;
 ADDRFP4 0
 INDIRP4
 CNSTI4 200
@@ -11908,20 +11928,20 @@ ADDP4
 ADDRGP4 saberHumSound
 INDIRI4
 ASGNI4
-line 1918
-;1918:	}
-LABELV $837
 line 1920
-;1919:
-;1920:	if (ownerLen <= 32)
+;1920:	}
+LABELV $837
+line 1922
+;1921:
+;1922:	if (ownerLen <= 32)
 ADDRLP4 12
 INDIRF4
 CNSTF4 1107296256
 GTF4 $839
-line 1921
-;1921:	{
-line 1922
-;1922:		saberOwner->client->ps.saberInFlight = qfalse;
+line 1923
+;1923:	{
+line 1924
+;1924:		saberOwner->client->ps.saberInFlight = qfalse;
 ADDRLP4 16
 INDIRP4
 CNSTI4 408
@@ -11931,8 +11951,8 @@ CNSTI4 504
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1923
-;1923:		saberOwner->client->ps.saberCanThrow = qfalse;
+line 1925
+;1925:		saberOwner->client->ps.saberCanThrow = qfalse;
 ADDRLP4 16
 INDIRP4
 CNSTI4 408
@@ -11942,8 +11962,8 @@ CNSTI4 560
 ADDP4
 CNSTI4 0
 ASGNI4
-line 1924
-;1924:		saberOwner->client->ps.saberThrowDelay = level.time + 300;
+line 1926
+;1926:		saberOwner->client->ps.saberThrowDelay = level.time + 300;
 ADDRLP4 16
 INDIRP4
 CNSTI4 408
@@ -11956,26 +11976,26 @@ INDIRI4
 CNSTI4 300
 ADDI4
 ASGNI4
-line 1926
-;1925:
-;1926:		saberent->touch = SaberGotHit;
+line 1928
+;1927:
+;1928:		saberent->touch = SaberGotHit;
 ADDRFP4 0
 INDIRP4
 CNSTI4 648
 ADDP4
 ADDRGP4 SaberGotHit
 ASGNP4
-line 1928
-;1927:
-;1928:		saberent->think = SaberUpdateSelf;
+line 1930
+;1929:
+;1930:		saberent->think = SaberUpdateSelf;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 SaberUpdateSelf
 ASGNP4
-line 1929
-;1929:		saberent->nextthink = level.time + 50;
+line 1931
+;1931:		saberent->nextthink = level.time + 50;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -11985,16 +12005,16 @@ INDIRI4
 CNSTI4 50
 ADDI4
 ASGNI4
-line 1931
-;1930:
-;1931:		return;
+line 1933
+;1932:
+;1933:		return;
 ADDRGP4 $792
 JUMPV
 LABELV $839
-line 1934
-;1932:	}
-;1933:
-;1934:	if (!saberent->s.saberInFlight)
+line 1936
+;1934:	}
+;1935:
+;1936:	if (!saberent->s.saberInFlight)
 ADDRFP4 0
 INDIRP4
 CNSTI4 228
@@ -12002,10 +12022,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 NEI4 $843
-line 1935
-;1935:	{
-line 1936
-;1936:		saberCheckRadiusDamage(saberent, 1);
+line 1937
+;1937:	{
+line 1938
+;1938:		saberCheckRadiusDamage(saberent, 1);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -12014,16 +12034,16 @@ ARGI4
 ADDRGP4 saberCheckRadiusDamage
 CALLV
 pop
-line 1937
-;1937:	}
+line 1939
+;1939:	}
 ADDRGP4 $844
 JUMPV
 LABELV $843
-line 1939
-;1938:	else
-;1939:	{
-line 1940
-;1940:		saberCheckRadiusDamage(saberent, 2);
+line 1941
+;1940:	else
+;1941:	{
+line 1942
+;1942:		saberCheckRadiusDamage(saberent, 2);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -12032,12 +12052,12 @@ ARGI4
 ADDRGP4 saberCheckRadiusDamage
 CALLV
 pop
-line 1941
-;1941:	}
-LABELV $844
 line 1943
-;1942:
-;1943:	saberMoveBack(saberent, qtrue);
+;1943:	}
+LABELV $844
+line 1945
+;1944:
+;1945:	saberMoveBack(saberent, qtrue);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -12046,10 +12066,10 @@ ARGI4
 ADDRGP4 saberMoveBack
 CALLV
 pop
-line 1946
-;1944:	//G_RunObject(saberent);
-;1945:
-;1946:	saberent->nextthink = level.time;
+line 1948
+;1946:	//G_RunObject(saberent);
+;1947:
+;1948:	saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -12057,27 +12077,27 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1947
-;1947:}
+line 1949
+;1949:}
 LABELV $792
 endproc saberBackToOwner 48 8
 export thrownSaberTouch
 proc thrownSaberTouch 44 20
-line 1952
-;1948:
-;1949:void saberFirstThrown(gentity_t *saberent);
+line 1954
 ;1950:
-;1951:void thrownSaberTouch (gentity_t *saberent, gentity_t *other, trace_t *trace)
-;1952:{
-line 1953
-;1953:	gentity_t *hitEnt = other;
+;1951:void saberFirstThrown(gentity_t *saberent);
+;1952:
+;1953:void thrownSaberTouch (gentity_t *saberent, gentity_t *other, trace_t *trace)
+;1954:{
+line 1955
+;1955:	gentity_t *hitEnt = other;
 ADDRLP4 0
 ADDRFP4 4
 INDIRP4
 ASGNP4
-line 1955
-;1954:
-;1955:	if (other && other->s.number == saberent->r.ownerNum)
+line 1957
+;1956:
+;1957:	if (other && other->s.number == saberent->r.ownerNum)
 ADDRLP4 4
 ADDRFP4 4
 INDIRP4
@@ -12096,16 +12116,16 @@ CNSTI4 396
 ADDP4
 INDIRI4
 NEI4 $847
-line 1956
-;1956:	{
-line 1957
-;1957:		return;
+line 1958
+;1958:	{
+line 1959
+;1959:		return;
 ADDRGP4 $846
 JUMPV
 LABELV $847
-line 1959
-;1958:	}
-;1959:	VectorClear(saberent->s.pos.trDelta);
+line 1961
+;1960:	}
+;1961:	VectorClear(saberent->s.pos.trDelta);
 ADDRLP4 8
 ADDRFP4 0
 INDIRP4
@@ -12134,8 +12154,8 @@ ADDP4
 ADDRLP4 12
 INDIRF4
 ASGNF4
-line 1960
-;1960:	saberent->s.pos.trTime = level.time;
+line 1962
+;1962:	saberent->s.pos.trTime = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 16
@@ -12143,42 +12163,42 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1962
-;1961:
-;1962:	saberent->s.apos.trType = TR_LINEAR;
+line 1964
+;1963:
+;1964:	saberent->s.apos.trType = TR_LINEAR;
 ADDRFP4 0
 INDIRP4
 CNSTI4 48
 ADDP4
 CNSTI4 2
 ASGNI4
-line 1963
-;1963:	saberent->s.apos.trDelta[0] = 0;
+line 1965
+;1965:	saberent->s.apos.trDelta[0] = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 72
 ADDP4
 CNSTF4 0
 ASGNF4
-line 1964
-;1964:	saberent->s.apos.trDelta[1] = 800;
+line 1966
+;1966:	saberent->s.apos.trDelta[1] = 800;
 ADDRFP4 0
 INDIRP4
 CNSTI4 76
 ADDP4
 CNSTF4 1145569280
 ASGNF4
-line 1965
-;1965:	saberent->s.apos.trDelta[2] = 0;
+line 1967
+;1967:	saberent->s.apos.trDelta[2] = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 80
 ADDP4
 CNSTF4 0
 ASGNF4
-line 1967
-;1966:
-;1967:	VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
+line 1969
+;1968:
+;1969:	VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
 ADDRLP4 16
 ADDRFP4 0
 INDIRP4
@@ -12193,19 +12213,19 @@ CNSTI4 368
 ADDP4
 INDIRB
 ASGNB 12
-line 1971
-;1968:
-;1969:	//saberent->damage = SABER_THROWN_RETURN_HIT_DAMAGE;
+line 1973
 ;1970:
-;1971:	saberent->think = saberBackToOwner;
+;1971:	//saberent->damage = SABER_THROWN_RETURN_HIT_DAMAGE;
+;1972:
+;1973:	saberent->think = saberBackToOwner;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 saberBackToOwner
 ASGNP4
-line 1972
-;1972:	saberent->nextthink = level.time;
+line 1974
+;1974:	saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -12213,10 +12233,10 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 1975
-;1973:
-;1974:	//saberCheckRadiusDamage(saberent, 2);
-;1975:	if (other && other->r.ownerNum < MAX_CLIENTS &&
+line 1977
+;1975:
+;1976:	//saberCheckRadiusDamage(saberent, 2);
+;1977:	if (other && other->r.ownerNum < MAX_CLIENTS &&
 ADDRLP4 20
 ADDRFP4 4
 INDIRP4
@@ -12277,13 +12297,13 @@ INDIRI4
 ADDRLP4 32
 INDIRI4
 EQI4 $851
-line 1979
-;1976:		(other->r.contents & CONTENTS_LIGHTSABER) &&
-;1977:		g_entities[other->r.ownerNum].client &&
-;1978:		g_entities[other->r.ownerNum].inuse)
-;1979:	{
-line 1980
-;1980:		hitEnt = &g_entities[other->r.ownerNum];
+line 1981
+;1978:		(other->r.contents & CONTENTS_LIGHTSABER) &&
+;1979:		g_entities[other->r.ownerNum].client &&
+;1980:		g_entities[other->r.ownerNum].inuse)
+;1981:	{
+line 1982
+;1982:		hitEnt = &g_entities[other->r.ownerNum];
 ADDRLP4 0
 CNSTI4 828
 ADDRFP4 4
@@ -12295,12 +12315,12 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1981
-;1981:	}
-LABELV $851
 line 1983
-;1982:
-;1983:	CheckThrownSaberDamaged(saberent, &g_entities[saberent->r.ownerNum], hitEnt, 256, 0);
+;1983:	}
+LABELV $851
+line 1985
+;1984:
+;1985:	CheckThrownSaberDamaged(saberent, &g_entities[saberent->r.ownerNum], hitEnt, 256, 0);
 ADDRLP4 40
 ADDRFP4 0
 INDIRP4
@@ -12328,31 +12348,31 @@ ARGI4
 ADDRGP4 CheckThrownSaberDamaged
 CALLI4
 pop
-line 1985
-;1984:
-;1985:	saberent->speed = 0;
+line 1987
+;1986:
+;1987:	saberent->speed = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
 ADDP4
 CNSTF4 0
 ASGNF4
-line 1986
-;1986:}
+line 1988
+;1988:}
 LABELV $846
 endproc thrownSaberTouch 44 20
 export saberFirstThrown
 proc saberFirstThrown 1204 28
-line 1991
-;1987:
-;1988:#define SABER_MAX_THROW_DISTANCE 700
+line 1993
 ;1989:
-;1990:void saberFirstThrown(gentity_t *saberent)
-;1991:{
-line 1994
-;1992:	vec3_t		vSub;
-;1993:	float		vLen;
-;1994:	gentity_t	*saberOwn = &g_entities[saberent->r.ownerNum];
+;1990:#define SABER_MAX_THROW_DISTANCE 700
+;1991:
+;1992:void saberFirstThrown(gentity_t *saberent)
+;1993:{
+line 1996
+;1994:	vec3_t		vSub;
+;1995:	float		vLen;
+;1996:	gentity_t	*saberOwn = &g_entities[saberent->r.ownerNum];
 ADDRLP4 0
 CNSTI4 828
 ADDRFP4 0
@@ -12364,9 +12384,9 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 1996
-;1995:
-;1996:	if (saberent->r.ownerNum == ENTITYNUM_NONE)
+line 1998
+;1997:
+;1998:	if (saberent->r.ownerNum == ENTITYNUM_NONE)
 ADDRFP4 0
 INDIRP4
 CNSTI4 396
@@ -12374,27 +12394,27 @@ ADDP4
 INDIRI4
 CNSTI4 1023
 NEI4 $856
-line 1997
-;1997:	{
-line 1998
-;1998:		MakeDeadSaber(saberent);
+line 1999
+;1999:	{
+line 2000
+;2000:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 2000
-;1999:
-;2000:		saberent->think = G_FreeEntity;
+line 2002
+;2001:
+;2002:		saberent->think = G_FreeEntity;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 G_FreeEntity
 ASGNP4
-line 2001
-;2001:		saberent->nextthink = level.time;
+line 2003
+;2003:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -12402,15 +12422,15 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2002
-;2002:		return;
+line 2004
+;2004:		return;
 ADDRGP4 $855
 JUMPV
 LABELV $856
-line 2005
-;2003:	}
-;2004:
-;2005:	if (!saberOwn ||
+line 2007
+;2005:	}
+;2006:
+;2007:	if (!saberOwn ||
 ADDRLP4 24
 CNSTU4 0
 ASGNU4
@@ -12448,30 +12468,30 @@ INDIRI4
 CNSTI4 3
 NEI4 $859
 LABELV $863
-line 2009
-;2006:		!saberOwn->inuse ||
-;2007:		!saberOwn->client ||
-;2008:		saberOwn->client->sess.sessionTeam == TEAM_SPECTATOR)
-;2009:	{
-line 2010
-;2010:		MakeDeadSaber(saberent);
+line 2011
+;2008:		!saberOwn->inuse ||
+;2009:		!saberOwn->client ||
+;2010:		saberOwn->client->sess.sessionTeam == TEAM_SPECTATOR)
+;2011:	{
+line 2012
+;2012:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 2012
-;2011:
-;2012:		saberent->think = G_FreeEntity;
+line 2014
+;2013:
+;2014:		saberent->think = G_FreeEntity;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 G_FreeEntity
 ASGNP4
-line 2013
-;2013:		saberent->nextthink = level.time;
+line 2015
+;2015:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -12479,15 +12499,15 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2014
-;2014:		return;
+line 2016
+;2016:		return;
 ADDRGP4 $855
 JUMPV
 LABELV $859
-line 2017
-;2015:	}
-;2016:
-;2017:	if (saberOwn->health < 1 || !saberOwn->client->ps.fd.forcePowerLevel[FP_SABERATTACK] || !saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW])
+line 2019
+;2017:	}
+;2018:
+;2019:	if (saberOwn->health < 1 || !saberOwn->client->ps.fd.forcePowerLevel[FP_SABERATTACK] || !saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW])
 ADDRLP4 0
 INDIRP4
 CNSTI4 676
@@ -12522,26 +12542,26 @@ ADDRLP4 40
 INDIRI4
 NEI4 $865
 LABELV $868
-line 2018
-;2018:	{ //He's dead, just go back to our normal saber status
-line 2019
-;2019:		saberent->touch = SaberGotHit;
+line 2020
+;2020:	{ //He's dead, just go back to our normal saber status
+line 2021
+;2021:		saberent->touch = SaberGotHit;
 ADDRFP4 0
 INDIRP4
 CNSTI4 648
 ADDP4
 ADDRGP4 SaberGotHit
 ASGNP4
-line 2020
-;2020:		saberent->think = SaberUpdateSelf;
+line 2022
+;2022:		saberent->think = SaberUpdateSelf;
 ADDRFP4 0
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 SaberUpdateSelf
 ASGNP4
-line 2021
-;2021:		saberent->nextthink = level.time;
+line 2023
+;2023:		saberent->nextthink = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 632
@@ -12549,18 +12569,18 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2023
-;2022:
-;2023:		MakeDeadSaber(saberent);
+line 2025
+;2024:
+;2025:		MakeDeadSaber(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 MakeDeadSaber
 CALLV
 pop
-line 2025
-;2024:
-;2025:		saberent->r.svFlags |= (SVF_NOCLIENT);
+line 2027
+;2026:
+;2027:		saberent->r.svFlags |= (SVF_NOCLIENT);
 ADDRLP4 44
 ADDRFP4 0
 INDIRP4
@@ -12575,16 +12595,16 @@ INDIRI4
 CNSTI4 1
 BORI4
 ASGNI4
-line 2026
-;2026:		saberent->r.contents = CONTENTS_LIGHTSABER;
+line 2028
+;2028:		saberent->r.contents = CONTENTS_LIGHTSABER;
 ADDRFP4 0
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 262144
 ASGNI4
-line 2027
-;2027:		VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
+line 2029
+;2029:		VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
 ADDRFP4 0
 INDIRP4
 CNSTI4 316
@@ -12603,8 +12623,8 @@ CNSTI4 324
 ADDP4
 CNSTF4 3238002688
 ASGNF4
-line 2028
-;2028:		VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
+line 2030
+;2030:		VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
 ADDRFP4 0
 INDIRP4
 CNSTI4 328
@@ -12623,17 +12643,17 @@ CNSTI4 336
 ADDP4
 CNSTF4 1090519040
 ASGNF4
-line 2029
-;2029:		saberent->s.loopSound = 0;
+line 2031
+;2031:		saberent->s.loopSound = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 200
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2031
-;2030:
-;2031:		saberOwn->client->ps.saberInFlight = qfalse;
+line 2033
+;2032:
+;2033:		saberOwn->client->ps.saberInFlight = qfalse;
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -12643,8 +12663,8 @@ CNSTI4 504
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2032
-;2032:		saberOwn->client->ps.saberThrowDelay = level.time + 500;
+line 2034
+;2034:		saberOwn->client->ps.saberThrowDelay = level.time + 500;
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -12657,8 +12677,8 @@ INDIRI4
 CNSTI4 500
 ADDI4
 ASGNI4
-line 2033
-;2033:		saberOwn->client->ps.saberCanThrow = qfalse;
+line 2035
+;2035:		saberOwn->client->ps.saberCanThrow = qfalse;
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -12668,16 +12688,16 @@ CNSTI4 560
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2035
-;2034:
-;2035:		return;
+line 2037
+;2036:
+;2037:		return;
 ADDRGP4 $855
 JUMPV
 LABELV $865
-line 2038
-;2036:	}
-;2037:
-;2038:	if ((level.time - saberOwn->client->ps.saberDidThrowTime) > 500)
+line 2040
+;2038:	}
+;2039:
+;2040:	if ((level.time - saberOwn->client->ps.saberDidThrowTime) > 500)
 ADDRGP4 level+32
 INDIRI4
 ADDRLP4 0
@@ -12691,10 +12711,10 @@ INDIRI4
 SUBI4
 CNSTI4 500
 LEI4 $871
-line 2039
-;2039:	{
-line 2040
-;2040:		if (!(saberOwn->client->buttons & BUTTON_ALT_ATTACK))
+line 2041
+;2041:	{
+line 2042
+;2042:		if (!(saberOwn->client->buttons & BUTTON_ALT_ATTACK))
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -12707,10 +12727,10 @@ CNSTI4 128
 BANDI4
 CNSTI4 0
 NEI4 $874
-line 2041
-;2041:		{ //If owner releases altattack 500ms or later after throwing saber, it autoreturns
-line 2042
-;2042:			thrownSaberTouch(saberent, saberent, NULL);
+line 2043
+;2043:		{ //If owner releases altattack 500ms or later after throwing saber, it autoreturns
+line 2044
+;2044:			thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 44
 ADDRFP4 0
 INDIRP4
@@ -12726,14 +12746,14 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 2043
-;2043:			goto runMin;
+line 2045
+;2045:			goto runMin;
 ADDRGP4 $876
 JUMPV
 LABELV $874
-line 2045
-;2044:		}
-;2045:		else if ((level.time - saberOwn->client->ps.saberDidThrowTime) > 6000)
+line 2047
+;2046:		}
+;2047:		else if ((level.time - saberOwn->client->ps.saberDidThrowTime) > 6000)
 ADDRGP4 level+32
 INDIRI4
 ADDRLP4 0
@@ -12747,10 +12767,10 @@ INDIRI4
 SUBI4
 CNSTI4 6000
 LEI4 $877
-line 2046
-;2046:		{ //if it's out longer than 6 seconds, return it
-line 2047
-;2047:			thrownSaberTouch(saberent, saberent, NULL);
+line 2048
+;2048:		{ //if it's out longer than 6 seconds, return it
+line 2049
+;2049:			thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 44
 ADDRFP4 0
 INDIRP4
@@ -12766,18 +12786,18 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 2048
-;2048:			goto runMin;
+line 2050
+;2050:			goto runMin;
 ADDRGP4 $876
 JUMPV
 LABELV $877
-line 2050
-;2049:		}
-;2050:	}
-LABELV $871
 line 2052
-;2051:
-;2052:	if (BG_HasYsalamiri(g_gametype.integer, &saberOwn->client->ps))
+;2051:		}
+;2052:	}
+LABELV $871
+line 2054
+;2053:
+;2054:	if (BG_HasYsalamiri(g_gametype.integer, &saberOwn->client->ps))
 ADDRGP4 g_gametype+12
 INDIRI4
 ARGI4
@@ -12795,10 +12815,10 @@ ADDRLP4 44
 INDIRI4
 CNSTI4 0
 EQI4 $880
-line 2053
-;2053:	{
-line 2054
-;2054:		thrownSaberTouch(saberent, saberent, NULL);
+line 2055
+;2055:	{
+line 2056
+;2056:		thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 48
 ADDRFP4 0
 INDIRP4
@@ -12814,15 +12834,15 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 2055
-;2055:		goto runMin;
+line 2057
+;2057:		goto runMin;
 ADDRGP4 $876
 JUMPV
 LABELV $880
-line 2058
-;2056:	}
-;2057:	
-;2058:	if (!BG_CanUseFPNow(g_gametype.integer, &saberOwn->client->ps, level.time, FP_SABERTHROW))
+line 2060
+;2058:	}
+;2059:	
+;2060:	if (!BG_CanUseFPNow(g_gametype.integer, &saberOwn->client->ps, level.time, FP_SABERTHROW))
 ADDRGP4 g_gametype+12
 INDIRI4
 ARGI4
@@ -12845,10 +12865,10 @@ ADDRLP4 48
 INDIRI4
 CNSTI4 0
 NEI4 $883
-line 2059
-;2059:	{
-line 2060
-;2060:		thrownSaberTouch(saberent, saberent, NULL);
+line 2061
+;2061:	{
+line 2062
+;2062:		thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 52
 ADDRFP4 0
 INDIRP4
@@ -12864,15 +12884,15 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 2061
-;2061:		goto runMin;
+line 2063
+;2063:		goto runMin;
 ADDRGP4 $876
 JUMPV
 LABELV $883
-line 2064
-;2062:	}
-;2063:
-;2064:	VectorSubtract(saberOwn->client->ps.origin, saberent->r.currentOrigin, vSub);
+line 2066
+;2064:	}
+;2065:
+;2066:	VectorSubtract(saberOwn->client->ps.origin, saberent->r.currentOrigin, vSub);
 ADDRLP4 52
 ADDRLP4 0
 INDIRP4
@@ -12927,8 +12947,8 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 2065
-;2065:	vLen = VectorLength(vSub);
+line 2067
+;2067:	vLen = VectorLength(vSub);
 ADDRLP4 4
 ARGP4
 ADDRLP4 60
@@ -12939,9 +12959,9 @@ ADDRLP4 16
 ADDRLP4 60
 INDIRF4
 ASGNF4
-line 2067
-;2066:
-;2067:	if (vLen >= (SABER_MAX_THROW_DISTANCE*saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW]))
+line 2069
+;2068:
+;2069:	if (vLen >= (SABER_MAX_THROW_DISTANCE*saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW]))
 ADDRLP4 16
 INDIRF4
 CNSTI4 700
@@ -12956,10 +12976,10 @@ INDIRI4
 MULI4
 CVIF4 4
 LTF4 $889
-line 2068
-;2068:	{
-line 2069
-;2069:		thrownSaberTouch(saberent, saberent, NULL);
+line 2070
+;2070:	{
+line 2071
+;2071:		thrownSaberTouch(saberent, saberent, NULL);
 ADDRLP4 64
 ADDRFP4 0
 INDIRP4
@@ -12975,15 +12995,15 @@ ARGP4
 ADDRGP4 thrownSaberTouch
 CALLV
 pop
-line 2070
-;2070:		goto runMin;
+line 2072
+;2072:		goto runMin;
 ADDRGP4 $876
 JUMPV
 LABELV $889
-line 2073
-;2071:	}
-;2072:
-;2073:	if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_2 &&
+line 2075
+;2073:	}
+;2074:
+;2075:	if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_2 &&
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -13003,14 +13023,14 @@ ADDRGP4 level+32
 INDIRI4
 CVIF4 4
 GEF4 $891
-line 2075
-;2074:		saberent->speed < level.time)
-;2075:	{ //if owner is rank 3 in saber throwing, the saber goes where he points
-line 2079
-;2076:		vec3_t fwd, traceFrom, traceTo, dir;
-;2077:		trace_t tr;
-;2078:
-;2079:		AngleVectors(saberOwn->client->ps.viewangles, fwd, 0, 0);
+line 2077
+;2076:		saberent->speed < level.time)
+;2077:	{ //if owner is rank 3 in saber throwing, the saber goes where he points
+line 2081
+;2078:		vec3_t fwd, traceFrom, traceTo, dir;
+;2079:		trace_t tr;
+;2080:
+;2081:		AngleVectors(saberOwn->client->ps.viewangles, fwd, 0, 0);
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -13033,9 +13053,9 @@ ARGP4
 ADDRGP4 AngleVectors
 CALLV
 pop
-line 2081
-;2080:
-;2081:		VectorCopy(saberOwn->client->ps.origin, traceFrom);
+line 2083
+;2082:
+;2083:		VectorCopy(saberOwn->client->ps.origin, traceFrom);
 ADDRLP4 100
 ADDRLP4 0
 INDIRP4
@@ -13046,8 +13066,8 @@ CNSTI4 20
 ADDP4
 INDIRB
 ASGNB 12
-line 2082
-;2082:		traceFrom[2] += saberOwn->client->ps.viewheight;
+line 2084
+;2084:		traceFrom[2] += saberOwn->client->ps.viewheight;
 ADDRLP4 100+8
 ADDRLP4 100+8
 INDIRF4
@@ -13062,15 +13082,15 @@ INDIRI4
 CVIF4 4
 ADDF4
 ASGNF4
-line 2084
-;2083:
-;2084:		VectorCopy(traceFrom, traceTo);
+line 2086
+;2085:
+;2086:		VectorCopy(traceFrom, traceTo);
 ADDRLP4 76
 ADDRLP4 100
 INDIRB
 ASGNB 12
-line 2085
-;2085:		traceTo[0] += fwd[0]*4096;
+line 2087
+;2087:		traceTo[0] += fwd[0]*4096;
 ADDRLP4 76
 ADDRLP4 76
 INDIRF4
@@ -13080,8 +13100,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2086
-;2086:		traceTo[1] += fwd[1]*4096;
+line 2088
+;2088:		traceTo[1] += fwd[1]*4096;
 ADDRLP4 76+4
 ADDRLP4 76+4
 INDIRF4
@@ -13091,8 +13111,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2087
-;2087:		traceTo[2] += fwd[2]*4096;
+line 2089
+;2089:		traceTo[2] += fwd[2]*4096;
 ADDRLP4 76+8
 ADDRLP4 76+8
 INDIRF4
@@ -13102,9 +13122,9 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2089
-;2088:
-;2089:		saberMoveBack(saberent, qfalse);
+line 2091
+;2090:
+;2091:		saberMoveBack(saberent, qfalse);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -13113,8 +13133,8 @@ ARGI4
 ADDRGP4 saberMoveBack
 CALLV
 pop
-line 2090
-;2090:		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
+line 2092
+;2092:		VectorCopy(saberent->r.currentOrigin, saberent->s.pos.trBase);
 ADDRLP4 1196
 ADDRFP4 0
 INDIRP4
@@ -13129,9 +13149,9 @@ CNSTI4 368
 ADDP4
 INDIRB
 ASGNB 12
-line 2092
-;2091:
-;2092:		if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
+line 2094
+;2093:
+;2094:		if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -13142,10 +13162,10 @@ ADDP4
 INDIRI4
 CNSTI4 3
 LTI4 $899
-line 2093
-;2093:		{ //if highest saber throw rank, we can direct the saber toward players directly by looking at them
-line 2094
-;2094:			trap_Trace(&tr, traceFrom, NULL, NULL, traceTo, saberOwn->s.number, MASK_PLAYERSOLID);
+line 2095
+;2095:		{ //if highest saber throw rank, we can direct the saber toward players directly by looking at them
+line 2096
+;2096:			trap_Trace(&tr, traceFrom, NULL, NULL, traceTo, saberOwn->s.number, MASK_PLAYERSOLID);
 ADDRLP4 112
 ARGP4
 ADDRLP4 100
@@ -13170,16 +13190,16 @@ ARGI4
 ADDRGP4 trap_Trace
 CALLV
 pop
-line 2095
-;2095:		}
+line 2097
+;2097:		}
 ADDRGP4 $900
 JUMPV
 LABELV $899
-line 2097
-;2096:		else
-;2097:		{
-line 2098
-;2098:			trap_Trace(&tr, traceFrom, NULL, NULL, traceTo, saberOwn->s.number, MASK_SOLID);
+line 2099
+;2098:		else
+;2099:		{
+line 2100
+;2100:			trap_Trace(&tr, traceFrom, NULL, NULL, traceTo, saberOwn->s.number, MASK_SOLID);
 ADDRLP4 112
 ARGP4
 ADDRLP4 100
@@ -13204,17 +13224,17 @@ ARGI4
 ADDRGP4 trap_Trace
 CALLV
 pop
-line 2099
-;2099:		}
+line 2101
+;2101:		}
 LABELV $900
-line 2104
-;2100:
-;2101:		//G_TestLine(traceFrom, tr.endpos, 0x000000ff, 100);
+line 2106
 ;2102:
-;2103:		//if (tr.fraction != 1)
-;2104:		{
-line 2105
-;2105:			VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
+;2103:		//G_TestLine(traceFrom, tr.endpos, 0x000000ff, 100);
+;2104:
+;2105:		//if (tr.fraction != 1)
+;2106:		{
+line 2107
+;2107:			VectorSubtract(tr.endpos, saberent->r.currentOrigin, dir);
 ADDRLP4 1200
 ADDRFP4 0
 INDIRP4
@@ -13249,17 +13269,17 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 2107
-;2106:
-;2107:			VectorNormalize(dir);
+line 2109
+;2108:
+;2109:			VectorNormalize(dir);
 ADDRLP4 64
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 2109
-;2108:
-;2109:			VectorScale(dir, 500, saberent->s.pos.trDelta );
+line 2111
+;2110:
+;2111:			VectorScale(dir, 500, saberent->s.pos.trDelta );
 ADDRFP4 0
 INDIRP4
 CNSTI4 36
@@ -13287,8 +13307,8 @@ ADDRLP4 64+8
 INDIRF4
 MULF4
 ASGNF4
-line 2110
-;2110:			saberent->s.pos.trTime = level.time;
+line 2112
+;2112:			saberent->s.pos.trTime = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 16
@@ -13296,9 +13316,9 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2112
-;2111:
-;2112:			if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
+line 2114
+;2113:
+;2114:			if (saberOwn->client->ps.fd.forcePowerLevel[FP_SABERTHROW] >= FORCE_LEVEL_3)
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -13309,10 +13329,10 @@ ADDP4
 INDIRI4
 CNSTI4 3
 LTI4 $911
-line 2113
-;2113:			{ //we'll treat them to a quicker update rate if their throw rank is high enough
-line 2114
-;2114:				saberent->speed = level.time + 100;
+line 2115
+;2115:			{ //we'll treat them to a quicker update rate if their throw rank is high enough
+line 2116
+;2116:				saberent->speed = level.time + 100;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -13323,16 +13343,16 @@ CNSTI4 100
 ADDI4
 CVIF4 4
 ASGNF4
-line 2115
-;2115:			}
+line 2117
+;2117:			}
 ADDRGP4 $912
 JUMPV
 LABELV $911
-line 2117
-;2116:			else
-;2117:			{
-line 2118
-;2118:				saberent->speed = level.time + 400;
+line 2119
+;2118:			else
+;2119:			{
+line 2120
+;2120:				saberent->speed = level.time + 400;
 ADDRFP4 0
 INDIRP4
 CNSTI4 608
@@ -13343,20 +13363,20 @@ CNSTI4 400
 ADDI4
 CVIF4 4
 ASGNF4
-line 2119
-;2119:			}
-LABELV $912
-line 2120
-;2120:		}
 line 2121
-;2121:	}
+;2121:			}
+LABELV $912
+line 2122
+;2122:		}
+line 2123
+;2123:	}
 LABELV $891
 LABELV $876
-line 2125
-;2122:
-;2123:runMin:
+line 2127
 ;2124:
-;2125:	saberCheckRadiusDamage(saberent, 0);
+;2125:runMin:
+;2126:
+;2127:	saberCheckRadiusDamage(saberent, 0);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -13365,57 +13385,57 @@ ARGI4
 ADDRGP4 saberCheckRadiusDamage
 CALLV
 pop
-line 2126
-;2126:	G_RunObject(saberent);
+line 2128
+;2128:	G_RunObject(saberent);
 ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRGP4 G_RunObject
 CALLV
 pop
-line 2127
-;2127:}
+line 2129
+;2129:}
 LABELV $855
 endproc saberFirstThrown 1204 28
 export WP_SaberPositionUpdate
 proc WP_SaberPositionUpdate 316 40
-line 2130
-;2128:
-;2129:void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
-;2130:{ //rww - keep the saber position as updated as possible on the server so that we can try to do realistic-looking contact stuff
-line 2138
-;2131:	mdxaBone_t	boltMatrix;
-;2132:	vec3_t properAngles, properOrigin;
-;2133:	vec3_t boltAngles, boltOrigin;
-;2134:	vec3_t end;
-;2135:	vec3_t legAxis[3];
-;2136:	vec3_t addVel;
-;2137:	vec3_t rawAngles;
-;2138:	float fVSpeed = 0;
+line 2132
+;2130:
+;2131:void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
+;2132:{ //rww - keep the saber position as updated as possible on the server so that we can try to do realistic-looking contact stuff
+line 2140
+;2133:	mdxaBone_t	boltMatrix;
+;2134:	vec3_t properAngles, properOrigin;
+;2135:	vec3_t boltAngles, boltOrigin;
+;2136:	vec3_t end;
+;2137:	vec3_t legAxis[3];
+;2138:	vec3_t addVel;
+;2139:	vec3_t rawAngles;
+;2140:	float fVSpeed = 0;
 ADDRLP4 24
 CNSTF4 0
 ASGNF4
-line 2142
-;2139:	int f;
-;2140:	int torsoAnim;
-;2141:	int legsAnim;
-;2142:	int returnAfterUpdate = 0;
+line 2144
+;2141:	int f;
+;2142:	int torsoAnim;
+;2143:	int legsAnim;
+;2144:	int returnAfterUpdate = 0;
 ADDRLP4 140
 CNSTI4 0
 ASGNI4
-line 2143
-;2143:	float animSpeedScale = 1;
+line 2145
+;2145:	float animSpeedScale = 1;
 ADDRLP4 28
 CNSTF4 1065353216
 ASGNF4
-line 2144
-;2144:	qboolean setTorso = qfalse;
+line 2146
+;2146:	qboolean setTorso = qfalse;
 ADDRLP4 144
 CNSTI4 0
 ASGNI4
-line 2146
-;2145:
-;2146:	if (self && self->inuse && self->client)
+line 2148
+;2147:
+;2148:	if (self && self->inuse && self->client)
 ADDRLP4 196
 ADDRFP4 0
 INDIRP4
@@ -13445,10 +13465,10 @@ CVPU4 4
 ADDRLP4 200
 INDIRU4
 EQU4 $916
-line 2147
-;2147:	{
-line 2148
-;2148:		if (self->client->saberCycleQueue)
+line 2149
+;2149:	{
+line 2150
+;2150:		if (self->client->saberCycleQueue)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13459,10 +13479,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $918
-line 2149
-;2149:		{
-line 2150
-;2150:			self->client->ps.fd.saberDrawAnimLevel = self->client->saberCycleQueue;
+line 2151
+;2151:		{
+line 2152
+;2152:			self->client->ps.fd.saberDrawAnimLevel = self->client->saberCycleQueue;
 ADDRLP4 204
 ADDRFP4 0
 INDIRP4
@@ -13480,16 +13500,16 @@ CNSTI4 1568
 ADDP4
 INDIRI4
 ASGNI4
-line 2151
-;2151:		}
+line 2153
+;2153:		}
 ADDRGP4 $919
 JUMPV
 LABELV $918
-line 2153
-;2152:		else
-;2153:		{
-line 2154
-;2154:			self->client->ps.fd.saberDrawAnimLevel = self->client->ps.fd.saberAnimLevel;
+line 2155
+;2154:		else
+;2155:		{
+line 2156
+;2156:			self->client->ps.fd.saberDrawAnimLevel = self->client->ps.fd.saberAnimLevel;
 ADDRLP4 204
 ADDRFP4 0
 INDIRP4
@@ -13507,15 +13527,15 @@ CNSTI4 1216
 ADDP4
 INDIRI4
 ASGNI4
-line 2155
-;2155:		}
+line 2157
+;2157:		}
 LABELV $919
-line 2156
-;2156:	}
-LABELV $916
 line 2158
-;2157:
-;2158:	if (self &&
+;2158:	}
+LABELV $916
+line 2160
+;2159:
+;2160:	if (self &&
 ADDRLP4 204
 ADDRFP4 0
 INDIRP4
@@ -13577,14 +13597,14 @@ INDIRI4
 CNSTI4 1
 GEI4 $920
 LABELV $922
-line 2163
-;2159:		self->inuse &&
-;2160:		self->client &&
-;2161:		self->client->saberCycleQueue &&
-;2162:		(self->client->ps.weaponTime <= 0 || self->health < 1))
-;2163:	{ //we cycled attack levels while we were busy, so update now that we aren't (even if that means we're dead)
-line 2164
-;2164:		self->client->ps.fd.saberAnimLevel = self->client->saberCycleQueue;
+line 2165
+;2161:		self->inuse &&
+;2162:		self->client &&
+;2163:		self->client->saberCycleQueue &&
+;2164:		(self->client->ps.weaponTime <= 0 || self->health < 1))
+;2165:	{ //we cycled attack levels while we were busy, so update now that we aren't (even if that means we're dead)
+line 2166
+;2166:		self->client->ps.fd.saberAnimLevel = self->client->saberCycleQueue;
 ADDRLP4 220
 ADDRFP4 0
 INDIRP4
@@ -13602,8 +13622,8 @@ CNSTI4 1568
 ADDP4
 INDIRI4
 ASGNI4
-line 2165
-;2165:		self->client->saberCycleQueue = 0;
+line 2167
+;2167:		self->client->saberCycleQueue = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13613,12 +13633,12 @@ CNSTI4 1568
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2166
-;2166:	}
-LABELV $920
 line 2168
-;2167:
-;2168:	if (!self ||
+;2168:	}
+LABELV $920
+line 2170
+;2169:
+;2170:	if (!self ||
 ADDRLP4 220
 ADDRFP4 0
 INDIRP4
@@ -13668,21 +13688,21 @@ INDIRI4
 CNSTI4 1
 GEI4 $923
 LABELV $928
-line 2173
-;2169:		!self->client ||
-;2170:		!self->client->ghoul2 ||
-;2171:		!g2SaberInstance ||
-;2172:		self->health < 1)
-;2173:	{
-line 2174
-;2174:		return;
+line 2175
+;2171:		!self->client ||
+;2172:		!self->client->ghoul2 ||
+;2173:		!g2SaberInstance ||
+;2174:		self->health < 1)
+;2175:	{
+line 2176
+;2176:		return;
 ADDRGP4 $915
 JUMPV
 LABELV $923
-line 2177
-;2175:	}
-;2176:
-;2177:	if (self->client->ps.usingATST)
+line 2179
+;2177:	}
+;2178:
+;2179:	if (self->client->ps.usingATST)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13693,17 +13713,17 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $929
-line 2178
-;2178:	{ //we don't update the server's G2 instance in the case of ATST use, so..
-line 2179
-;2179:		return;
+line 2180
+;2180:	{ //we don't update the server's G2 instance in the case of ATST use, so..
+line 2181
+;2181:		return;
 ADDRGP4 $915
 JUMPV
 LABELV $929
-line 2182
-;2180:	}
-;2181:
-;2182:	if (self->client->ps.weapon != WP_SABER ||
+line 2184
+;2182:	}
+;2183:
+;2184:	if (self->client->ps.weapon != WP_SABER ||
 ADDRLP4 232
 ADDRFP4 0
 INDIRP4
@@ -13739,22 +13759,22 @@ ADDRLP4 236
 INDIRI4
 NEI4 $931
 LABELV $934
-line 2185
-;2183:		self->client->ps.weaponstate == WEAPON_RAISING ||
-;2184:		self->client->ps.weaponstate == WEAPON_DROPPING)
-;2185:	{
-line 2186
-;2186:		returnAfterUpdate = 1;
+line 2187
+;2185:		self->client->ps.weaponstate == WEAPON_RAISING ||
+;2186:		self->client->ps.weaponstate == WEAPON_DROPPING)
+;2187:	{
+line 2188
+;2188:		returnAfterUpdate = 1;
 ADDRLP4 140
 CNSTI4 1
 ASGNI4
-line 2188
-;2187:		//return;
-;2188:	}
-LABELV $931
 line 2190
-;2189:
-;2190:	if (self->client->ps.saberThrowDelay < level.time)
+;2189:		//return;
+;2190:	}
+LABELV $931
+line 2192
+;2191:
+;2192:	if (self->client->ps.saberThrowDelay < level.time)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13766,10 +13786,10 @@ INDIRI4
 ADDRGP4 level+32
 INDIRI4
 GEI4 $935
-line 2191
-;2191:	{
-line 2192
-;2192:		self->client->ps.saberCanThrow = qtrue;
+line 2193
+;2193:	{
+line 2194
+;2194:		self->client->ps.saberCanThrow = qtrue;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13779,12 +13799,12 @@ CNSTI4 560
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2193
-;2193:	}
-LABELV $935
 line 2195
-;2194:
-;2195:	if (self->client->ps.fd.forcePowersActive & (1 << FP_RAGE))
+;2195:	}
+LABELV $935
+line 2197
+;2196:
+;2197:	if (self->client->ps.fd.forcePowersActive & (1 << FP_RAGE))
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13797,19 +13817,19 @@ CNSTI4 256
 BANDI4
 CNSTI4 0
 EQI4 $938
-line 2196
-;2196:	{
-line 2197
-;2197:		animSpeedScale = 2;
+line 2198
+;2198:	{
+line 2199
+;2199:		animSpeedScale = 2;
 ADDRLP4 28
 CNSTF4 1073741824
 ASGNF4
-line 2198
-;2198:	}
-LABELV $938
 line 2200
-;2199:	
-;2200:	torsoAnim = (self->client->ps.torsoAnim & ~ANIM_TOGGLEBIT );
+;2200:	}
+LABELV $938
+line 2202
+;2201:	
+;2202:	torsoAnim = (self->client->ps.torsoAnim & ~ANIM_TOGGLEBIT );
 ADDRLP4 92
 ADDRFP4 0
 INDIRP4
@@ -13822,8 +13842,8 @@ INDIRI4
 CNSTI4 -2049
 BANDI4
 ASGNI4
-line 2201
-;2201:	legsAnim = (self->client->ps.legsAnim & ~ANIM_TOGGLEBIT );
+line 2203
+;2203:	legsAnim = (self->client->ps.legsAnim & ~ANIM_TOGGLEBIT );
 ADDRLP4 120
 ADDRFP4 0
 INDIRP4
@@ -13836,9 +13856,9 @@ INDIRI4
 CNSTI4 -2049
 BANDI4
 ASGNI4
-line 2203
-;2202:
-;2203:	VectorCopy(self->client->ps.origin, properOrigin);
+line 2205
+;2204:
+;2205:	VectorCopy(self->client->ps.origin, properOrigin);
 ADDRLP4 96
 ADDRFP4 0
 INDIRP4
@@ -13849,8 +13869,8 @@ CNSTI4 20
 ADDP4
 INDIRB
 ASGNB 12
-line 2204
-;2204:	VectorCopy(self->client->ps.viewangles, properAngles);
+line 2206
+;2206:	VectorCopy(self->client->ps.viewangles, properAngles);
 ADDRLP4 80
 ADDRFP4 0
 INDIRP4
@@ -13861,10 +13881,10 @@ CNSTI4 156
 ADDP4
 INDIRB
 ASGNB 12
-line 2207
-;2205:
-;2206:	//try to predict the origin based on velocity so it's more like what the client is seeing
-;2207:	VectorCopy(self->client->ps.velocity, addVel);
+line 2209
+;2207:
+;2208:	//try to predict the origin based on velocity so it's more like what the client is seeing
+;2209:	VectorCopy(self->client->ps.velocity, addVel);
 ADDRLP4 108
 ADDRFP4 0
 INDIRP4
@@ -13875,16 +13895,16 @@ CNSTI4 32
 ADDP4
 INDIRB
 ASGNB 12
-line 2208
-;2208:	VectorNormalize(addVel);
+line 2210
+;2210:	VectorNormalize(addVel);
 ADDRLP4 108
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 2210
-;2209:
-;2210:	if (self->client->ps.velocity[0] < 0)
+line 2212
+;2211:
+;2212:	if (self->client->ps.velocity[0] < 0)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13895,10 +13915,10 @@ ADDP4
 INDIRF4
 CNSTF4 0
 GEF4 $940
-line 2211
-;2211:	{
-line 2212
-;2212:		fVSpeed += (-self->client->ps.velocity[0]);
+line 2213
+;2213:	{
+line 2214
+;2214:		fVSpeed += (-self->client->ps.velocity[0]);
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -13913,16 +13933,16 @@ INDIRF4
 NEGF4
 ADDF4
 ASGNF4
-line 2213
-;2213:	}
+line 2215
+;2215:	}
 ADDRGP4 $941
 JUMPV
 LABELV $940
-line 2215
-;2214:	else
-;2215:	{
-line 2216
-;2216:		fVSpeed += self->client->ps.velocity[0];
+line 2217
+;2216:	else
+;2217:	{
+line 2218
+;2218:		fVSpeed += self->client->ps.velocity[0];
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -13936,11 +13956,11 @@ ADDP4
 INDIRF4
 ADDF4
 ASGNF4
-line 2217
-;2217:	}
+line 2219
+;2219:	}
 LABELV $941
-line 2218
-;2218:	if (self->client->ps.velocity[1] < 0)
+line 2220
+;2220:	if (self->client->ps.velocity[1] < 0)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -13951,10 +13971,10 @@ ADDP4
 INDIRF4
 CNSTF4 0
 GEF4 $942
-line 2219
-;2219:	{
-line 2220
-;2220:		fVSpeed += (-self->client->ps.velocity[1]);
+line 2221
+;2221:	{
+line 2222
+;2222:		fVSpeed += (-self->client->ps.velocity[1]);
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -13969,16 +13989,16 @@ INDIRF4
 NEGF4
 ADDF4
 ASGNF4
-line 2221
-;2221:	}
+line 2223
+;2223:	}
 ADDRGP4 $943
 JUMPV
 LABELV $942
-line 2223
-;2222:	else
-;2223:	{
-line 2224
-;2224:		fVSpeed += self->client->ps.velocity[1];
+line 2225
+;2224:	else
+;2225:	{
+line 2226
+;2226:		fVSpeed += self->client->ps.velocity[1];
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -13992,11 +14012,11 @@ ADDP4
 INDIRF4
 ADDF4
 ASGNF4
-line 2225
-;2225:	}
+line 2227
+;2227:	}
 LABELV $943
-line 2226
-;2226:	if (self->client->ps.velocity[2] < 0)
+line 2228
+;2228:	if (self->client->ps.velocity[2] < 0)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14007,10 +14027,10 @@ ADDP4
 INDIRF4
 CNSTF4 0
 GEF4 $944
-line 2227
-;2227:	{
-line 2228
-;2228:		fVSpeed += (-self->client->ps.velocity[2]);
+line 2229
+;2229:	{
+line 2230
+;2230:		fVSpeed += (-self->client->ps.velocity[2]);
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -14025,16 +14045,16 @@ INDIRF4
 NEGF4
 ADDF4
 ASGNF4
-line 2229
-;2229:	}
+line 2231
+;2231:	}
 ADDRGP4 $945
 JUMPV
 LABELV $944
-line 2231
-;2230:	else
-;2231:	{
-line 2232
-;2232:		fVSpeed += self->client->ps.velocity[2];
+line 2233
+;2232:	else
+;2233:	{
+line 2234
+;2234:		fVSpeed += self->client->ps.velocity[2];
 ADDRLP4 24
 ADDRLP4 24
 INDIRF4
@@ -14048,21 +14068,21 @@ ADDP4
 INDIRF4
 ADDF4
 ASGNF4
-line 2233
-;2233:	}
-LABELV $945
 line 2235
-;2234:
-;2235:	fVSpeed *= 0.08;
+;2235:	}
+LABELV $945
+line 2237
+;2236:
+;2237:	fVSpeed *= 0.08;
 ADDRLP4 24
 CNSTF4 1034147594
 ADDRLP4 24
 INDIRF4
 MULF4
 ASGNF4
-line 2237
-;2236:
-;2237:	properOrigin[0] += addVel[0]*fVSpeed;
+line 2239
+;2238:
+;2239:	properOrigin[0] += addVel[0]*fVSpeed;
 ADDRLP4 96
 ADDRLP4 96
 INDIRF4
@@ -14073,8 +14093,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2238
-;2238:	properOrigin[1] += addVel[1]*fVSpeed;
+line 2240
+;2240:	properOrigin[1] += addVel[1]*fVSpeed;
 ADDRLP4 96+4
 ADDRLP4 96+4
 INDIRF4
@@ -14085,8 +14105,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2239
-;2239:	properOrigin[2] += addVel[2]*fVSpeed;
+line 2241
+;2241:	properOrigin[2] += addVel[2]*fVSpeed;
 ADDRLP4 96+8
 ADDRLP4 96+8
 INDIRF4
@@ -14097,14 +14117,14 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2241
-;2240:
-;2241:	properAngles[0] = 0;
+line 2243
+;2242:
+;2243:	properAngles[0] = 0;
 ADDRLP4 80
 CNSTF4 0
 ASGNF4
-line 2242
-;2242:	properAngles[1] = self->client->ps.viewangles[YAW];
+line 2244
+;2244:	properAngles[1] = self->client->ps.viewangles[YAW];
 ADDRLP4 80+4
 ADDRFP4 0
 INDIRP4
@@ -14115,14 +14135,14 @@ CNSTI4 160
 ADDP4
 INDIRF4
 ASGNF4
-line 2243
-;2243:	properAngles[2] = 0;
+line 2245
+;2245:	properAngles[2] = 0;
 ADDRLP4 80+8
 CNSTF4 0
 ASGNF4
-line 2245
-;2244:
-;2245:	AnglesToAxis( properAngles, legAxis );
+line 2247
+;2246:
+;2247:	AnglesToAxis( properAngles, legAxis );
 ADDRLP4 80
 ARGP4
 ADDRLP4 148
@@ -14130,8 +14150,8 @@ ARGP4
 ADDRGP4 AnglesToAxis
 CALLV
 pop
-line 2246
-;2246:	G_G2PlayerAngles( self, legAxis, properAngles );
+line 2248
+;2248:	G_G2PlayerAngles( self, legAxis, properAngles );
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -14142,24 +14162,24 @@ ARGP4
 ADDRGP4 G_G2PlayerAngles
 CALLV
 pop
-line 2248
-;2247:
-;2248:	if (returnAfterUpdate)
+line 2250
+;2249:
+;2250:	if (returnAfterUpdate)
 ADDRLP4 140
 INDIRI4
 CNSTI4 0
 EQI4 $952
-line 2249
-;2249:	{ //We don't even need to do GetBoltMatrix if we're only in here to keep the g2 server instance in sync
-line 2250
-;2250:		goto finalUpdate;
+line 2251
+;2251:	{ //We don't even need to do GetBoltMatrix if we're only in here to keep the g2 server instance in sync
+line 2252
+;2252:		goto finalUpdate;
 ADDRGP4 $954
 JUMPV
 LABELV $952
-line 2253
-;2251:	}
-;2252:
-;2253:	trap_G2API_GetBoltMatrix(self->client->ghoul2, 1, 0, &boltMatrix, properAngles, properOrigin, level.time, NULL, vec3_origin);
+line 2255
+;2253:	}
+;2254:
+;2255:	trap_G2API_GetBoltMatrix(self->client->ghoul2, 1, 0, &boltMatrix, properAngles, properOrigin, level.time, NULL, vec3_origin);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14189,57 +14209,57 @@ ARGP4
 ADDRGP4 trap_G2API_GetBoltMatrix
 CALLI4
 pop
-line 2255
-;2254:
-;2255:	boltOrigin[0] = boltMatrix.matrix[0][3];
+line 2257
+;2256:
+;2257:	boltOrigin[0] = boltMatrix.matrix[0][3];
 ADDRLP4 12
 ADDRLP4 32+12
 INDIRF4
 ASGNF4
-line 2256
-;2256:	boltOrigin[1] = boltMatrix.matrix[1][3];
+line 2258
+;2258:	boltOrigin[1] = boltMatrix.matrix[1][3];
 ADDRLP4 12+4
 ADDRLP4 32+16+12
 INDIRF4
 ASGNF4
-line 2257
-;2257:	boltOrigin[2] = boltMatrix.matrix[2][3];
+line 2259
+;2259:	boltOrigin[2] = boltMatrix.matrix[2][3];
 ADDRLP4 12+8
 ADDRLP4 32+32+12
 INDIRF4
 ASGNF4
-line 2259
-;2258:
-;2259:	boltAngles[0] = -boltMatrix.matrix[0][1];
+line 2261
+;2260:
+;2261:	boltAngles[0] = -boltMatrix.matrix[0][1];
 ADDRLP4 0
 ADDRLP4 32+4
 INDIRF4
 NEGF4
 ASGNF4
-line 2260
-;2260:	boltAngles[1] = -boltMatrix.matrix[1][1];
+line 2262
+;2262:	boltAngles[1] = -boltMatrix.matrix[1][1];
 ADDRLP4 0+4
 ADDRLP4 32+16+4
 INDIRF4
 NEGF4
 ASGNF4
-line 2261
-;2261:	boltAngles[2] = -boltMatrix.matrix[2][1];
+line 2263
+;2263:	boltAngles[2] = -boltMatrix.matrix[2][1];
 ADDRLP4 0+8
 ADDRLP4 32+32+4
 INDIRF4
 NEGF4
 ASGNF4
-line 2263
-;2262:
-;2263:	VectorCopy(boltAngles, rawAngles);
+line 2265
+;2264:
+;2265:	VectorCopy(boltAngles, rawAngles);
 ADDRLP4 184
 ADDRLP4 0
 INDIRB
 ASGNB 12
-line 2265
-;2264:
-;2265:	VectorMA( boltOrigin, 40, boltAngles, end );
+line 2267
+;2266:
+;2267:	VectorMA( boltOrigin, 40, boltAngles, end );
 ADDRLP4 244
 CNSTF4 1109393408
 ASGNF4
@@ -14272,9 +14292,9 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2267
-;2266:
-;2267:	if (self->client->ps.saberEntityNum)
+line 2269
+;2268:
+;2269:	if (self->client->ps.saberEntityNum)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14285,10 +14305,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $976
-line 2268
-;2268:	{
-line 2269
-;2269:		gentity_t *mySaber = &g_entities[self->client->ps.saberEntityNum];
+line 2270
+;2270:	{
+line 2271
+;2271:		gentity_t *mySaber = &g_entities[self->client->ps.saberEntityNum];
 ADDRLP4 248
 CNSTI4 828
 ADDRFP4 0
@@ -14303,9 +14323,9 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 2271
-;2270:
-;2271:		if (mySaber && (mySaber->r.contents & CONTENTS_LIGHTSABER) && !self->client->ps.saberInFlight)
+line 2273
+;2272:
+;2273:		if (mySaber && (mySaber->r.contents & CONTENTS_LIGHTSABER) && !self->client->ps.saberInFlight)
 ADDRLP4 252
 ADDRLP4 248
 INDIRP4
@@ -14339,10 +14359,10 @@ INDIRI4
 ADDRLP4 256
 INDIRI4
 NEI4 $978
-line 2272
-;2272:		{ //place it roughly in the middle of the saber..
-line 2273
-;2273:			VectorMA( boltOrigin, 20, boltAngles, mySaber->r.currentOrigin );
+line 2274
+;2274:		{ //place it roughly in the middle of the saber..
+line 2275
+;2275:			VectorMA( boltOrigin, 20, boltAngles, mySaber->r.currentOrigin );
 ADDRLP4 248
 INDIRP4
 CNSTI4 368
@@ -14379,9 +14399,9 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2275
-;2274:
-;2275:			if (self->client->ps.dualBlade)
+line 2277
+;2276:
+;2277:			if (self->client->ps.dualBlade)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14392,10 +14412,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $984
-line 2276
-;2276:			{
-line 2277
-;2277:				VectorCopy(boltOrigin, mySaber->r.currentOrigin);
+line 2278
+;2278:			{
+line 2279
+;2279:				VectorCopy(boltOrigin, mySaber->r.currentOrigin);
 ADDRLP4 248
 INDIRP4
 CNSTI4 368
@@ -14403,19 +14423,19 @@ ADDP4
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2278
-;2278:			}
-LABELV $984
 line 2280
-;2279:			//VectorCopy(/*boltOrigin*/end, mySaber->r.currentOrigin);
-;2280:		}
+;2280:			}
+LABELV $984
+line 2282
+;2281:			//VectorCopy(/*boltOrigin*/end, mySaber->r.currentOrigin);
+;2282:		}
 LABELV $978
-line 2281
-;2281:	}
-LABELV $976
 line 2283
-;2282:
-;2283:	boltAngles[YAW] = self->client->ps.viewangles[YAW];
+;2283:	}
+LABELV $976
+line 2285
+;2284:
+;2285:	boltAngles[YAW] = self->client->ps.viewangles[YAW];
 ADDRLP4 0+4
 ADDRFP4 0
 INDIRP4
@@ -14426,11 +14446,11 @@ CNSTI4 160
 ADDP4
 INDIRF4
 ASGNF4
-line 2287
-;2284:
-;2285:	//G_TestLine(boltOrigin, end, 0x000000ff, 50);
+line 2289
 ;2286:
-;2287:	if (self->client->ps.saberInFlight)
+;2287:	//G_TestLine(boltOrigin, end, 0x000000ff, 50);
+;2288:
+;2289:	if (self->client->ps.saberInFlight)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14441,10 +14461,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $987
-line 2288
-;2288:	{ //do the thrown-saber stuff
-line 2289
-;2289:		gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
+line 2290
+;2290:	{ //do the thrown-saber stuff
+line 2291
+;2291:		gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
 ADDRLP4 248
 CNSTI4 828
 ADDRFP4 0
@@ -14459,18 +14479,18 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 2291
-;2290:
-;2291:		if (saberent)
+line 2293
+;2292:
+;2293:		if (saberent)
 ADDRLP4 248
 INDIRP4
 CVPU4 4
 CNSTU4 0
 EQU4 $988
-line 2292
-;2292:		{
-line 2293
-;2293:			if (!self->client->ps.saberEntityState)
+line 2294
+;2294:		{
+line 2295
+;2295:			if (!self->client->ps.saberEntityState)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14481,12 +14501,12 @@ ADDP4
 INDIRI4
 CNSTI4 0
 NEI4 $991
-line 2294
-;2294:			{
-line 2297
-;2295:				vec3_t startorg, startang, dir;
-;2296:
-;2297:				VectorCopy(boltOrigin, saberent->r.currentOrigin);
+line 2296
+;2296:			{
+line 2299
+;2297:				vec3_t startorg, startang, dir;
+;2298:
+;2299:				VectorCopy(boltOrigin, saberent->r.currentOrigin);
 ADDRLP4 248
 INDIRP4
 CNSTI4 368
@@ -14494,26 +14514,26 @@ ADDP4
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2299
-;2298:
-;2299:				VectorCopy(boltOrigin, startorg);
+line 2301
+;2300:
+;2301:				VectorCopy(boltOrigin, startorg);
 ADDRLP4 264
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2300
-;2300:				VectorCopy(boltAngles, startang);
+line 2302
+;2302:				VectorCopy(boltAngles, startang);
 ADDRLP4 276
 ADDRLP4 0
 INDIRB
 ASGNB 12
-line 2306
-;2301:
-;2302:				//startang[0] = 90;
-;2303:				//Instead of this we'll sort of fake it and slowly tilt it down on the client via
-;2304:				//a perframe method
-;2305:
-;2306:				saberent->r.svFlags &= ~(SVF_NOCLIENT);
+line 2308
+;2303:
+;2304:				//startang[0] = 90;
+;2305:				//Instead of this we'll sort of fake it and slowly tilt it down on the client via
+;2306:				//a perframe method
+;2307:
+;2308:				saberent->r.svFlags &= ~(SVF_NOCLIENT);
 ADDRLP4 288
 ADDRLP4 248
 INDIRP4
@@ -14528,8 +14548,8 @@ INDIRI4
 CNSTI4 -2
 BANDI4
 ASGNI4
-line 2307
-;2307:				VectorCopy(startorg, saberent->s.pos.trBase);
+line 2309
+;2309:				VectorCopy(startorg, saberent->s.pos.trBase);
 ADDRLP4 248
 INDIRP4
 CNSTI4 24
@@ -14537,8 +14557,8 @@ ADDP4
 ADDRLP4 264
 INDIRB
 ASGNB 12
-line 2308
-;2308:				VectorCopy(startang, saberent->s.apos.trBase);
+line 2310
+;2310:				VectorCopy(startang, saberent->s.apos.trBase);
 ADDRLP4 248
 INDIRP4
 CNSTI4 60
@@ -14546,9 +14566,9 @@ ADDP4
 ADDRLP4 276
 INDIRB
 ASGNB 12
-line 2310
-;2309:
-;2310:				VectorCopy(startorg, saberent->s.origin);
+line 2312
+;2311:
+;2312:				VectorCopy(startorg, saberent->s.origin);
 ADDRLP4 248
 INDIRP4
 CNSTI4 92
@@ -14556,8 +14576,8 @@ ADDP4
 ADDRLP4 264
 INDIRB
 ASGNB 12
-line 2311
-;2311:				VectorCopy(startang, saberent->s.angles);
+line 2313
+;2313:				VectorCopy(startang, saberent->s.angles);
 ADDRLP4 248
 INDIRP4
 CNSTI4 116
@@ -14565,75 +14585,75 @@ ADDP4
 ADDRLP4 276
 INDIRB
 ASGNB 12
-line 2313
-;2312:
-;2313:				saberent->s.saberInFlight = qtrue;
+line 2315
+;2314:
+;2315:				saberent->s.saberInFlight = qtrue;
 ADDRLP4 248
 INDIRP4
 CNSTI4 228
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2315
-;2314:
-;2315:				saberent->s.apos.trType = TR_LINEAR;
+line 2317
+;2316:
+;2317:				saberent->s.apos.trType = TR_LINEAR;
 ADDRLP4 248
 INDIRP4
 CNSTI4 48
 ADDP4
 CNSTI4 2
 ASGNI4
-line 2316
-;2316:				saberent->s.apos.trDelta[0] = 0;
+line 2318
+;2318:				saberent->s.apos.trDelta[0] = 0;
 ADDRLP4 248
 INDIRP4
 CNSTI4 72
 ADDP4
 CNSTF4 0
 ASGNF4
-line 2317
-;2317:				saberent->s.apos.trDelta[1] = 800;
+line 2319
+;2319:				saberent->s.apos.trDelta[1] = 800;
 ADDRLP4 248
 INDIRP4
 CNSTI4 76
 ADDP4
 CNSTF4 1145569280
 ASGNF4
-line 2318
-;2318:				saberent->s.apos.trDelta[2] = 0;
+line 2320
+;2320:				saberent->s.apos.trDelta[2] = 0;
 ADDRLP4 248
 INDIRP4
 CNSTI4 80
 ADDP4
 CNSTF4 0
 ASGNF4
-line 2320
-;2319:
-;2320:				saberent->s.pos.trType = TR_LINEAR;
+line 2322
+;2321:
+;2322:				saberent->s.pos.trType = TR_LINEAR;
 ADDRLP4 248
 INDIRP4
 CNSTI4 12
 ADDP4
 CNSTI4 2
 ASGNI4
-line 2321
-;2321:				saberent->s.eType = ET_GENERAL;
+line 2323
+;2323:				saberent->s.eType = ET_GENERAL;
 ADDRLP4 248
 INDIRP4
 CNSTI4 4
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2322
-;2322:				saberent->s.eFlags = 0;
+line 2324
+;2324:				saberent->s.eFlags = 0;
 ADDRLP4 248
 INDIRP4
 CNSTI4 8
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2323
-;2323:				saberent->s.modelindex = G_ModelIndex("models/weapons2/saber/saber_w.glm");
+line 2325
+;2325:				saberent->s.modelindex = G_ModelIndex("models/weapons2/saber/saber_w.glm");
 ADDRGP4 $790
 ARGP4
 ADDRLP4 292
@@ -14647,17 +14667,17 @@ ADDP4
 ADDRLP4 292
 INDIRI4
 ASGNI4
-line 2324
-;2324:				saberent->s.modelGhoul2 = 127;
+line 2326
+;2326:				saberent->s.modelGhoul2 = 127;
 ADDRLP4 248
 INDIRP4
 CNSTI4 204
 ADDP4
 CNSTI4 127
 ASGNI4
-line 2326
-;2325:
-;2326:				saberent->parent = self;
+line 2328
+;2327:
+;2328:				saberent->parent = self;
 ADDRLP4 248
 INDIRP4
 CNSTI4 536
@@ -14665,9 +14685,9 @@ ADDP4
 ADDRFP4 0
 INDIRP4
 ASGNP4
-line 2328
-;2327:
-;2328:				self->client->ps.saberEntityState = 1;
+line 2330
+;2329:
+;2330:				self->client->ps.saberEntityState = 1;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14677,10 +14697,10 @@ CNSTI4 552
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2331
-;2329:
-;2330:				//Projectile stuff:
-;2331:				AngleVectors(self->client->ps.viewangles, dir, NULL, NULL);
+line 2333
+;2331:
+;2332:				//Projectile stuff:
+;2333:				AngleVectors(self->client->ps.viewangles, dir, NULL, NULL);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14703,9 +14723,9 @@ ARGP4
 ADDRGP4 AngleVectors
 CALLV
 pop
-line 2333
-;2332:
-;2333:				saberent->nextthink = level.time + FRAMETIME;
+line 2335
+;2334:
+;2335:				saberent->nextthink = level.time + FRAMETIME;
 ADDRLP4 248
 INDIRP4
 CNSTI4 632
@@ -14715,58 +14735,58 @@ INDIRI4
 CNSTI4 100
 ADDI4
 ASGNI4
-line 2334
-;2334:				saberent->think = saberFirstThrown;//G_RunObject;
+line 2336
+;2336:				saberent->think = saberFirstThrown;//G_RunObject;
 ADDRLP4 248
 INDIRP4
 CNSTI4 636
 ADDP4
 ADDRGP4 saberFirstThrown
 ASGNP4
-line 2336
-;2335:
-;2336:				saberent->damage = SABER_THROWN_HIT_DAMAGE;
+line 2338
+;2337:
+;2338:				saberent->damage = SABER_THROWN_HIT_DAMAGE;
 ADDRLP4 248
 INDIRP4
 CNSTI4 688
 ADDP4
 CNSTI4 30
 ASGNI4
-line 2337
-;2337:				saberent->methodOfDeath = MOD_SABER;
+line 2339
+;2339:				saberent->methodOfDeath = MOD_SABER;
 ADDRLP4 248
 INDIRP4
 CNSTI4 704
 ADDP4
 CNSTI4 3
 ASGNI4
-line 2338
-;2338:				saberent->splashMethodOfDeath = MOD_SABER;
+line 2340
+;2340:				saberent->splashMethodOfDeath = MOD_SABER;
 ADDRLP4 248
 INDIRP4
 CNSTI4 708
 ADDP4
 CNSTI4 3
 ASGNI4
-line 2339
-;2339:				saberent->s.solid = 2;
+line 2341
+;2341:				saberent->s.solid = 2;
 ADDRLP4 248
 INDIRP4
 CNSTI4 248
 ADDP4
 CNSTI4 2
 ASGNI4
-line 2340
-;2340:				saberent->r.contents = CONTENTS_LIGHTSABER;
+line 2342
+;2342:				saberent->r.contents = CONTENTS_LIGHTSABER;
 ADDRLP4 248
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 262144
 ASGNI4
-line 2342
-;2341:
-;2342:				VectorSet( saberent->r.mins, -24.0f, -24.0f, -8.0f );
+line 2344
+;2343:
+;2344:				VectorSet( saberent->r.mins, -24.0f, -24.0f, -8.0f );
 ADDRLP4 248
 INDIRP4
 CNSTI4 316
@@ -14785,8 +14805,8 @@ CNSTI4 324
 ADDP4
 CNSTF4 3238002688
 ASGNF4
-line 2343
-;2343:				VectorSet( saberent->r.maxs, 24.0f, 24.0f, 8.0f );
+line 2345
+;2345:				VectorSet( saberent->r.maxs, 24.0f, 24.0f, 8.0f );
 ADDRLP4 248
 INDIRP4
 CNSTI4 328
@@ -14805,9 +14825,9 @@ CNSTI4 336
 ADDP4
 CNSTF4 1090519040
 ASGNF4
-line 2345
-;2344:
-;2345:				saberent->s.genericenemyindex = self->s.number+1024;
+line 2347
+;2346:
+;2347:				saberent->s.genericenemyindex = self->s.number+1024;
 ADDRLP4 248
 INDIRP4
 CNSTI4 172
@@ -14818,27 +14838,27 @@ INDIRI4
 CNSTI4 1024
 ADDI4
 ASGNI4
-line 2347
-;2346:
-;2347:				saberent->touch = thrownSaberTouch;
+line 2349
+;2348:
+;2349:				saberent->touch = thrownSaberTouch;
 ADDRLP4 248
 INDIRP4
 CNSTI4 648
 ADDP4
 ADDRGP4 thrownSaberTouch
 ASGNP4
-line 2349
-;2348:
-;2349:				saberent->s.weapon = WP_SABER;
+line 2351
+;2350:
+;2351:				saberent->s.weapon = WP_SABER;
 ADDRLP4 248
 INDIRP4
 CNSTI4 276
 ADDP4
 CNSTI4 2
 ASGNI4
-line 2351
-;2350:
-;2351:				VectorScale(dir, 400, saberent->s.pos.trDelta );
+line 2353
+;2352:
+;2353:				VectorScale(dir, 400, saberent->s.pos.trDelta );
 ADDRLP4 248
 INDIRP4
 CNSTI4 36
@@ -14866,8 +14886,8 @@ ADDRLP4 252+8
 INDIRF4
 MULF4
 ASGNF4
-line 2352
-;2352:				saberent->s.pos.trTime = level.time;
+line 2354
+;2354:				saberent->s.pos.trTime = level.time;
 ADDRLP4 248
 INDIRP4
 CNSTI4 16
@@ -14875,9 +14895,9 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2354
-;2353:
-;2354:				saberent->s.loopSound = saberSpinSound;
+line 2356
+;2355:
+;2356:				saberent->s.loopSound = saberSpinSound;
 ADDRLP4 248
 INDIRP4
 CNSTI4 200
@@ -14885,9 +14905,9 @@ ADDP4
 ADDRGP4 saberSpinSound
 INDIRI4
 ASGNI4
-line 2356
-;2355:
-;2356:				self->client->ps.saberDidThrowTime = level.time;
+line 2358
+;2357:
+;2358:				self->client->ps.saberDidThrowTime = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14898,9 +14918,9 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2358
-;2357:
-;2358:				self->client->dangerTime = level.time;
+line 2360
+;2359:
+;2360:				self->client->dangerTime = level.time;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14911,8 +14931,8 @@ ADDP4
 ADDRGP4 level+32
 INDIRI4
 ASGNI4
-line 2359
-;2359:				self->client->ps.eFlags &= ~EF_INVULNERABLE;
+line 2361
+;2361:				self->client->ps.eFlags &= ~EF_INVULNERABLE;
 ADDRLP4 300
 ADDRFP4 0
 INDIRP4
@@ -14930,8 +14950,8 @@ INDIRI4
 CNSTI4 -67108865
 BANDI4
 ASGNI4
-line 2360
-;2360:				self->client->invulnerableTimer = 0;
+line 2362
+;2362:				self->client->invulnerableTimer = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14941,25 +14961,25 @@ CNSTI4 1564
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2362
-;2361:
-;2362:				trap_LinkEntity(saberent);
+line 2364
+;2363:
+;2364:				trap_LinkEntity(saberent);
 ADDRLP4 248
 INDIRP4
 ARGP4
 ADDRGP4 trap_LinkEntity
 CALLV
 pop
-line 2363
-;2363:			}
+line 2365
+;2365:			}
 ADDRGP4 $988
 JUMPV
 LABELV $991
-line 2365
-;2364:			else
-;2365:			{
-line 2366
-;2366:				VectorCopy(boltOrigin, saberent->pos1);
+line 2367
+;2366:			else
+;2367:			{
+line 2368
+;2368:				VectorCopy(boltOrigin, saberent->pos1);
 ADDRLP4 248
 INDIRP4
 CNSTI4 548
@@ -14967,25 +14987,25 @@ ADDP4
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2367
-;2367:				trap_LinkEntity(saberent);
+line 2369
+;2369:				trap_LinkEntity(saberent);
 ADDRLP4 248
 INDIRP4
 ARGP4
 ADDRGP4 trap_LinkEntity
 CALLV
 pop
-line 2368
-;2368:			}
-line 2369
-;2369:		}
 line 2370
-;2370:	}
+;2370:			}
+line 2371
+;2371:		}
+line 2372
+;2372:	}
 ADDRGP4 $988
 JUMPV
 LABELV $987
-line 2371
-;2371:	else if (!self->client->ps.saberHolstered)
+line 2373
+;2373:	else if (!self->client->ps.saberHolstered)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -14996,10 +15016,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 NEI4 $999
-line 2372
-;2372:	{
-line 2373
-;2373:		gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
+line 2374
+;2374:	{
+line 2375
+;2375:		gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
 ADDRLP4 248
 CNSTI4 828
 ADDRFP4 0
@@ -15014,18 +15034,18 @@ MULI4
 ADDRGP4 g_entities
 ADDP4
 ASGNP4
-line 2375
-;2374:
-;2375:		if (saberent)
+line 2377
+;2376:
+;2377:		if (saberent)
 ADDRLP4 248
 INDIRP4
 CVPU4 4
 CNSTU4 0
 EQU4 $1001
-line 2376
-;2376:		{
-line 2377
-;2377:			saberent->r.svFlags |= (SVF_NOCLIENT);
+line 2378
+;2378:		{
+line 2379
+;2379:			saberent->r.svFlags |= (SVF_NOCLIENT);
 ADDRLP4 252
 ADDRLP4 248
 INDIRP4
@@ -15040,16 +15060,16 @@ INDIRI4
 CNSTI4 1
 BORI4
 ASGNI4
-line 2378
-;2378:			saberent->r.contents = CONTENTS_LIGHTSABER;
+line 2380
+;2380:			saberent->r.contents = CONTENTS_LIGHTSABER;
 ADDRLP4 248
 INDIRP4
 CNSTI4 340
 ADDP4
 CNSTI4 262144
 ASGNI4
-line 2379
-;2379:			VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
+line 2381
+;2381:			VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
 ADDRLP4 248
 INDIRP4
 CNSTI4 316
@@ -15068,8 +15088,8 @@ CNSTI4 324
 ADDP4
 CNSTF4 3238002688
 ASGNF4
-line 2380
-;2380:			VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
+line 2382
+;2382:			VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
 ADDRLP4 248
 INDIRP4
 CNSTI4 328
@@ -15088,20 +15108,20 @@ CNSTI4 336
 ADDP4
 CNSTF4 1090519040
 ASGNF4
-line 2381
-;2381:			saberent->s.loopSound = 0;
+line 2383
+;2383:			saberent->s.loopSound = 0;
 ADDRLP4 248
 INDIRP4
 CNSTI4 200
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2382
-;2382:		}
-LABELV $1001
 line 2384
-;2383:
-;2384:		if (self->client->ps.saberLockTime > level.time && self->client->ps.saberEntityNum)
+;2384:		}
+LABELV $1001
+line 2386
+;2385:
+;2386:		if (self->client->ps.saberLockTime > level.time && self->client->ps.saberEntityNum)
 ADDRLP4 252
 ADDRFP4 0
 INDIRP4
@@ -15124,10 +15144,10 @@ ADDP4
 INDIRI4
 CNSTI4 0
 EQI4 $1003
-line 2385
-;2385:		{
-line 2386
-;2386:			if (self->client->ps.saberIdleWound < level.time)
+line 2387
+;2387:		{
+line 2388
+;2388:			if (self->client->ps.saberIdleWound < level.time)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15139,12 +15159,12 @@ INDIRI4
 ADDRGP4 level+32
 INDIRI4
 GEI4 $1006
-line 2387
-;2387:			{
-line 2390
-;2388:				gentity_t *te;
-;2389:				vec3_t dir;
-;2390:				te = G_TempEntity( g_entities[self->client->ps.saberEntityNum].r.currentOrigin, EV_SABER_BLOCK );
+line 2389
+;2389:			{
+line 2392
+;2390:				gentity_t *te;
+;2391:				vec3_t dir;
+;2392:				te = G_TempEntity( g_entities[self->client->ps.saberEntityNum].r.currentOrigin, EV_SABER_BLOCK );
 CNSTI4 828
 ADDRFP4 0
 INDIRP4
@@ -15168,8 +15188,8 @@ ADDRLP4 256
 ADDRLP4 272
 INDIRP4
 ASGNP4
-line 2391
-;2391:				VectorSet( dir, 0, 1, 0 );
+line 2393
+;2393:				VectorSet( dir, 0, 1, 0 );
 ADDRLP4 260
 CNSTF4 0
 ASGNF4
@@ -15179,8 +15199,8 @@ ASGNF4
 ADDRLP4 260+8
 CNSTF4 0
 ASGNF4
-line 2392
-;2392:				VectorCopy(g_entities[self->client->ps.saberEntityNum].r.currentOrigin, te->s.origin);
+line 2394
+;2394:				VectorCopy(g_entities[self->client->ps.saberEntityNum].r.currentOrigin, te->s.origin);
 ADDRLP4 256
 INDIRP4
 CNSTI4 92
@@ -15199,8 +15219,8 @@ ADDRGP4 g_entities+296+72
 ADDP4
 INDIRB
 ASGNB 12
-line 2393
-;2393:				VectorCopy(dir, te->s.angles);
+line 2395
+;2395:				VectorCopy(dir, te->s.angles);
 ADDRLP4 256
 INDIRP4
 CNSTI4 116
@@ -15208,17 +15228,17 @@ ADDP4
 ADDRLP4 260
 INDIRB
 ASGNB 12
-line 2394
-;2394:				te->s.eventParm = 1;
+line 2396
+;2396:				te->s.eventParm = 1;
 ADDRLP4 256
 INDIRP4
 CNSTI4 256
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2396
-;2395:
-;2396:				self->client->ps.saberIdleWound = level.time + Q_irand(400, 600);
+line 2398
+;2397:
+;2398:				self->client->ps.saberIdleWound = level.time + Q_irand(400, 600);
 CNSTI4 400
 ARGI4
 CNSTI4 600
@@ -15240,12 +15260,12 @@ ADDRLP4 276
 INDIRI4
 ADDI4
 ASGNI4
-line 2397
-;2397:			}
-LABELV $1006
 line 2399
-;2398:
-;2399:			VectorCopy(boltOrigin, self->client->lastSaberBase);
+;2399:			}
+LABELV $1006
+line 2401
+;2400:
+;2401:			VectorCopy(boltOrigin, self->client->lastSaberBase);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15256,8 +15276,8 @@ ADDP4
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2400
-;2400:			VectorCopy(end, self->client->lastSaberTip);
+line 2402
+;2402:			VectorCopy(end, self->client->lastSaberTip);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15268,8 +15288,8 @@ ADDP4
 ADDRLP4 124
 INDIRB
 ASGNB 12
-line 2401
-;2401:			self->client->hasCurrentPosition = qtrue;
+line 2403
+;2403:			self->client->hasCurrentPosition = qtrue;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15279,9 +15299,9 @@ CNSTI4 1744
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2403
-;2402:
-;2403:			self->client->ps.saberBlocked = BLOCKED_NONE;
+line 2405
+;2404:
+;2405:			self->client->ps.saberBlocked = BLOCKED_NONE;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15291,56 +15311,22 @@ CNSTI4 520
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2405
-;2404:
-;2405:			goto finalUpdate;
+line 2407
+;2406:
+;2407:			goto finalUpdate;
 ADDRGP4 $954
 JUMPV
 LABELV $1003
-line 2408
-;2406:		}
-;2407:
-;2408:		if (self->client->ps.dualBlade)
-ADDRFP4 0
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 1352
-ADDP4
-INDIRI4
-CNSTI4 0
-EQI4 $1016
-line 2409
-;2409:		{
-line 2410
-;2410:			self->client->ps.saberIdleWound = 0;
-ADDRFP4 0
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 736
-ADDP4
-CNSTI4 0
-ASGNI4
-line 2411
-;2411:			self->client->ps.saberAttackWound = 0;
-ADDRFP4 0
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 740
-ADDP4
-CNSTI4 0
-ASGNI4
-line 2412
-;2412:		}
-LABELV $1016
-line 2414
-;2413:
-;2414:		if (self->client->hasCurrentPosition && g_saberInterpolate.integer)
+line 2416
+;2408:		}
+;2409:
+;2410:		/*if (self->client->ps.dualBlade)
+;2411:		{
+;2412:			self->client->ps.saberIdleWound = 0;
+;2413:			self->client->ps.saberAttackWound = 0;
+;2414:		}*/
+;2415:
+;2416:		if (self->client->hasCurrentPosition && g_saberInterpolate.integer)
 ADDRLP4 256
 CNSTI4 0
 ASGNI4
@@ -15354,16 +15340,16 @@ ADDP4
 INDIRI4
 ADDRLP4 256
 INDIRI4
-EQI4 $1018
+EQI4 $1016
 ADDRGP4 g_saberInterpolate+12
 INDIRI4
 ADDRLP4 256
 INDIRI4
-EQI4 $1018
-line 2415
-;2415:		{
-line 2416
-;2416:			if (!CheckSaberDamage(self, boltOrigin, end, qfalse))
+EQI4 $1016
+line 2417
+;2417:		{
+line 2418
+;2418:			if (!CheckSaberDamage(self, boltOrigin, end, qfalse))
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -15380,11 +15366,11 @@ ASGNI4
 ADDRLP4 260
 INDIRI4
 CNSTI4 0
-NEI4 $1019
-line 2417
-;2417:			{
-line 2418
-;2418:				CheckSaberDamage(self, boltOrigin, end, qtrue);
+NEI4 $1017
+line 2419
+;2419:			{
+line 2420
+;2420:				CheckSaberDamage(self, boltOrigin, end, qtrue);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -15397,18 +15383,18 @@ ARGI4
 ADDRGP4 CheckSaberDamage
 CALLI4
 pop
-line 2419
-;2419:			}
-line 2420
-;2420:		}
-ADDRGP4 $1019
-JUMPV
-LABELV $1018
+line 2421
+;2421:			}
 line 2422
-;2421:		else
-;2422:		{
-line 2423
-;2423:			CheckSaberDamage(self, boltOrigin, end, qfalse);
+;2422:		}
+ADDRGP4 $1017
+JUMPV
+LABELV $1016
+line 2424
+;2423:		else
+;2424:		{
+line 2425
+;2425:			CheckSaberDamage(self, boltOrigin, end, qfalse);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -15421,12 +15407,12 @@ ARGI4
 ADDRGP4 CheckSaberDamage
 CALLI4
 pop
-line 2424
-;2424:		}
-LABELV $1019
 line 2426
-;2425:
-;2426:		if (self->client->ps.dualBlade)
+;2426:		}
+LABELV $1017
+line 2428
+;2427:
+;2428:		if (self->client->ps.dualBlade)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15436,13 +15422,13 @@ CNSTI4 1352
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1023
-line 2427
-;2427:		{
-line 2430
-;2428:			vec3_t otherOrg, otherEnd;
-;2429:
-;2430:			VectorMA( boltOrigin, -12, rawAngles, otherOrg );
+EQI4 $1021
+line 2429
+;2429:		{
+line 2432
+;2430:			vec3_t otherOrg, otherEnd;
+;2431:
+;2432:			VectorMA( boltOrigin, -12, rawAngles, otherOrg );
 ADDRLP4 284
 CNSTF4 3242196992
 ASGNF4
@@ -15475,8 +15461,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2431
-;2431:			VectorMA( otherOrg, -40, rawAngles, otherEnd );
+line 2433
+;2433:			VectorMA( otherOrg, -40, rawAngles, otherEnd );
 ADDRLP4 288
 CNSTF4 3256877056
 ASGNF4
@@ -15509,9 +15495,9 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2433
-;2432:
-;2433:			self->client->ps.saberIdleWound = 0;
+line 2435
+;2434:
+;2435:			self->client->ps.saberIdleWound = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15521,8 +15507,8 @@ CNSTI4 736
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2434
-;2434:			self->client->ps.saberAttackWound = 0;
+line 2436
+;2436:			self->client->ps.saberAttackWound = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15532,9 +15518,9 @@ CNSTI4 740
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2436
-;2435:
-;2436:			CheckSaberDamage(self, otherOrg, otherEnd, qfalse);
+line 2438
+;2437:
+;2438:			CheckSaberDamage(self, otherOrg, otherEnd, qfalse);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -15547,12 +15533,12 @@ ARGI4
 ADDRGP4 CheckSaberDamage
 CALLI4
 pop
-line 2437
-;2437:		}
-LABELV $1023
 line 2439
-;2438:
-;2439:		VectorCopy(boltOrigin, self->client->lastSaberBase);
+;2439:		}
+LABELV $1021
+line 2441
+;2440:
+;2441:		VectorCopy(boltOrigin, self->client->lastSaberBase);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15563,8 +15549,8 @@ ADDP4
 ADDRLP4 12
 INDIRB
 ASGNB 12
-line 2440
-;2440:		VectorCopy(end, self->client->lastSaberTip);
+line 2442
+;2442:		VectorCopy(end, self->client->lastSaberTip);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15575,8 +15561,8 @@ ADDP4
 ADDRLP4 124
 INDIRB
 ASGNB 12
-line 2441
-;2441:		self->client->hasCurrentPosition = qtrue;
+line 2443
+;2443:		self->client->hasCurrentPosition = qtrue;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15586,9 +15572,9 @@ CNSTI4 1744
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2443
-;2442:
-;2443:		self->client->ps.saberEntityState = 0;
+line 2445
+;2444:
+;2445:		self->client->ps.saberEntityState = 0;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15598,134 +15584,36 @@ CNSTI4 552
 ADDP4
 CNSTI4 0
 ASGNI4
-line 2444
-;2444:	}
+line 2446
+;2446:	}
 LABELV $999
 LABELV $988
 LABELV $954
-line 2446
-;2445:finalUpdate:
-;2446:	if (self->client->ps.saberLockFrame)
-ADDRFP4 0
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 532
-ADDP4
-INDIRI4
-CNSTI4 0
-EQI4 $1037
-line 2447
-;2447:	{
 line 2448
-;2448:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "model_root", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
-ADDRLP4 248
+;2447:finalUpdate:
+;2448:	if (self->client->ps.saberLockFrame)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
 ADDP4
 INDIRP4
-ASGNP4
-ADDRLP4 248
-INDIRP4
-CNSTI4 1716
-ADDP4
-INDIRP4
-ARGP4
-CNSTI4 0
-ARGI4
-ADDRGP4 $1039
-ARGP4
-ADDRLP4 252
-ADDRLP4 248
-INDIRP4
 CNSTI4 532
 ADDP4
 INDIRI4
-ASGNI4
-ADDRLP4 252
-INDIRI4
-ARGI4
-ADDRLP4 252
-INDIRI4
-CNSTI4 1
-ADDI4
-ARGI4
-CNSTI4 200
-ARGI4
-ADDRLP4 28
-INDIRF4
-ARGF4
-ADDRGP4 level+32
-INDIRI4
-ARGI4
-CNSTF4 3212836864
-ARGF4
-CNSTI4 150
-ARGI4
-ADDRGP4 trap_G2API_SetBoneAnim
-CALLI4
-pop
+CNSTI4 0
+EQI4 $1035
 line 2449
-;2449:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "upper_lumbar", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
-ADDRLP4 256
-ADDRFP4 0
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-ASGNP4
-ADDRLP4 256
-INDIRP4
-CNSTI4 1716
-ADDP4
-INDIRP4
-ARGP4
-CNSTI4 0
-ARGI4
-ADDRGP4 $234
-ARGP4
-ADDRLP4 260
-ADDRLP4 256
-INDIRP4
-CNSTI4 532
-ADDP4
-INDIRI4
-ASGNI4
-ADDRLP4 260
-INDIRI4
-ARGI4
-ADDRLP4 260
-INDIRI4
-CNSTI4 1
-ADDI4
-ARGI4
-CNSTI4 200
-ARGI4
-ADDRLP4 28
-INDIRF4
-ARGF4
-ADDRGP4 level+32
-INDIRI4
-ARGI4
-CNSTF4 3212836864
-ARGF4
-CNSTI4 150
-ARGI4
-ADDRGP4 trap_G2API_SetBoneAnim
-CALLI4
-pop
+;2449:	{
 line 2450
-;2450:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "Motion", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
-ADDRLP4 264
+;2450:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "model_root", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+ADDRLP4 248
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
 ADDP4
 INDIRP4
 ASGNP4
-ADDRLP4 264
+ADDRLP4 248
 INDIRP4
 CNSTI4 1716
 ADDP4
@@ -15733,19 +15621,19 @@ INDIRP4
 ARGP4
 CNSTI4 0
 ARGI4
-ADDRGP4 $1042
+ADDRGP4 $1037
 ARGP4
-ADDRLP4 268
-ADDRLP4 264
+ADDRLP4 252
+ADDRLP4 248
 INDIRP4
 CNSTI4 532
 ADDP4
 INDIRI4
 ASGNI4
-ADDRLP4 268
+ADDRLP4 252
 INDIRI4
 ARGI4
-ADDRLP4 268
+ADDRLP4 252
 INDIRI4
 CNSTI4 1
 ADDI4
@@ -15766,14 +15654,112 @@ ADDRGP4 trap_G2API_SetBoneAnim
 CALLI4
 pop
 line 2451
-;2451:		return;
+;2451:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "upper_lumbar", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+ADDRLP4 256
+ADDRFP4 0
+INDIRP4
+CNSTI4 408
+ADDP4
+INDIRP4
+ASGNP4
+ADDRLP4 256
+INDIRP4
+CNSTI4 1716
+ADDP4
+INDIRP4
+ARGP4
+CNSTI4 0
+ARGI4
+ADDRGP4 $234
+ARGP4
+ADDRLP4 260
+ADDRLP4 256
+INDIRP4
+CNSTI4 532
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 260
+INDIRI4
+ARGI4
+ADDRLP4 260
+INDIRI4
+CNSTI4 1
+ADDI4
+ARGI4
+CNSTI4 200
+ARGI4
+ADDRLP4 28
+INDIRF4
+ARGF4
+ADDRGP4 level+32
+INDIRI4
+ARGI4
+CNSTF4 3212836864
+ARGF4
+CNSTI4 150
+ARGI4
+ADDRGP4 trap_G2API_SetBoneAnim
+CALLI4
+pop
+line 2452
+;2452:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "Motion", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+ADDRLP4 264
+ADDRFP4 0
+INDIRP4
+CNSTI4 408
+ADDP4
+INDIRP4
+ASGNP4
+ADDRLP4 264
+INDIRP4
+CNSTI4 1716
+ADDP4
+INDIRP4
+ARGP4
+CNSTI4 0
+ARGI4
+ADDRGP4 $1040
+ARGP4
+ADDRLP4 268
+ADDRLP4 264
+INDIRP4
+CNSTI4 532
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 268
+INDIRI4
+ARGI4
+ADDRLP4 268
+INDIRI4
+CNSTI4 1
+ADDI4
+ARGI4
+CNSTI4 200
+ARGI4
+ADDRLP4 28
+INDIRF4
+ARGF4
+ADDRGP4 level+32
+INDIRI4
+ARGI4
+CNSTF4 3212836864
+ARGF4
+CNSTI4 150
+ARGI4
+ADDRGP4 trap_G2API_SetBoneAnim
+CALLI4
+pop
+line 2453
+;2453:		return;
 ADDRGP4 $915
 JUMPV
-LABELV $1037
-line 2454
-;2452:	}
-;2453:
-;2454:	if (self->client->ps.legsAnimExecute != legsAnim)
+LABELV $1035
+line 2456
+;2454:	}
+;2455:
+;2456:	if (self->client->ps.legsAnimExecute != legsAnim)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15784,11 +15770,11 @@ ADDP4
 INDIRI4
 ADDRLP4 120
 INDIRI4
-EQI4 $1044
-line 2455
-;2455:	{
-line 2456
-;2456:		float animSpeed = 50.0f / bgGlobalAnimations[legsAnim].frameLerp;
+EQI4 $1042
+line 2457
+;2457:	{
+line 2458
+;2458:		float animSpeed = 50.0f / bgGlobalAnimations[legsAnim].frameLerp;
 ADDRLP4 248
 CNSTF4 1112014848
 CNSTI4 28
@@ -15801,9 +15787,9 @@ INDIRI4
 CVIF4 4
 DIVF4
 ASGNF4
-line 2458
-;2457:		int aFlags;
-;2458:		animSpeedScale = (animSpeed *= animSpeedScale);
+line 2460
+;2459:		int aFlags;
+;2460:		animSpeedScale = (animSpeed *= animSpeedScale);
 ADDRLP4 256
 ADDRLP4 248
 INDIRF4
@@ -15819,9 +15805,9 @@ ADDRLP4 28
 ADDRLP4 256
 INDIRF4
 ASGNF4
-line 2460
-;2459:
-;2460:		if (bgGlobalAnimations[legsAnim].loopFrames != -1)
+line 2462
+;2461:
+;2462:		if (bgGlobalAnimations[legsAnim].loopFrames != -1)
 CNSTI4 28
 ADDRLP4 120
 INDIRI4
@@ -15830,42 +15816,42 @@ ADDRGP4 bgGlobalAnimations+8
 ADDP4
 INDIRI4
 CNSTI4 -1
-EQI4 $1047
-line 2461
-;2461:		{
-line 2462
-;2462:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
+EQI4 $1045
+line 2463
+;2463:		{
+line 2464
+;2464:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
 ADDRLP4 252
 CNSTI4 16
 ASGNI4
-line 2463
-;2463:		}
-ADDRGP4 $1048
-JUMPV
-LABELV $1047
 line 2465
-;2464:		else
-;2465:		{
-line 2466
-;2466:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
+;2465:		}
+ADDRGP4 $1046
+JUMPV
+LABELV $1045
+line 2467
+;2466:		else
+;2467:		{
+line 2468
+;2468:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
 ADDRLP4 252
 CNSTI4 72
 ASGNI4
-line 2467
-;2467:		}
-LABELV $1048
 line 2469
-;2468:
-;2469:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
+;2469:		}
+LABELV $1046
+line 2471
+;2470:
+;2471:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
 ADDRLP4 252
 ADDRLP4 252
 INDIRI4
 CNSTI4 128
 BORI4
 ASGNI4
-line 2471
-;2470:
-;2471:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "model_root", bgGlobalAnimations[legsAnim].firstFrame, bgGlobalAnimations[legsAnim].firstFrame+bgGlobalAnimations[legsAnim].numFrames, aFlags, animSpeedScale, level.time, -1, 150);
+line 2473
+;2472:
+;2473:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "model_root", bgGlobalAnimations[legsAnim].firstFrame, bgGlobalAnimations[legsAnim].firstFrame+bgGlobalAnimations[legsAnim].numFrames, aFlags, animSpeedScale, level.time, -1, 150);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15877,7 +15863,7 @@ INDIRP4
 ARGP4
 CNSTI4 0
 ARGI4
-ADDRGP4 $1039
+ADDRGP4 $1037
 ARGP4
 ADDRLP4 260
 CNSTI4 28
@@ -15920,8 +15906,8 @@ ARGI4
 ADDRGP4 trap_G2API_SetBoneAnim
 CALLI4
 pop
-line 2472
-;2472:		self->client->ps.legsAnimExecute = legsAnim;
+line 2474
+;2474:		self->client->ps.legsAnimExecute = legsAnim;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15932,11 +15918,11 @@ ADDP4
 ADDRLP4 120
 INDIRI4
 ASGNI4
-line 2473
-;2473:	}
-LABELV $1044
-line 2474
-;2474:	if (self->client->ps.torsoAnimExecute != torsoAnim)
+line 2475
+;2475:	}
+LABELV $1042
+line 2476
+;2476:	if (self->client->ps.torsoAnimExecute != torsoAnim)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -15947,30 +15933,30 @@ ADDP4
 INDIRI4
 ADDRLP4 92
 INDIRI4
-EQI4 $1052
-line 2475
-;2475:	{
+EQI4 $1050
 line 2477
-;2476:		int initialFrame;
-;2477:		int aFlags = 0;
+;2477:	{
+line 2479
+;2478:		int initialFrame;
+;2479:		int aFlags = 0;
 ADDRLP4 248
 CNSTI4 0
 ASGNI4
-line 2478
-;2478:		float animSpeed = 0;
+line 2480
+;2480:		float animSpeed = 0;
 ADDRLP4 252
 CNSTF4 0
 ASGNF4
-line 2480
-;2479:
-;2480:		f = torsoAnim;
+line 2482
+;2481:
+;2482:		f = torsoAnim;
 ADDRLP4 136
 ADDRLP4 92
 INDIRI4
 ASGNI4
-line 2482
-;2481:
-;2482:		initialFrame = bgGlobalAnimations[f].firstFrame;
+line 2484
+;2483:
+;2484:		initialFrame = bgGlobalAnimations[f].firstFrame;
 ADDRLP4 256
 CNSTI4 28
 ADDRLP4 136
@@ -15980,20 +15966,20 @@ ADDRGP4 bgGlobalAnimations
 ADDP4
 INDIRI4
 ASGNI4
-line 2495
-;2483:	
-;2484:		/*
-;2485:		if (bgGlobalAnimations[f].numFrames > 20)
-;2486:		{
-;2487:			initialFrame += 6;
-;2488:		}
-;2489:		else if (bgGlobalAnimations[f].numFrames > 3)
-;2490:		{ //HACK: Force it a couple frames into the animation so it doesn't lag behind the client visual position as much..
-;2491:			initialFrame += 2;
-;2492:		}
-;2493:		*/
-;2494:
-;2495:		BG_SaberStartTransAnim(self->client->ps.fd.saberAnimLevel, f, &animSpeedScale);
+line 2497
+;2485:	
+;2486:		/*
+;2487:		if (bgGlobalAnimations[f].numFrames > 20)
+;2488:		{
+;2489:			initialFrame += 6;
+;2490:		}
+;2491:		else if (bgGlobalAnimations[f].numFrames > 3)
+;2492:		{ //HACK: Force it a couple frames into the animation so it doesn't lag behind the client visual position as much..
+;2493:			initialFrame += 2;
+;2494:		}
+;2495:		*/
+;2496:
+;2497:		BG_SaberStartTransAnim(self->client->ps.fd.saberAnimLevel, f, &animSpeedScale);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16011,9 +15997,9 @@ ARGP4
 ADDRGP4 BG_SaberStartTransAnim
 CALLV
 pop
-line 2497
-;2496:
-;2497:		animSpeed = 50.0f / bgGlobalAnimations[f].frameLerp;
+line 2499
+;2498:
+;2499:		animSpeed = 50.0f / bgGlobalAnimations[f].frameLerp;
 ADDRLP4 252
 CNSTF4 1112014848
 CNSTI4 28
@@ -16026,8 +16012,8 @@ INDIRI4
 CVIF4 4
 DIVF4
 ASGNF4
-line 2498
-;2498:		animSpeedScale = (animSpeed *= animSpeedScale);
+line 2500
+;2500:		animSpeedScale = (animSpeed *= animSpeedScale);
 ADDRLP4 260
 ADDRLP4 252
 INDIRF4
@@ -16043,9 +16029,9 @@ ADDRLP4 28
 ADDRLP4 260
 INDIRF4
 ASGNF4
-line 2500
-;2499:
-;2500:		if (bgGlobalAnimations[f].loopFrames != -1)
+line 2502
+;2501:
+;2502:		if (bgGlobalAnimations[f].loopFrames != -1)
 CNSTI4 28
 ADDRLP4 136
 INDIRI4
@@ -16054,42 +16040,42 @@ ADDRGP4 bgGlobalAnimations+8
 ADDP4
 INDIRI4
 CNSTI4 -1
-EQI4 $1055
-line 2501
-;2501:		{
-line 2502
-;2502:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
+EQI4 $1053
+line 2503
+;2503:		{
+line 2504
+;2504:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
 ADDRLP4 248
 CNSTI4 16
 ASGNI4
-line 2503
-;2503:		}
-ADDRGP4 $1056
-JUMPV
-LABELV $1055
 line 2505
-;2504:		else
-;2505:		{
-line 2506
-;2506:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
+;2505:		}
+ADDRGP4 $1054
+JUMPV
+LABELV $1053
+line 2507
+;2506:		else
+;2507:		{
+line 2508
+;2508:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
 ADDRLP4 248
 CNSTI4 72
 ASGNI4
-line 2507
-;2507:		}
-LABELV $1056
 line 2509
-;2508:
-;2509:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
+;2509:		}
+LABELV $1054
+line 2511
+;2510:
+;2511:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
 ADDRLP4 248
 ADDRLP4 248
 INDIRI4
 CNSTI4 128
 BORI4
 ASGNI4
-line 2511
-;2510:
-;2511:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "upper_lumbar", initialFrame, bgGlobalAnimations[f].firstFrame+bgGlobalAnimations[f].numFrames, aFlags, animSpeedScale, level.time, initialFrame, 150);
+line 2513
+;2512:
+;2513:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "upper_lumbar", initialFrame, bgGlobalAnimations[f].firstFrame+bgGlobalAnimations[f].numFrames, aFlags, animSpeedScale, level.time, initialFrame, 150);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16146,9 +16132,9 @@ ARGI4
 ADDRGP4 trap_G2API_SetBoneAnim
 CALLI4
 pop
-line 2513
-;2512:
-;2513:		self->client->ps.torsoAnimExecute = torsoAnim;
+line 2515
+;2514:
+;2515:		self->client->ps.torsoAnimExecute = torsoAnim;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16159,18 +16145,18 @@ ADDP4
 ADDRLP4 92
 INDIRI4
 ASGNI4
-line 2515
-;2514:		
-;2515:		setTorso = qtrue;
+line 2517
+;2516:		
+;2517:		setTorso = qtrue;
 ADDRLP4 144
 CNSTI4 1
 ASGNI4
-line 2516
-;2516:	}
-LABELV $1052
 line 2518
-;2517:
-;2518:	if (!BG_FlippingAnim( self->client->ps.legsAnim ) &&
+;2518:	}
+LABELV $1050
+line 2520
+;2519:
+;2520:	if (!BG_FlippingAnim( self->client->ps.legsAnim ) &&
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16187,7 +16173,7 @@ ASGNI4
 ADDRLP4 248
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16204,7 +16190,7 @@ ASGNI4
 ADDRLP4 252
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16221,7 +16207,7 @@ ASGNI4
 ADDRLP4 256
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16238,7 +16224,7 @@ ASGNI4
 ADDRLP4 260
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16255,7 +16241,7 @@ ASGNI4
 ADDRLP4 264
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16272,7 +16258,7 @@ ASGNI4
 ADDRLP4 268
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRLP4 272
 ADDRFP4 0
 INDIRP4
@@ -16296,7 +16282,7 @@ ASGNI4
 ADDRLP4 276
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16313,7 +16299,7 @@ ASGNI4
 ADDRLP4 280
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16330,7 +16316,7 @@ ASGNI4
 ADDRLP4 284
 INDIRI4
 CNSTI4 0
-NEI4 $1060
+NEI4 $1058
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16351,26 +16337,26 @@ ADDRLP4 288
 INDIRI4
 ADDRLP4 292
 INDIRI4
-NEI4 $1060
+NEI4 $1058
 ADDRLP4 144
 INDIRI4
 ADDRLP4 292
 INDIRI4
-EQI4 $1060
-line 2529
-;2519:		!BG_FlippingAnim( self->client->ps.torsoAnim ) &&
-;2520:		!BG_SpinningSaberAnim( self->client->ps.legsAnim ) &&
-;2521:		!BG_SpinningSaberAnim( self->client->ps.torsoAnim ) &&
-;2522:		!BG_InSpecialJump( self->client->ps.legsAnim ) &&
-;2523:		!BG_InSpecialJump( self->client->ps.torsoAnim ) &&
-;2524:		!BG_InRoll(&self->client->ps, self->client->ps.legsAnim) &&
-;2525:		!BG_SaberInSpecial(self->client->ps.saberMove) &&
-;2526:		!BG_SaberInSpecialAttack(self->client->ps.legsAnim) &&
-;2527:		!BG_SaberInSpecialAttack(self->client->ps.torsoAnim) &&
-;2528:		setTorso )
-;2529:	{
-line 2530
-;2530:		float animSpeed = 50.0f / bgGlobalAnimations[torsoAnim].frameLerp;
+EQI4 $1058
+line 2531
+;2521:		!BG_FlippingAnim( self->client->ps.torsoAnim ) &&
+;2522:		!BG_SpinningSaberAnim( self->client->ps.legsAnim ) &&
+;2523:		!BG_SpinningSaberAnim( self->client->ps.torsoAnim ) &&
+;2524:		!BG_InSpecialJump( self->client->ps.legsAnim ) &&
+;2525:		!BG_InSpecialJump( self->client->ps.torsoAnim ) &&
+;2526:		!BG_InRoll(&self->client->ps, self->client->ps.legsAnim) &&
+;2527:		!BG_SaberInSpecial(self->client->ps.saberMove) &&
+;2528:		!BG_SaberInSpecialAttack(self->client->ps.legsAnim) &&
+;2529:		!BG_SaberInSpecialAttack(self->client->ps.torsoAnim) &&
+;2530:		setTorso )
+;2531:	{
+line 2532
+;2532:		float animSpeed = 50.0f / bgGlobalAnimations[torsoAnim].frameLerp;
 ADDRLP4 296
 CNSTF4 1112014848
 CNSTI4 28
@@ -16383,9 +16369,9 @@ INDIRI4
 CVIF4 4
 DIVF4
 ASGNF4
-line 2532
-;2531:		int aFlags;
-;2532:		animSpeedScale = (animSpeed *= animSpeedScale);
+line 2534
+;2533:		int aFlags;
+;2534:		animSpeedScale = (animSpeed *= animSpeedScale);
 ADDRLP4 304
 ADDRLP4 296
 INDIRF4
@@ -16401,9 +16387,9 @@ ADDRLP4 28
 ADDRLP4 304
 INDIRF4
 ASGNF4
-line 2534
-;2533:
-;2534:		if (bgGlobalAnimations[torsoAnim].loopFrames != -1)
+line 2536
+;2535:
+;2536:		if (bgGlobalAnimations[torsoAnim].loopFrames != -1)
 CNSTI4 28
 ADDRLP4 92
 INDIRI4
@@ -16412,42 +16398,42 @@ ADDRGP4 bgGlobalAnimations+8
 ADDP4
 INDIRI4
 CNSTI4 -1
-EQI4 $1063
-line 2535
-;2535:		{
-line 2536
-;2536:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
+EQI4 $1061
+line 2537
+;2537:		{
+line 2538
+;2538:			aFlags = BONE_ANIM_OVERRIDE_LOOP;
 ADDRLP4 300
 CNSTI4 16
 ASGNI4
-line 2537
-;2537:		}
-ADDRGP4 $1064
-JUMPV
-LABELV $1063
 line 2539
-;2538:		else
-;2539:		{
-line 2540
-;2540:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
+;2539:		}
+ADDRGP4 $1062
+JUMPV
+LABELV $1061
+line 2541
+;2540:		else
+;2541:		{
+line 2542
+;2542:			aFlags = BONE_ANIM_OVERRIDE_FREEZE;
 ADDRLP4 300
 CNSTI4 72
 ASGNI4
-line 2541
-;2541:		}
-LABELV $1064
 line 2543
-;2542:
-;2543:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
+;2543:		}
+LABELV $1062
+line 2545
+;2544:
+;2545:		aFlags |= BONE_ANIM_BLEND; //since client defaults to blend. Not sure if this will make much difference if any on client position, but it's here just for the sake of matching them.
 ADDRLP4 300
 ADDRLP4 300
 INDIRI4
 CNSTI4 128
 BORI4
 ASGNI4
-line 2545
-;2544:
-;2545:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "Motion", bgGlobalAnimations[torsoAnim].firstFrame, bgGlobalAnimations[torsoAnim].firstFrame+bgGlobalAnimations[torsoAnim].numFrames, aFlags, animSpeedScale, level.time, -1, 150);
+line 2547
+;2546:
+;2547:		trap_G2API_SetBoneAnim(self->client->ghoul2, 0, "Motion", bgGlobalAnimations[torsoAnim].firstFrame, bgGlobalAnimations[torsoAnim].firstFrame+bgGlobalAnimations[torsoAnim].numFrames, aFlags, animSpeedScale, level.time, -1, 150);
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16459,7 +16445,7 @@ INDIRP4
 ARGP4
 CNSTI4 0
 ARGI4
-ADDRGP4 $1042
+ADDRGP4 $1040
 ARGP4
 ADDRLP4 308
 CNSTI4 28
@@ -16502,21 +16488,21 @@ ARGI4
 ADDRGP4 trap_G2API_SetBoneAnim
 CALLI4
 pop
-line 2546
-;2546:	}
-LABELV $1060
-line 2547
-;2547:}
+line 2548
+;2548:	}
+LABELV $1058
+line 2549
+;2549:}
 LABELV $915
 endproc WP_SaberPositionUpdate 316 40
 export WP_MissileBlockForBlock
 proc WP_MissileBlockForBlock 4 0
-line 2550
-;2548:
-;2549:int WP_MissileBlockForBlock( int saberBlock )
-;2550:{
-line 2551
-;2551:	switch( saberBlock )
+line 2552
+;2550:
+;2551:int WP_MissileBlockForBlock( int saberBlock )
+;2552:{
+line 2553
+;2553:	switch( saberBlock )
 ADDRLP4 0
 ADDRFP4 0
 INDIRI4
@@ -16524,115 +16510,115 @@ ASGNI4
 ADDRLP4 0
 INDIRI4
 CNSTI4 3
-LTI4 $1069
+LTI4 $1067
 ADDRLP4 0
 INDIRI4
 CNSTI4 7
-GTI4 $1069
+GTI4 $1067
 ADDRLP4 0
 INDIRI4
 CNSTI4 2
 LSHI4
-ADDRGP4 $1076-12
+ADDRGP4 $1074-12
 ADDP4
 INDIRP4
 JUMPV
 lit
 align 4
-LABELV $1076
+LABELV $1074
+address $1069
+address $1070
 address $1071
 address $1072
 address $1073
-address $1074
-address $1075
 code
-line 2552
-;2552:	{
-LABELV $1071
 line 2554
-;2553:	case BLOCKED_UPPER_RIGHT:
-;2554:		return BLOCKED_UPPER_RIGHT_PROJ;
+;2554:	{
+LABELV $1069
+line 2556
+;2555:	case BLOCKED_UPPER_RIGHT:
+;2556:		return BLOCKED_UPPER_RIGHT_PROJ;
 CNSTI4 8
 RETI4
-ADDRGP4 $1068
+ADDRGP4 $1066
 JUMPV
-line 2555
-;2555:		break;
-LABELV $1072
 line 2557
-;2556:	case BLOCKED_UPPER_LEFT:
-;2557:		return BLOCKED_UPPER_LEFT_PROJ;
+;2557:		break;
+LABELV $1070
+line 2559
+;2558:	case BLOCKED_UPPER_LEFT:
+;2559:		return BLOCKED_UPPER_LEFT_PROJ;
 CNSTI4 9
 RETI4
-ADDRGP4 $1068
+ADDRGP4 $1066
 JUMPV
-line 2558
-;2558:		break;
-LABELV $1073
 line 2560
-;2559:	case BLOCKED_LOWER_RIGHT:
-;2560:		return BLOCKED_LOWER_RIGHT_PROJ;
+;2560:		break;
+LABELV $1071
+line 2562
+;2561:	case BLOCKED_LOWER_RIGHT:
+;2562:		return BLOCKED_LOWER_RIGHT_PROJ;
 CNSTI4 10
 RETI4
-ADDRGP4 $1068
+ADDRGP4 $1066
 JUMPV
-line 2561
-;2561:		break;
-LABELV $1074
 line 2563
-;2562:	case BLOCKED_LOWER_LEFT:
-;2563:		return BLOCKED_LOWER_LEFT_PROJ;
+;2563:		break;
+LABELV $1072
+line 2565
+;2564:	case BLOCKED_LOWER_LEFT:
+;2565:		return BLOCKED_LOWER_LEFT_PROJ;
 CNSTI4 11
 RETI4
-ADDRGP4 $1068
+ADDRGP4 $1066
 JUMPV
-line 2564
-;2564:		break;
-LABELV $1075
 line 2566
-;2565:	case BLOCKED_TOP:
-;2566:		return BLOCKED_TOP_PROJ;
+;2566:		break;
+LABELV $1073
+line 2568
+;2567:	case BLOCKED_TOP:
+;2568:		return BLOCKED_TOP_PROJ;
 CNSTI4 12
 RETI4
-ADDRGP4 $1068
+ADDRGP4 $1066
 JUMPV
-line 2567
-;2567:		break;
-LABELV $1069
 line 2569
-;2568:	}
-;2569:	return saberBlock;
+;2569:		break;
+LABELV $1067
+line 2571
+;2570:	}
+;2571:	return saberBlock;
 ADDRFP4 0
 INDIRI4
 RETI4
-LABELV $1068
+LABELV $1066
 endproc WP_MissileBlockForBlock 4 0
 lit
 align 4
-LABELV $1079
+LABELV $1077
 byte 4 0
 byte 4 0
 byte 4 0
 export WP_SaberBlockNonRandom
 code
 proc WP_SaberBlockNonRandom 72 16
-line 2573
-;2570:}
-;2571:
-;2572:void WP_SaberBlockNonRandom( gentity_t *self, vec3_t hitloc, qboolean missileBlock )
-;2573:{
-line 2574
-;2574:	vec3_t diff, fwdangles={0,0,0}, right;
+line 2575
+;2572:}
+;2573:
+;2574:void WP_SaberBlockNonRandom( gentity_t *self, vec3_t hitloc, qboolean missileBlock )
+;2575:{
+line 2576
+;2576:	vec3_t diff, fwdangles={0,0,0}, right;
 ADDRLP4 36
-ADDRGP4 $1079
+ADDRGP4 $1077
 INDIRB
 ASGNB 12
-line 2579
-;2575:	vec3_t clEye;
-;2576:	float rightdot;
-;2577:	float zdiff;
-;2578:
-;2579:	VectorCopy(self->client->ps.origin, clEye);
+line 2581
+;2577:	vec3_t clEye;
+;2578:	float rightdot;
+;2579:	float zdiff;
+;2580:
+;2581:	VectorCopy(self->client->ps.origin, clEye);
 ADDRLP4 12
 ADDRFP4 0
 INDIRP4
@@ -16643,8 +16629,8 @@ CNSTI4 20
 ADDP4
 INDIRB
 ASGNB 12
-line 2580
-;2580:	clEye[2] += self->client->ps.viewheight;
+line 2582
+;2582:	clEye[2] += self->client->ps.viewheight;
 ADDRLP4 12+8
 ADDRLP4 12+8
 INDIRF4
@@ -16659,9 +16645,9 @@ INDIRI4
 CVIF4 4
 ADDF4
 ASGNF4
-line 2582
-;2581:
-;2582:	VectorSubtract( hitloc, clEye, diff );
+line 2584
+;2583:
+;2584:	VectorSubtract( hitloc, clEye, diff );
 ADDRLP4 56
 ADDRFP4 4
 INDIRP4
@@ -16694,21 +16680,21 @@ ADDRLP4 12+8
 INDIRF4
 SUBF4
 ASGNF4
-line 2583
-;2583:	diff[2] = 0;
+line 2585
+;2585:	diff[2] = 0;
 ADDRLP4 0+8
 CNSTF4 0
 ASGNF4
-line 2584
-;2584:	VectorNormalize( diff );
+line 2586
+;2586:	VectorNormalize( diff );
 ADDRLP4 0
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 2586
-;2585:
-;2586:	fwdangles[1] = self->client->ps.viewangles[1];
+line 2588
+;2587:
+;2588:	fwdangles[1] = self->client->ps.viewangles[1];
 ADDRLP4 36+4
 ADDRFP4 0
 INDIRP4
@@ -16719,9 +16705,9 @@ CNSTI4 160
 ADDP4
 INDIRF4
 ASGNF4
-line 2588
-;2587:	// Ultimately we might care if the shot was ahead or behind, but for now, just quadrant is fine.
-;2588:	AngleVectors( fwdangles, NULL, right, NULL );
+line 2590
+;2589:	// Ultimately we might care if the shot was ahead or behind, but for now, just quadrant is fine.
+;2590:	AngleVectors( fwdangles, NULL, right, NULL );
 ADDRLP4 36
 ARGP4
 ADDRLP4 60
@@ -16738,9 +16724,9 @@ ARGP4
 ADDRGP4 AngleVectors
 CALLV
 pop
-line 2590
-;2589:
-;2590:	rightdot = DotProduct(right, diff);
+line 2592
+;2591:
+;2592:	rightdot = DotProduct(right, diff);
 ADDRLP4 52
 ADDRLP4 24
 INDIRF4
@@ -16760,8 +16746,8 @@ INDIRF4
 MULF4
 ADDF4
 ASGNF4
-line 2591
-;2591:	zdiff = hitloc[2] - clEye[2];
+line 2593
+;2593:	zdiff = hitloc[2] - clEye[2];
 ADDRLP4 48
 ADDRFP4 4
 INDIRP4
@@ -16772,26 +16758,26 @@ ADDRLP4 12+8
 INDIRF4
 SUBF4
 ASGNF4
-line 2594
-;2592:	
-;2593:	//FIXME: take torsoAngles into account?
-;2594:	if ( zdiff > 0 )//40 )
+line 2596
+;2594:	
+;2595:	//FIXME: take torsoAngles into account?
+;2596:	if ( zdiff > 0 )//40 )
 ADDRLP4 48
 INDIRF4
 CNSTF4 0
-LEF4 $1092
-line 2595
-;2595:	{
-line 2596
-;2596:		if ( rightdot > 0.3 )
+LEF4 $1090
+line 2597
+;2597:	{
+line 2598
+;2598:		if ( rightdot > 0.3 )
 ADDRLP4 52
 INDIRF4
 CNSTF4 1050253722
-LEF4 $1094
-line 2597
-;2597:		{
-line 2598
-;2598:			self->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
+LEF4 $1092
+line 2599
+;2599:		{
+line 2600
+;2600:			self->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16801,21 +16787,21 @@ CNSTI4 520
 ADDP4
 CNSTI4 3
 ASGNI4
-line 2599
-;2599:		}
-ADDRGP4 $1093
+line 2601
+;2601:		}
+ADDRGP4 $1091
 JUMPV
-LABELV $1094
-line 2600
-;2600:		else if ( rightdot < -0.3 )
+LABELV $1092
+line 2602
+;2602:		else if ( rightdot < -0.3 )
 ADDRLP4 52
 INDIRF4
 CNSTF4 3197737370
-GEF4 $1096
-line 2601
-;2601:		{
-line 2602
-;2602:			self->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
+GEF4 $1094
+line 2603
+;2603:		{
+line 2604
+;2604:			self->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16825,16 +16811,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 4
 ASGNI4
-line 2603
-;2603:		}
-ADDRGP4 $1093
-JUMPV
-LABELV $1096
 line 2605
-;2604:		else
-;2605:		{
-line 2606
-;2606:			self->client->ps.saberBlocked = BLOCKED_TOP;
+;2605:		}
+ADDRGP4 $1091
+JUMPV
+LABELV $1094
+line 2607
+;2606:		else
+;2607:		{
+line 2608
+;2608:			self->client->ps.saberBlocked = BLOCKED_TOP;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16844,43 +16830,43 @@ CNSTI4 520
 ADDP4
 CNSTI4 7
 ASGNI4
-line 2607
-;2607:		}
-line 2608
-;2608:	}
-ADDRGP4 $1093
-JUMPV
-LABELV $1092
 line 2609
-;2609:	else if ( zdiff > -20 )//20 )
+;2609:		}
+line 2610
+;2610:	}
+ADDRGP4 $1091
+JUMPV
+LABELV $1090
+line 2611
+;2611:	else if ( zdiff > -20 )//20 )
 ADDRLP4 48
 INDIRF4
 CNSTF4 3248488448
-LEF4 $1098
-line 2610
-;2610:	{
-line 2611
-;2611:		if ( zdiff < -10 )//30 )
+LEF4 $1096
+line 2612
+;2612:	{
+line 2613
+;2613:		if ( zdiff < -10 )//30 )
 ADDRLP4 48
 INDIRF4
 CNSTF4 3240099840
-GEF4 $1100
-line 2612
-;2612:		{//hmm, pretty low, but not low enough to use the low block, so we need to duck
+GEF4 $1098
 line 2614
-;2613:			//NPC should duck, but NPC should never get here
-;2614:		}
-LABELV $1100
-line 2615
-;2615:		if ( rightdot > 0.1 )
+;2614:		{//hmm, pretty low, but not low enough to use the low block, so we need to duck
+line 2616
+;2615:			//NPC should duck, but NPC should never get here
+;2616:		}
+LABELV $1098
+line 2617
+;2617:		if ( rightdot > 0.1 )
 ADDRLP4 52
 INDIRF4
 CNSTF4 1036831949
-LEF4 $1102
-line 2616
-;2616:		{
-line 2617
-;2617:			self->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
+LEF4 $1100
+line 2618
+;2618:		{
+line 2619
+;2619:			self->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16890,21 +16876,21 @@ CNSTI4 520
 ADDP4
 CNSTI4 3
 ASGNI4
-line 2618
-;2618:		}
-ADDRGP4 $1099
+line 2620
+;2620:		}
+ADDRGP4 $1097
 JUMPV
-LABELV $1102
-line 2619
-;2619:		else if ( rightdot < -0.1 )
+LABELV $1100
+line 2621
+;2621:		else if ( rightdot < -0.1 )
 ADDRLP4 52
 INDIRF4
 CNSTF4 3184315597
-GEF4 $1104
-line 2620
-;2620:		{
-line 2621
-;2621:			self->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
+GEF4 $1102
+line 2622
+;2622:		{
+line 2623
+;2623:			self->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16914,16 +16900,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 4
 ASGNI4
-line 2622
-;2622:		}
-ADDRGP4 $1099
-JUMPV
-LABELV $1104
 line 2624
-;2623:		else
-;2624:		{//FIXME: this looks really weird if the shot is too low!
-line 2625
-;2625:			self->client->ps.saberBlocked = BLOCKED_TOP;
+;2624:		}
+ADDRGP4 $1097
+JUMPV
+LABELV $1102
+line 2626
+;2625:		else
+;2626:		{//FIXME: this looks really weird if the shot is too low!
+line 2627
+;2627:			self->client->ps.saberBlocked = BLOCKED_TOP;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16933,26 +16919,26 @@ CNSTI4 520
 ADDP4
 CNSTI4 7
 ASGNI4
-line 2626
-;2626:		}
-line 2627
-;2627:	}
-ADDRGP4 $1099
-JUMPV
-LABELV $1098
+line 2628
+;2628:		}
 line 2629
-;2628:	else
-;2629:	{
-line 2630
-;2630:		if ( rightdot >= 0 )
+;2629:	}
+ADDRGP4 $1097
+JUMPV
+LABELV $1096
+line 2631
+;2630:	else
+;2631:	{
+line 2632
+;2632:		if ( rightdot >= 0 )
 ADDRLP4 52
 INDIRF4
 CNSTF4 0
-LTF4 $1106
-line 2631
-;2631:		{
-line 2632
-;2632:			self->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
+LTF4 $1104
+line 2633
+;2633:		{
+line 2634
+;2634:			self->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16962,16 +16948,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 5
 ASGNI4
-line 2633
-;2633:		}
-ADDRGP4 $1107
-JUMPV
-LABELV $1106
 line 2635
-;2634:		else
-;2635:		{
-line 2636
-;2636:			self->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
+;2635:		}
+ADDRGP4 $1105
+JUMPV
+LABELV $1104
+line 2637
+;2636:		else
+;2637:		{
+line 2638
+;2638:			self->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -16981,51 +16967,51 @@ CNSTI4 520
 ADDP4
 CNSTI4 6
 ASGNI4
-line 2637
-;2637:		}
-LABELV $1107
-line 2638
-;2638:	}
-LABELV $1099
-LABELV $1093
-line 2667
-;2639:
-;2640:	/*
-;2641:	if ( !self->s.number )
-;2642:	{
-;2643:		gi.Printf( "EyeZ: %4.2f  HitZ: %4.2f  zdiff: %4.2f  rdot: %4.2f\n", self->client->renderInfo.eyePoint[2], hitloc[2], zdiff, rightdot );
-;2644:		switch ( self->client->ps.saberBlocked )
-;2645:		{
-;2646:		case BLOCKED_TOP:
-;2647:			gi.Printf( "BLOCKED_TOP\n" );
-;2648:			break;
-;2649:		case BLOCKED_UPPER_RIGHT:
-;2650:			gi.Printf( "BLOCKED_UPPER_RIGHT\n" );
-;2651:			break;
-;2652:		case BLOCKED_UPPER_LEFT:
-;2653:			gi.Printf( "BLOCKED_UPPER_LEFT\n" );
-;2654:			break;
-;2655:		case BLOCKED_LOWER_RIGHT:
-;2656:			gi.Printf( "BLOCKED_LOWER_RIGHT\n" );
-;2657:			break;
-;2658:		case BLOCKED_LOWER_LEFT:
-;2659:			gi.Printf( "BLOCKED_LOWER_LEFT\n" );
-;2660:			break;
-;2661:		default:
+line 2639
+;2639:		}
+LABELV $1105
+line 2640
+;2640:	}
+LABELV $1097
+LABELV $1091
+line 2669
+;2641:
+;2642:	/*
+;2643:	if ( !self->s.number )
+;2644:	{
+;2645:		gi.Printf( "EyeZ: %4.2f  HitZ: %4.2f  zdiff: %4.2f  rdot: %4.2f\n", self->client->renderInfo.eyePoint[2], hitloc[2], zdiff, rightdot );
+;2646:		switch ( self->client->ps.saberBlocked )
+;2647:		{
+;2648:		case BLOCKED_TOP:
+;2649:			gi.Printf( "BLOCKED_TOP\n" );
+;2650:			break;
+;2651:		case BLOCKED_UPPER_RIGHT:
+;2652:			gi.Printf( "BLOCKED_UPPER_RIGHT\n" );
+;2653:			break;
+;2654:		case BLOCKED_UPPER_LEFT:
+;2655:			gi.Printf( "BLOCKED_UPPER_LEFT\n" );
+;2656:			break;
+;2657:		case BLOCKED_LOWER_RIGHT:
+;2658:			gi.Printf( "BLOCKED_LOWER_RIGHT\n" );
+;2659:			break;
+;2660:		case BLOCKED_LOWER_LEFT:
+;2661:			gi.Printf( "BLOCKED_LOWER_LEFT\n" );
 ;2662:			break;
-;2663:		}
-;2664:	}
-;2665:	*/
-;2666:
-;2667:	if ( missileBlock )
+;2663:		default:
+;2664:			break;
+;2665:		}
+;2666:	}
+;2667:	*/
+;2668:
+;2669:	if ( missileBlock )
 ADDRFP4 8
 INDIRI4
 CNSTI4 0
-EQI4 $1108
-line 2668
-;2668:	{
-line 2669
-;2669:		self->client->ps.saberBlocked = WP_MissileBlockForBlock( self->client->ps.saberBlocked );
+EQI4 $1106
+line 2670
+;2670:	{
+line 2671
+;2671:		self->client->ps.saberBlocked = WP_MissileBlockForBlock( self->client->ps.saberBlocked );
 ADDRLP4 64
 ADDRFP4 0
 INDIRP4
@@ -17048,68 +17034,68 @@ INDIRP4
 ADDRLP4 68
 INDIRI4
 ASGNI4
-line 2674
-;2670:		//if ( !self->s.number )
-;2671:		//{
-;2672:			//G_DynaMixEvent( DM_BLOCK );
-;2673:		//}
-;2674:	}
-LABELV $1108
 line 2676
-;2675:	else
-;2676:	{
-line 2681
-;2677:		//if ( !self->s.number )
-;2678:		//{
-;2679:			//G_DynaMixEvent( DM_PARRY );
-;2680:		//}
-;2681:	}
-LABELV $1109
-line 2682
-;2682:}
-LABELV $1078
+;2672:		//if ( !self->s.number )
+;2673:		//{
+;2674:			//G_DynaMixEvent( DM_BLOCK );
+;2675:		//}
+;2676:	}
+LABELV $1106
+line 2678
+;2677:	else
+;2678:	{
+line 2683
+;2679:		//if ( !self->s.number )
+;2680:		//{
+;2681:			//G_DynaMixEvent( DM_PARRY );
+;2682:		//}
+;2683:	}
+LABELV $1107
+line 2684
+;2684:}
+LABELV $1076
 endproc WP_SaberBlockNonRandom 72 16
 lit
 align 4
-LABELV $1111
+LABELV $1109
 byte 4 0
 byte 4 0
 byte 4 0
 export WP_SaberBlock
 code
 proc WP_SaberBlock 80 16
-line 2685
-;2683:
-;2684:void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
-;2685:{
 line 2687
-;2686:	//gentity_t *playerent;
-;2687:	vec3_t diff, fwdangles={0,0,0}, right;
+;2685:
+;2686:void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
+;2687:{
+line 2689
+;2688:	//gentity_t *playerent;
+;2689:	vec3_t diff, fwdangles={0,0,0}, right;
 ADDRLP4 24
-ADDRGP4 $1111
+ADDRGP4 $1109
 INDIRB
 ASGNB 12
-line 2707
-;2688:	float rightdot;
-;2689:	float zdiff;
-;2690:
-;2691:	/*
-;2692:	if (saber && saber->owner)
-;2693:	{
-;2694:		playerent = saber->owner;
-;2695:		if (!playerent->client)
-;2696:		{
-;2697:			return;
-;2698:		}
-;2699:	}
-;2700:	else
-;2701:	{	// Bad entity passed.
-;2702:		return;
-;2703:	}
-;2704:	*/
-;2705:	//I don't see what the point of this was anyway, saber isn't used anywhere in the function.
-;2706:
-;2707:	VectorSubtract(hitloc, playerent->client->ps.origin, diff);
+line 2709
+;2690:	float rightdot;
+;2691:	float zdiff;
+;2692:
+;2693:	/*
+;2694:	if (saber && saber->owner)
+;2695:	{
+;2696:		playerent = saber->owner;
+;2697:		if (!playerent->client)
+;2698:		{
+;2699:			return;
+;2700:		}
+;2701:	}
+;2702:	else
+;2703:	{	// Bad entity passed.
+;2704:		return;
+;2705:	}
+;2706:	*/
+;2707:	//I don't see what the point of this was anyway, saber isn't used anywhere in the function.
+;2708:
+;2709:	VectorSubtract(hitloc, playerent->client->ps.origin, diff);
 ADDRLP4 44
 ADDRFP4 4
 INDIRP4
@@ -17162,16 +17148,16 @@ ADDP4
 INDIRF4
 SUBF4
 ASGNF4
-line 2708
-;2708:	VectorNormalize(diff);
+line 2710
+;2710:	VectorNormalize(diff);
 ADDRLP4 0
 ARGP4
 ADDRGP4 VectorNormalize
 CALLF4
 pop
-line 2710
-;2709:
-;2710:	fwdangles[1] = playerent->client->ps.viewangles[1];
+line 2712
+;2711:
+;2712:	fwdangles[1] = playerent->client->ps.viewangles[1];
 ADDRLP4 24+4
 ADDRFP4 0
 INDIRP4
@@ -17182,9 +17168,9 @@ CNSTI4 160
 ADDP4
 INDIRF4
 ASGNF4
-line 2712
-;2711:	// Ultimately we might care if the shot was ahead or behind, but for now, just quadrant is fine.
-;2712:	AngleVectors( fwdangles, NULL, right, NULL );
+line 2714
+;2713:	// Ultimately we might care if the shot was ahead or behind, but for now, just quadrant is fine.
+;2714:	AngleVectors( fwdangles, NULL, right, NULL );
 ADDRLP4 24
 ARGP4
 ADDRLP4 52
@@ -17201,9 +17187,9 @@ ARGP4
 ADDRGP4 AngleVectors
 CALLV
 pop
-line 2714
-;2713:
-;2714:	rightdot = DotProduct(right, diff) + RandFloat(-0.2f,0.2f);
+line 2716
+;2715:
+;2716:	rightdot = DotProduct(right, diff) + RandFloat(-0.2f,0.2f);
 CNSTF4 3192704205
 ARGF4
 CNSTF4 1045220557
@@ -17234,8 +17220,8 @@ ADDRLP4 56
 INDIRF4
 ADDF4
 ASGNF4
-line 2715
-;2715:	zdiff = hitloc[2] - playerent->client->ps.origin[2] + Q_irand(-8,8);
+line 2717
+;2717:	zdiff = hitloc[2] - playerent->client->ps.origin[2] + Q_irand(-8,8);
 CNSTI4 -8
 ARGI4
 ADDRLP4 60
@@ -17269,18 +17255,18 @@ INDIRI4
 CVIF4 4
 ADDF4
 ASGNF4
-line 2718
-;2716:	
-;2717:	// Figure out what quadrant the block was in.
-;2718:	if (zdiff > 24)
+line 2720
+;2718:	
+;2719:	// Figure out what quadrant the block was in.
+;2720:	if (zdiff > 24)
 ADDRLP4 36
 INDIRF4
 CNSTF4 1103101952
-LEF4 $1119
-line 2719
-;2719:	{	// Attack from above
-line 2720
-;2720:		if (Q_irand(0,1))
+LEF4 $1117
+line 2721
+;2721:	{	// Attack from above
+line 2722
+;2722:		if (Q_irand(0,1))
 CNSTI4 0
 ARGI4
 CNSTI4 1
@@ -17292,11 +17278,11 @@ ASGNI4
 ADDRLP4 68
 INDIRI4
 CNSTI4 0
-EQI4 $1121
-line 2721
-;2721:		{
-line 2722
-;2722:			playerent->client->ps.saberBlocked = BLOCKED_TOP;
+EQI4 $1119
+line 2723
+;2723:		{
+line 2724
+;2724:			playerent->client->ps.saberBlocked = BLOCKED_TOP;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17306,16 +17292,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 7
 ASGNI4
-line 2723
-;2723:		}
-ADDRGP4 $1120
-JUMPV
-LABELV $1121
 line 2725
-;2724:		else
-;2725:		{
-line 2726
-;2726:			playerent->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
+;2725:		}
+ADDRGP4 $1118
+JUMPV
+LABELV $1119
+line 2727
+;2726:		else
+;2727:		{
+line 2728
+;2728:			playerent->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17325,31 +17311,31 @@ CNSTI4 520
 ADDP4
 CNSTI4 4
 ASGNI4
-line 2727
-;2727:		}
-line 2728
-;2728:	}
-ADDRGP4 $1120
-JUMPV
-LABELV $1119
 line 2729
-;2729:	else if (zdiff > 13)
+;2729:		}
+line 2730
+;2730:	}
+ADDRGP4 $1118
+JUMPV
+LABELV $1117
+line 2731
+;2731:	else if (zdiff > 13)
 ADDRLP4 36
 INDIRF4
 CNSTF4 1095761920
-LEF4 $1123
-line 2730
-;2730:	{	// The upper half has three viable blocks...
-line 2731
-;2731:		if (rightdot > 0.25)
+LEF4 $1121
+line 2732
+;2732:	{	// The upper half has three viable blocks...
+line 2733
+;2733:		if (rightdot > 0.25)
 ADDRLP4 40
 INDIRF4
 CNSTF4 1048576000
-LEF4 $1125
-line 2732
-;2732:		{	// In the right quadrant...
-line 2733
-;2733:			if (Q_irand(0,1))
+LEF4 $1123
+line 2734
+;2734:		{	// In the right quadrant...
+line 2735
+;2735:			if (Q_irand(0,1))
 CNSTI4 0
 ARGI4
 CNSTI4 1
@@ -17361,11 +17347,11 @@ ASGNI4
 ADDRLP4 68
 INDIRI4
 CNSTI4 0
-EQI4 $1127
-line 2734
-;2734:			{
-line 2735
-;2735:				playerent->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
+EQI4 $1125
+line 2736
+;2736:			{
+line 2737
+;2737:				playerent->client->ps.saberBlocked = BLOCKED_UPPER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17375,16 +17361,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 4
 ASGNI4
-line 2736
-;2736:			}
-ADDRGP4 $1124
-JUMPV
-LABELV $1127
 line 2738
-;2737:			else
-;2738:			{
-line 2739
-;2739:				playerent->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
+;2738:			}
+ADDRGP4 $1122
+JUMPV
+LABELV $1125
+line 2740
+;2739:			else
+;2740:			{
+line 2741
+;2741:				playerent->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17394,18 +17380,18 @@ CNSTI4 520
 ADDP4
 CNSTI4 6
 ASGNI4
-line 2740
-;2740:			}
-line 2741
-;2741:		}
-ADDRGP4 $1124
-JUMPV
-LABELV $1125
+line 2742
+;2742:			}
 line 2743
-;2742:		else
-;2743:		{
-line 2744
-;2744:			switch(Q_irand(0,3))
+;2743:		}
+ADDRGP4 $1122
+JUMPV
+LABELV $1123
+line 2745
+;2744:		else
+;2745:		{
+line 2746
+;2746:			switch(Q_irand(0,3))
 CNSTI4 0
 ARGI4
 CNSTI4 3
@@ -17421,33 +17407,33 @@ ASGNI4
 ADDRLP4 68
 INDIRI4
 CNSTI4 0
-LTI4 $1124
+LTI4 $1122
 ADDRLP4 68
 INDIRI4
 CNSTI4 3
-GTI4 $1124
+GTI4 $1122
 ADDRLP4 68
 INDIRI4
 CNSTI4 2
 LSHI4
-ADDRGP4 $1135
+ADDRGP4 $1133
 ADDP4
 INDIRP4
 JUMPV
 lit
 align 4
-LABELV $1135
+LABELV $1133
+address $1130
+address $1131
+address $1131
 address $1132
-address $1133
-address $1133
-address $1134
 code
-line 2745
-;2745:			{
-LABELV $1132
 line 2747
-;2746:			case 0:
-;2747:				playerent->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
+;2747:			{
+LABELV $1130
+line 2749
+;2748:			case 0:
+;2749:				playerent->client->ps.saberBlocked = BLOCKED_UPPER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17457,15 +17443,15 @@ CNSTI4 520
 ADDP4
 CNSTI4 3
 ASGNI4
-line 2748
-;2748:				break;
-ADDRGP4 $1124
+line 2750
+;2750:				break;
+ADDRGP4 $1122
 JUMPV
-LABELV $1133
-line 2751
-;2749:			case 1:
-;2750:			case 2:
-;2751:				playerent->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
+LABELV $1131
+line 2753
+;2751:			case 1:
+;2752:			case 2:
+;2753:				playerent->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17475,14 +17461,14 @@ CNSTI4 520
 ADDP4
 CNSTI4 5
 ASGNI4
-line 2752
-;2752:				break;
-ADDRGP4 $1124
-JUMPV
-LABELV $1134
 line 2754
-;2753:			case 3:
-;2754:				playerent->client->ps.saberBlocked = BLOCKED_TOP;
+;2754:				break;
+ADDRGP4 $1122
+JUMPV
+LABELV $1132
+line 2756
+;2755:			case 3:
+;2756:				playerent->client->ps.saberBlocked = BLOCKED_TOP;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17492,21 +17478,21 @@ CNSTI4 520
 ADDP4
 CNSTI4 7
 ASGNI4
-line 2755
-;2755:				break;
 line 2757
-;2756:			}
-;2757:		}
-line 2758
-;2758:	}
-ADDRGP4 $1124
-JUMPV
-LABELV $1123
+;2757:				break;
+line 2759
+;2758:			}
+;2759:		}
 line 2760
-;2759:	else
-;2760:	{	// The lower half is a bit iffy as far as block coverage.  Pick one of the "low" ones at random.
-line 2761
-;2761:		if (Q_irand(0,1))
+;2760:	}
+ADDRGP4 $1122
+JUMPV
+LABELV $1121
+line 2762
+;2761:	else
+;2762:	{	// The lower half is a bit iffy as far as block coverage.  Pick one of the "low" ones at random.
+line 2763
+;2763:		if (Q_irand(0,1))
 CNSTI4 0
 ARGI4
 CNSTI4 1
@@ -17518,11 +17504,11 @@ ASGNI4
 ADDRLP4 68
 INDIRI4
 CNSTI4 0
-EQI4 $1136
-line 2762
-;2762:		{
-line 2763
-;2763:			playerent->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
+EQI4 $1134
+line 2764
+;2764:		{
+line 2765
+;2765:			playerent->client->ps.saberBlocked = BLOCKED_LOWER_RIGHT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17532,16 +17518,16 @@ CNSTI4 520
 ADDP4
 CNSTI4 5
 ASGNI4
-line 2764
-;2764:		}
-ADDRGP4 $1137
-JUMPV
-LABELV $1136
 line 2766
-;2765:		else
-;2766:		{
-line 2767
-;2767:			playerent->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
+;2766:		}
+ADDRGP4 $1135
+JUMPV
+LABELV $1134
+line 2768
+;2767:		else
+;2768:		{
+line 2769
+;2769:			playerent->client->ps.saberBlocked = BLOCKED_LOWER_LEFT;
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17551,24 +17537,24 @@ CNSTI4 520
 ADDP4
 CNSTI4 6
 ASGNI4
-line 2768
-;2768:		}
-LABELV $1137
-line 2769
-;2769:	}
-LABELV $1124
-LABELV $1120
+line 2770
+;2770:		}
+LABELV $1135
 line 2771
-;2770:
-;2771:	if ( missileBlock )
+;2771:	}
+LABELV $1122
+LABELV $1118
+line 2773
+;2772:
+;2773:	if ( missileBlock )
 ADDRFP4 8
 INDIRI4
 CNSTI4 0
-EQI4 $1138
-line 2772
-;2772:	{
-line 2773
-;2773:		playerent->client->ps.saberBlocked = WP_MissileBlockForBlock( playerent->client->ps.saberBlocked );
+EQI4 $1136
+line 2774
+;2774:	{
+line 2775
+;2775:		playerent->client->ps.saberBlocked = WP_MissileBlockForBlock( playerent->client->ps.saberBlocked );
 ADDRLP4 68
 ADDRFP4 0
 INDIRP4
@@ -17591,33 +17577,33 @@ INDIRP4
 ADDRLP4 72
 INDIRI4
 ASGNI4
-line 2774
-;2774:	}
-LABELV $1138
-line 2775
-;2775:}
-LABELV $1110
+line 2776
+;2776:	}
+LABELV $1136
+line 2777
+;2777:}
+LABELV $1108
 endproc WP_SaberBlock 80 16
 export WP_SaberCanBlock
 proc WP_SaberCanBlock 36 16
-line 2778
-;2776:
-;2777:int WP_SaberCanBlock(gentity_t *self, /*Boot:*/gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
-;2778:{
-line 2779
-;2779:	qboolean thrownSaber = qfalse;
+line 2780
+;2778:
+;2779:int WP_SaberCanBlock(gentity_t *self, /*Boot:*/gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
+;2780:{
+line 2781
+;2781:	qboolean thrownSaber = qfalse;
 ADDRLP4 8
 CNSTI4 0
 ASGNI4
-line 2780
-;2780:	float blockFactor = 0;
+line 2782
+;2782:	float blockFactor = 0;
 ADDRLP4 0
 CNSTF4 0
 ASGNF4
-line 2781
-;2781:	bootSession_t *bootSelf = &bootSession[self - g_entities];
+line 2783
+;2783:	bootSession_t *bootSelf = &bootSession[self - g_entities];
 ADDRLP4 4
-CNSTI4 56
+CNSTI4 60
 ADDRFP4 0
 INDIRP4
 CVPU4 4
@@ -17631,9 +17617,9 @@ MULI4
 ADDRGP4 bootSession
 ADDP4
 ASGNP4
-line 2783
-;2782:
-;2783:	if (!self || !self->client || !point)
+line 2785
+;2784:
+;2785:	if (!self || !self->client || !point)
 ADDRLP4 12
 ADDRFP4 0
 INDIRP4
@@ -17646,7 +17632,7 @@ INDIRP4
 CVPU4 4
 ADDRLP4 16
 INDIRU4
-EQU4 $1144
+EQU4 $1142
 ADDRLP4 12
 INDIRP4
 CNSTI4 408
@@ -17655,63 +17641,63 @@ INDIRP4
 CVPU4 4
 ADDRLP4 16
 INDIRU4
-EQU4 $1144
+EQU4 $1142
 ADDRFP4 8
 INDIRP4
 CVPU4 4
 ADDRLP4 16
 INDIRU4
-NEU4 $1141
-LABELV $1144
-line 2784
-;2784:	{
-line 2785
-;2785:		return 0;
+NEU4 $1139
+LABELV $1142
+line 2786
+;2786:	{
+line 2787
+;2787:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1141
-line 2788
-;2786:	}
-;2787:
-;2788:	if (attackStr == 8)
+LABELV $1139
+line 2790
+;2788:	}
+;2789:
+;2790:	if (attackStr == 8)
 ADDRFP4 24
 INDIRI4
 CNSTI4 8
-NEI4 $1145
-line 2789
-;2789:	{
-line 2790
-;2790:		attackStr = 0;
+NEI4 $1143
+line 2791
+;2791:	{
+line 2792
+;2792:		attackStr = 0;
 ADDRFP4 24
 CNSTI4 0
 ASGNI4
-line 2791
-;2791:		thrownSaber = qtrue;
+line 2793
+;2793:		thrownSaber = qtrue;
 ADDRLP4 8
 CNSTI4 1
 ASGNI4
-line 2792
-;2792:	}
-LABELV $1145
-line 2808
-;2793:
-;2794:	/*if (BG_SaberInAttack(self->client->ps.saberMove))	//Boot
-;2795:	{
-;2796:		return 0;
-;2797:	}*/
-;2798:
-;2799:	/*if (PM_InSaberAnim(self->client->ps.torsoAnim) && !self->client->ps.saberBlocked &&	//Boot
-;2800:		self->client->ps.saberMove != LS_READY && self->client->ps.saberMove != LS_NONE)
-;2801:	{
-;2802:		if ( self->client->ps.saberMove < LS_PARRY_UP || self->client->ps.saberMove > LS_REFLECT_LL )
-;2803:		{
-;2804:			return 0;
-;2805:		}
-;2806:	}*/
-;2807:
-;2808:	if (self->client->ps.saberHolstered)
+line 2794
+;2794:	}
+LABELV $1143
+line 2810
+;2795:
+;2796:	/*if (BG_SaberInAttack(self->client->ps.saberMove))	//Boot
+;2797:	{
+;2798:		return 0;
+;2799:	}*/
+;2800:
+;2801:	/*if (PM_InSaberAnim(self->client->ps.torsoAnim) && !self->client->ps.saberBlocked &&	//Boot
+;2802:		self->client->ps.saberMove != LS_READY && self->client->ps.saberMove != LS_NONE)
+;2803:	{
+;2804:		if ( self->client->ps.saberMove < LS_PARRY_UP || self->client->ps.saberMove > LS_REFLECT_LL )
+;2805:		{
+;2806:			return 0;
+;2807:		}
+;2808:	}*/
+;2809:
+;2810:	if (self->client->ps.saberHolstered)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17721,20 +17707,20 @@ CNSTI4 1300
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1147
-line 2809
-;2809:	{
-line 2810
-;2810:		return 0;
+EQI4 $1145
+line 2811
+;2811:	{
+line 2812
+;2812:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1147
-line 2813
-;2811:	}
-;2812:
-;2813:	if (self->client->ps.usingATST)
+LABELV $1145
+line 2815
+;2813:	}
+;2814:
+;2815:	if (self->client->ps.usingATST)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17744,20 +17730,20 @@ CNSTI4 1304
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1149
-line 2814
-;2814:	{
-line 2815
-;2815:		return 0;
+EQI4 $1147
+line 2816
+;2816:	{
+line 2817
+;2817:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1149
-line 2818
-;2816:	}
-;2817:
-;2818:	if (self->client->ps.weapon != WP_SABER)
+LABELV $1147
+line 2820
+;2818:	}
+;2819:
+;2820:	if (self->client->ps.weapon != WP_SABER)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17767,25 +17753,25 @@ CNSTI4 148
 ADDP4
 INDIRI4
 CNSTI4 2
-EQI4 $1151
-line 2819
-;2819:	{
-line 2820
-;2820:		return 0;
+EQI4 $1149
+line 2821
+;2821:	{
+line 2822
+;2822:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1151
-line 2828
-;2821:	}
-;2822:
-;2823:	/*if (self->client->ps.weaponstate == WEAPON_RAISING)	//Boot
-;2824:	{
-;2825:		return 0;
-;2826:	}*/
-;2827:
-;2828:	if (self->client->ps.saberInFlight)
+LABELV $1149
+line 2830
+;2823:	}
+;2824:
+;2825:	/*if (self->client->ps.weaponstate == WEAPON_RAISING)	//Boot
+;2826:	{
+;2827:		return 0;
+;2828:	}*/
+;2829:
+;2830:	if (self->client->ps.saberInFlight)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17795,79 +17781,79 @@ CNSTI4 504
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1153
-line 2829
-;2829:	{
-line 2830
-;2830:		return 0;
+EQI4 $1151
+line 2831
+;2831:	{
+line 2832
+;2832:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1153
-line 2892
-;2831:	}
-;2832:
-;2833:	//if ((self->client->pers.cmd.buttons & BUTTON_ATTACK)/* &&	//Boot
-;2834:	//	(projectile || attackStr == FORCE_LEVEL_3)*/)
-;2835:	//{ //don't block when the player is trying to slash, if it's a projectile or he's doing a very strong attack
-;2836:	//	return 0;
-;2837:	//}
-;2838:
-;2839:	/*if (attackStr == FORCE_LEVEL_3)	//Boot comment
-;2840:	{
-;2841:		if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-;2842:		{
-;2843:			if (Q_irand(1, 10) < 3)
-;2844:			{
-;2845:				return 0;
-;2846:			}
-;2847:		}
-;2848:		else
-;2849:		{
-;2850:			return 0;
-;2851:		}
-;2852:	}*/
-;2853:
-;2854:	//if (attackStr == FORCE_LEVEL_2 && Q_irand(1, 10) < 3)	//Boot comment
-;2855:	//{
-;2856:	//	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-;2857:	//	{
-;2858:	//		//do nothing for now
-;2859:	//	}
-;2860:	//	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_2)
-;2861:	//	{
-;2862:	//		if (Q_irand(1, 10) < 5)
-;2863:	//		{
-;2864:	//			return 0;
-;2865:	//		}
-;2866:	//	}
-;2867:	//	else
-;2868:	//	{
-;2869:	//		return 0;
-;2870:	//	}
-;2871:	//}
-;2872:	//
-;2873:	//if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] &&
-;2874:	//	Q_irand(1, 40) < 3)
-;2875:	//{ //if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
-;2876:	//	return 0;
-;2877:	//}
-;2878:
-;2879:	//if (SaberAttacking(self))	//Boot
-;2880:	//{ //attacking, can't block now
-;2881:
-;2882:	//	//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
-;2883:	//	return 0;
-;2884:	//}
-;2885:
-;2886:	/*if (self->client->ps.saberMove != LS_READY &&	//Boot
-;2887:		!self->client->ps.saberBlocking)
-;2888:	{
-;2889:		return 0;
-;2890:	}*/
-;2891:
-;2892:	if (self->client->ps.saberBlockTime >= level.time)
+LABELV $1151
+line 2894
+;2833:	}
+;2834:
+;2835:	//if ((self->client->pers.cmd.buttons & BUTTON_ATTACK)/* &&	//Boot
+;2836:	//	(projectile || attackStr == FORCE_LEVEL_3)*/)
+;2837:	//{ //don't block when the player is trying to slash, if it's a projectile or he's doing a very strong attack
+;2838:	//	return 0;
+;2839:	//}
+;2840:
+;2841:	/*if (attackStr == FORCE_LEVEL_3)	//Boot comment
+;2842:	{
+;2843:		if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
+;2844:		{
+;2845:			if (Q_irand(1, 10) < 3)
+;2846:			{
+;2847:				return 0;
+;2848:			}
+;2849:		}
+;2850:		else
+;2851:		{
+;2852:			return 0;
+;2853:		}
+;2854:	}*/
+;2855:
+;2856:	//if (attackStr == FORCE_LEVEL_2 && Q_irand(1, 10) < 3)	//Boot comment
+;2857:	//{
+;2858:	//	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
+;2859:	//	{
+;2860:	//		//do nothing for now
+;2861:	//	}
+;2862:	//	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_2)
+;2863:	//	{
+;2864:	//		if (Q_irand(1, 10) < 5)
+;2865:	//		{
+;2866:	//			return 0;
+;2867:	//		}
+;2868:	//	}
+;2869:	//	else
+;2870:	//	{
+;2871:	//		return 0;
+;2872:	//	}
+;2873:	//}
+;2874:	//
+;2875:	//if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] &&
+;2876:	//	Q_irand(1, 40) < 3)
+;2877:	//{ //if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
+;2878:	//	return 0;
+;2879:	//}
+;2880:
+;2881:	//if (SaberAttacking(self))	//Boot
+;2882:	//{ //attacking, can't block now
+;2883:
+;2884:	//	//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
+;2885:	//	return 0;
+;2886:	//}
+;2887:
+;2888:	/*if (self->client->ps.saberMove != LS_READY &&	//Boot
+;2889:		!self->client->ps.saberBlocking)
+;2890:	{
+;2891:		return 0;
+;2892:	}*/
+;2893:
+;2894:	if (self->client->ps.saberBlockTime >= level.time)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17878,20 +17864,20 @@ ADDP4
 INDIRI4
 ADDRGP4 level+32
 INDIRI4
-LTI4 $1155
-line 2893
-;2893:	{
-line 2894
-;2894:		return 0;
+LTI4 $1153
+line 2895
+;2895:	{
+line 2896
+;2896:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1155
-line 2897
-;2895:	}
-;2896:
-;2897:	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
+LABELV $1153
+line 2899
+;2897:	}
+;2898:
+;2899:	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17901,20 +17887,20 @@ CNSTI4 1236
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1158
-line 2898
-;2898:	{
-line 2899
-;2899:		return 0;
+EQI4 $1156
+line 2900
+;2900:	{
+line 2901
+;2901:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1158
-line 2902
-;2900:	}
-;2901:
-;2902:	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_3)
+LABELV $1156
+line 2904
+;2902:	}
+;2903:
+;2904:	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_3)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17924,21 +17910,21 @@ CNSTI4 996
 ADDP4
 INDIRI4
 CNSTI4 3
-NEI4 $1160
-line 2903
-;2903:	{
-line 2904
-;2904:		blockFactor = 0.05f;
+NEI4 $1158
+line 2905
+;2905:	{
+line 2906
+;2906:		blockFactor = 0.05f;
 ADDRLP4 0
 CNSTF4 1028443341
 ASGNF4
-line 2905
-;2905:	}
-ADDRGP4 $1161
+line 2907
+;2907:	}
+ADDRGP4 $1159
 JUMPV
-LABELV $1160
-line 2906
-;2906:	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_2)
+LABELV $1158
+line 2908
+;2908:	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_2)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17948,21 +17934,21 @@ CNSTI4 996
 ADDP4
 INDIRI4
 CNSTI4 2
-NEI4 $1162
-line 2907
-;2907:	{
-line 2908
-;2908:		blockFactor = 0.6f;
+NEI4 $1160
+line 2909
+;2909:	{
+line 2910
+;2910:		blockFactor = 0.6f;
 ADDRLP4 0
 CNSTF4 1058642330
 ASGNF4
-line 2909
-;2909:	}
-ADDRGP4 $1163
+line 2911
+;2911:	}
+ADDRGP4 $1161
 JUMPV
-LABELV $1162
-line 2910
-;2910:	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_1)
+LABELV $1160
+line 2912
+;2912:	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_1)
 ADDRFP4 0
 INDIRP4
 CNSTI4 408
@@ -17972,55 +17958,55 @@ CNSTI4 996
 ADDP4
 INDIRI4
 CNSTI4 1
-NEI4 $1164
-line 2911
-;2911:	{
-line 2912
-;2912:		blockFactor = 0.9f;
+NEI4 $1162
+line 2913
+;2913:	{
+line 2914
+;2914:		blockFactor = 0.9f;
 ADDRLP4 0
 CNSTF4 1063675494
 ASGNF4
-line 2913
-;2913:	}
-ADDRGP4 $1165
-JUMPV
-LABELV $1164
 line 2915
-;2914:	else
-;2915:	{ //for now we just don't get to autoblock with no def
-line 2916
-;2916:		return 0;
+;2915:	}
+ADDRGP4 $1163
+JUMPV
+LABELV $1162
+line 2917
+;2916:	else
+;2917:	{ //for now we just don't get to autoblock with no def
+line 2918
+;2918:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1165
 LABELV $1163
 LABELV $1161
-line 2919
-;2917:	}
-;2918:
-;2919:	if (thrownSaber)
+LABELV $1159
+line 2921
+;2919:	}
+;2920:
+;2921:	if (thrownSaber)
 ADDRLP4 8
 INDIRI4
 CNSTI4 0
-EQI4 $1166
-line 2920
-;2920:	{
-line 2921
-;2921:		blockFactor -= 0.25f;
+EQI4 $1164
+line 2922
+;2922:	{
+line 2923
+;2923:		blockFactor -= 0.25f;
 ADDRLP4 0
 ADDRLP4 0
 INDIRF4
 CNSTF4 1048576000
 SUBF4
 ASGNF4
-line 2922
-;2922:	}
-LABELV $1166
 line 2924
-;2923:
-;2924:	if (!InFront( point, self->client->ps.origin, self->client->ps.viewangles, blockFactor )) //orig 0.2f
+;2924:	}
+LABELV $1164
+line 2926
+;2925:
+;2926:	if (!InFront( point, self->client->ps.origin, self->client->ps.viewangles, blockFactor )) //orig 0.2f
 ADDRFP4 8
 INDIRP4
 ARGP4
@@ -18051,32 +18037,32 @@ ASGNI4
 ADDRLP4 24
 INDIRI4
 CNSTI4 0
-NEI4 $1168
-line 2925
-;2925:	{
-line 2926
-;2926:		return 0;
+NEI4 $1166
+line 2927
+;2927:	{
+line 2928
+;2928:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1168
-line 2930
-;2927:	}
-;2928:	//Boot
-;2929:
-;2930:	if (bootSelf->isParrying)
+LABELV $1166
+line 2932
+;2929:	}
+;2930:	//Boot
+;2931:
+;2932:	if (bootSelf->isParrying)
 ADDRLP4 4
 INDIRP4
 CNSTI4 4
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $1170
-line 2931
-;2931:	{
-line 2932
-;2932:		if (!Boot_BlockMatchesAttack(other->client->ps.saberMove, bootSelf->parryDirection) && !projectile)
+EQI4 $1168
+line 2933
+;2933:	{
+line 2934
+;2934:		if (!Boot_BlockMatchesAttack(other->client->ps.saberMove, bootSelf->parryDirection) && !projectile)
 ADDRFP4 4
 INDIRP4
 CNSTI4 408
@@ -18103,75 +18089,75 @@ ADDRLP4 28
 INDIRI4
 ADDRLP4 32
 INDIRI4
-NEI4 $1172
+NEI4 $1170
 ADDRFP4 20
 INDIRI4
 ADDRLP4 32
 INDIRI4
-NEI4 $1172
-line 2933
-;2933:		{
-line 2934
-;2934:			return 0;
+NEI4 $1170
+line 2935
+;2935:		{
+line 2936
+;2936:			return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1172
-line 2936
-;2935:		}
-;2936:		else if (projectile)
+LABELV $1170
+line 2938
+;2937:		}
+;2938:		else if (projectile)
 ADDRFP4 20
 INDIRI4
 CNSTI4 0
-EQI4 $1174
-line 2937
-;2937:		{
-line 2938
-;2938:			bootSelf->blockedProjectile = qtrue;
+EQI4 $1172
+line 2939
+;2939:		{
+line 2940
+;2940:			bootSelf->blockedProjectile = qtrue;
 ADDRLP4 4
 INDIRP4
 CNSTI4 20
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2939
-;2939:		}
-ADDRGP4 $1171
-JUMPV
-LABELV $1174
 line 2941
-;2940:		else
-;2941:		{
-line 2942
-;2942:			bootSelf->didSuccessfulParry = qtrue;
+;2941:		}
+ADDRGP4 $1169
+JUMPV
+LABELV $1172
+line 2943
+;2942:		else
+;2943:		{
+line 2944
+;2944:			bootSelf->didSuccessfulParry = qtrue;
 ADDRLP4 4
 INDIRP4
 CNSTI4 12
 ADDP4
 CNSTI4 1
 ASGNI4
-line 2943
-;2943:		}
-line 2944
-;2944:	}
-ADDRGP4 $1171
-JUMPV
-LABELV $1170
+line 2945
+;2945:		}
 line 2946
-;2945:	else
-;2946:	{
-line 2947
-;2947:		return 0;
+;2946:	}
+ADDRGP4 $1169
+JUMPV
+LABELV $1168
+line 2948
+;2947:	else
+;2948:	{
+line 2949
+;2949:		return 0;
 CNSTI4 0
 RETI4
-ADDRGP4 $1140
+ADDRGP4 $1138
 JUMPV
-LABELV $1171
-line 2950
-;2948:	}
-;2949:
-;2950:	WP_SaberBlockNonRandom(self, point, projectile);
+LABELV $1169
+line 2952
+;2950:	}
+;2951:
+;2952:	WP_SaberBlockNonRandom(self, point, projectile);
 ADDRFP4 0
 INDIRP4
 ARGP4
@@ -18184,41 +18170,41 @@ ARGI4
 ADDRGP4 WP_SaberBlockNonRandom
 CALLV
 pop
-line 2951
-;2951:	return 1;
+line 2953
+;2953:	return 1;
 CNSTI4 1
 RETI4
-LABELV $1140
+LABELV $1138
 endproc WP_SaberCanBlock 36 16
 export Boot_BlockMatchesAttack
 proc Boot_BlockMatchesAttack 16 0
-line 2955
-;2952:}
-;2953:
-;2954:qboolean Boot_BlockMatchesAttack(int attack, int block)
-;2955:{
-line 2956
-;2956:	if (attack == LS_A_T2B && block == BLOCKED_TOP) //Forward swing
+line 2957
+;2954:}
+;2955:
+;2956:qboolean Boot_BlockMatchesAttack(int attack, int block)
+;2957:{
+line 2958
+;2958:	if (attack == LS_A_T2B && block == BLOCKED_TOP) //Forward swing
 ADDRFP4 0
 INDIRI4
 CNSTI4 10
-NEI4 $1177
+NEI4 $1175
 ADDRFP4 4
 INDIRI4
 CNSTI4 7
-NEI4 $1177
-line 2957
-;2957:	{
-line 2958
-;2958:		return qtrue;
+NEI4 $1175
+line 2959
+;2959:	{
+line 2960
+;2960:		return qtrue;
 CNSTI4 1
 RETI4
-ADDRGP4 $1176
+ADDRGP4 $1174
 JUMPV
-LABELV $1177
-line 2960
-;2959:	}
-;2960:	else if ((attack == LS_A_L2R || attack == LS_A_TL2BR || attack == LS_A_BL2TR) &&
+LABELV $1175
+line 2962
+;2961:	}
+;2962:	else if ((attack == LS_A_L2R || attack == LS_A_TL2BR || attack == LS_A_BL2TR) &&
 ADDRLP4 0
 ADDRFP4 0
 INDIRI4
@@ -18226,16 +18212,16 @@ ASGNI4
 ADDRLP4 0
 INDIRI4
 CNSTI4 5
-EQI4 $1182
+EQI4 $1180
 ADDRLP4 0
 INDIRI4
 CNSTI4 4
-EQI4 $1182
+EQI4 $1180
 ADDRLP4 0
 INDIRI4
 CNSTI4 6
-NEI4 $1179
-LABELV $1182
+NEI4 $1177
+LABELV $1180
 ADDRLP4 4
 ADDRFP4 4
 INDIRI4
@@ -18243,29 +18229,29 @@ ASGNI4
 ADDRLP4 4
 INDIRI4
 CNSTI4 3
-EQI4 $1184
+EQI4 $1182
 ADDRLP4 4
 INDIRI4
 CNSTI4 5
-EQI4 $1184
+EQI4 $1182
 ADDRLP4 4
 INDIRI4
 CNSTI4 14
-NEI4 $1179
-LABELV $1184
-line 2962
-;2961:		(block == BLOCKED_UPPER_RIGHT || block == BLOCKED_LOWER_RIGHT || block == BOOT_BLOCKED_DIAG_RIGHT))
-;2962:	{
-line 2963
-;2963:		return qtrue;
+NEI4 $1177
+LABELV $1182
+line 2964
+;2963:		(block == BLOCKED_UPPER_RIGHT || block == BLOCKED_LOWER_RIGHT || block == BOOT_BLOCKED_DIAG_RIGHT))
+;2964:	{
+line 2965
+;2965:		return qtrue;
 CNSTI4 1
 RETI4
-ADDRGP4 $1176
+ADDRGP4 $1174
 JUMPV
-LABELV $1179
-line 2965
-;2964:	}
-;2965:	else if ((attack == LS_A_R2L || attack == LS_A_TR2BL || attack == LS_A_BR2TL) &&
+LABELV $1177
+line 2967
+;2966:	}
+;2967:	else if ((attack == LS_A_R2L || attack == LS_A_TR2BL || attack == LS_A_BR2TL) &&
 ADDRLP4 8
 ADDRFP4 0
 INDIRI4
@@ -18273,16 +18259,16 @@ ASGNI4
 ADDRLP4 8
 INDIRI4
 CNSTI4 8
-EQI4 $1188
+EQI4 $1186
 ADDRLP4 8
 INDIRI4
 CNSTI4 9
-EQI4 $1188
+EQI4 $1186
 ADDRLP4 8
 INDIRI4
 CNSTI4 7
-NEI4 $1185
-LABELV $1188
+NEI4 $1183
+LABELV $1186
 ADDRLP4 12
 ADDRFP4 4
 INDIRI4
@@ -18290,109 +18276,109 @@ ASGNI4
 ADDRLP4 12
 INDIRI4
 CNSTI4 4
-EQI4 $1190
+EQI4 $1188
 ADDRLP4 12
 INDIRI4
 CNSTI4 6
-EQI4 $1190
+EQI4 $1188
 ADDRLP4 12
 INDIRI4
 CNSTI4 13
-NEI4 $1185
-LABELV $1190
-line 2967
-;2966:		(block == BLOCKED_UPPER_LEFT || block == BLOCKED_LOWER_LEFT || block == BOOT_BLOCKED_DIAG_LEFT))
-;2967:	{
-line 2968
-;2968:		return qtrue;
+NEI4 $1183
+LABELV $1188
+line 2969
+;2968:		(block == BLOCKED_UPPER_LEFT || block == BLOCKED_LOWER_LEFT || block == BOOT_BLOCKED_DIAG_LEFT))
+;2969:	{
+line 2970
+;2970:		return qtrue;
 CNSTI4 1
 RETI4
-ADDRGP4 $1176
+ADDRGP4 $1174
 JUMPV
-LABELV $1185
-line 2971
-;2969:	}
-;2970:
-;2971:	return qfalse;
+LABELV $1183
+line 2973
+;2971:	}
+;2972:
+;2973:	return qfalse;
 CNSTI4 0
 RETI4
-LABELV $1176
+LABELV $1174
 endproc Boot_BlockMatchesAttack 16 0
 export HasSetSaberOnly
 proc HasSetSaberOnly 16 0
-line 2976
-;2972:}
-;2973:
-;2974:
-;2975:qboolean HasSetSaberOnly(void)
-;2976:{
-line 2977
-;2977:	int i = 0;
+line 2978
+;2974:}
+;2975:
+;2976:
+;2977:qboolean HasSetSaberOnly(void)
+;2978:{
+line 2979
+;2979:	int i = 0;
 ADDRLP4 0
 CNSTI4 0
 ASGNI4
-line 2978
-;2978:	int wDisable = 0;
+line 2980
+;2980:	int wDisable = 0;
 ADDRLP4 4
 CNSTI4 0
 ASGNI4
-line 2980
-;2979:
-;2980:	if (g_gametype.integer == GT_JEDIMASTER)
+line 2982
+;2981:
+;2982:	if (g_gametype.integer == GT_JEDIMASTER)
 ADDRGP4 g_gametype+12
 INDIRI4
 CNSTI4 2
-NEI4 $1192
-line 2981
-;2981:	{ //set to 0 
-line 2982
-;2982:		return qfalse;
+NEI4 $1190
+line 2983
+;2983:	{ //set to 0 
+line 2984
+;2984:		return qfalse;
 CNSTI4 0
 RETI4
-ADDRGP4 $1191
+ADDRGP4 $1189
 JUMPV
-LABELV $1192
-line 2985
-;2983:	}
-;2984:
-;2985:	if (g_gametype.integer == GT_TOURNAMENT)
+LABELV $1190
+line 2987
+;2985:	}
+;2986:
+;2987:	if (g_gametype.integer == GT_TOURNAMENT)
 ADDRGP4 g_gametype+12
 INDIRI4
 CNSTI4 3
-NEI4 $1195
-line 2986
-;2986:	{
-line 2987
-;2987:		wDisable = g_duelWeaponDisable.integer;
+NEI4 $1193
+line 2988
+;2988:	{
+line 2989
+;2989:		wDisable = g_duelWeaponDisable.integer;
 ADDRLP4 4
 ADDRGP4 g_duelWeaponDisable+12
 INDIRI4
 ASGNI4
-line 2988
-;2988:	}
-ADDRGP4 $1201
-JUMPV
-LABELV $1195
 line 2990
-;2989:	else
-;2990:	{
-line 2991
-;2991:		wDisable = g_weaponDisable.integer;
+;2990:	}
+ADDRGP4 $1199
+JUMPV
+LABELV $1193
+line 2992
+;2991:	else
+;2992:	{
+line 2993
+;2993:		wDisable = g_weaponDisable.integer;
 ADDRLP4 4
 ADDRGP4 g_weaponDisable+12
 INDIRI4
 ASGNI4
-line 2992
-;2992:	}
-ADDRGP4 $1201
+line 2994
+;2994:	}
+ADDRGP4 $1199
 JUMPV
-LABELV $1200
-line 2995
-;2993:
-;2994:	while (i < WP_NUM_WEAPONS)
-;2995:	{
-line 2996
-;2996:		if (!(wDisable & (1 << i)) &&
+LABELV $1198
+line 2997
+;2995:
+;2996:	while (i < WP_NUM_WEAPONS)
+;2997:	{
+line 2998
+;2998:		if (!(wDisable & (1 << i)) &&
 ADDRLP4 12
 CNSTI4 0
 ASGNI4
@@ -18405,50 +18391,50 @@ LSHI4
 BANDI4
 ADDRLP4 12
 INDIRI4
-NEI4 $1203
+NEI4 $1201
 ADDRLP4 0
 INDIRI4
 CNSTI4 2
-EQI4 $1203
+EQI4 $1201
 ADDRLP4 0
 INDIRI4
 ADDRLP4 12
 INDIRI4
-EQI4 $1203
-line 2998
-;2997:			i != WP_SABER && i != WP_NONE)
-;2998:		{
-line 2999
-;2999:			return qfalse;
+EQI4 $1201
+line 3000
+;2999:			i != WP_SABER && i != WP_NONE)
+;3000:		{
+line 3001
+;3001:			return qfalse;
 CNSTI4 0
 RETI4
-ADDRGP4 $1191
+ADDRGP4 $1189
 JUMPV
-LABELV $1203
-line 3002
-;3000:		}
-;3001:
-;3002:		i++;
+LABELV $1201
+line 3004
+;3002:		}
+;3003:
+;3004:		i++;
 ADDRLP4 0
 ADDRLP4 0
 INDIRI4
 CNSTI4 1
 ADDI4
 ASGNI4
-line 3003
-;3003:	}
-LABELV $1201
-line 2994
+line 3005
+;3005:	}
+LABELV $1199
+line 2996
 ADDRLP4 0
 INDIRI4
 CNSTI4 16
-LTI4 $1200
-line 3005
-;3004:
-;3005:	return qtrue;
+LTI4 $1198
+line 3007
+;3006:
+;3007:	return qtrue;
 CNSTI4 1
 RETI4
-LABELV $1191
+LABELV $1189
 endproc HasSetSaberOnly 16 0
 import InFront
 import botstates
@@ -19267,7 +19253,7 @@ import srand
 import qsort
 lit
 align 1
-LABELV $1042
+LABELV $1040
 char 1 77
 char 1 111
 char 1 116
@@ -19276,7 +19262,7 @@ char 1 111
 char 1 110
 char 1 0
 align 1
-LABELV $1039
+LABELV $1037
 char 1 109
 char 1 111
 char 1 100

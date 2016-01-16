@@ -6956,7 +6956,7 @@ pop
 line 1331
 ;1331:	memset( &bootSession[clientNum], 0, sizeof(bootSession[clientNum]) );
 ADDRLP4 1052
-CNSTI4 56
+CNSTI4 60
 ASGNI4
 ADDRLP4 1052
 INDIRI4

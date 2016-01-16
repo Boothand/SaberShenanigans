@@ -2122,7 +2122,10 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 		hitLocUse = G2_MODELPART_LARM;
 		break;
 	case HL_HEAD:
-		hitLocUse = G2_MODELPART_HEAD;
+		if (boot->lastPersonWhoHitMe && boot->lastPersonWhoHitMe->client->ps.saberMove != LS_A_T2B)
+		{
+			hitLocUse = G2_MODELPART_HEAD;
+		}
 		break;	//Boot - they forgot?
 	default:
 		//hitLocUse = G_GetHitQuad(ent, point);

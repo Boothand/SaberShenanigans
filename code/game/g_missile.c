@@ -438,73 +438,73 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		}
 		return;
 	}
-	else if (other->r.contents & CONTENTS_LIGHTSABER)
-	{ //hit this person's saber, so..
-		gentity_t *otherOwner = &g_entities[other->r.ownerNum];
+	//else if (other->r.contents & CONTENTS_LIGHTSABER)	//Boot comment - don't reflect projectiles if not blocking manually
+	//{ //hit this person's saber, so..
+	//	gentity_t *otherOwner = &g_entities[other->r.ownerNum];
 
-		if (otherOwner->takedamage && otherOwner->client &&
-			ent->s.weapon != WP_ROCKET_LAUNCHER &&
-			ent->s.weapon != WP_THERMAL &&
-			ent->s.weapon != WP_TRIP_MINE &&
-			ent->s.weapon != WP_DET_PACK &&
-			ent->s.weapon != WP_DEMP2 &&
-			ent->methodOfDeath != MOD_REPEATER_ALT &&
-			ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH /*&&
-			otherOwner->client->ps.saberBlockTime < level.time*/)
-		{ //for now still deflect even if saberBlockTime >= level.time because it hit the actual saber
-			vec3_t fwd;
-			gentity_t *te;
-			int otherDefLevel = otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND];
+	//	if (otherOwner->takedamage && otherOwner->client &&
+	//		ent->s.weapon != WP_ROCKET_LAUNCHER &&
+	//		ent->s.weapon != WP_THERMAL &&
+	//		ent->s.weapon != WP_TRIP_MINE &&
+	//		ent->s.weapon != WP_DET_PACK &&
+	//		ent->s.weapon != WP_DEMP2 &&
+	//		ent->methodOfDeath != MOD_REPEATER_ALT &&
+	//		ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH /*&&
+	//		otherOwner->client->ps.saberBlockTime < level.time*/)
+	//	{ //for now still deflect even if saberBlockTime >= level.time because it hit the actual saber
+	//		vec3_t fwd;
+	//		gentity_t *te;
+	//		int otherDefLevel = otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND];
 
-			//in this case, deflect it even if we can't actually block it because it hit our saber
-			WP_SaberCanBlock(otherOwner, ent, ent->r.currentOrigin, 0, 0, qtrue, 0);
+	//		//in this case, deflect it even if we can't actually block it because it hit our saber
+	//		WP_SaberCanBlock(otherOwner, ent, ent->r.currentOrigin, 0, 0, qtrue, 0);
 
-			te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
-			VectorCopy(ent->r.currentOrigin, te->s.origin);
-			VectorCopy(trace->plane.normal, te->s.angles);
-			te->s.eventParm = 0;
+	//		te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
+	//		VectorCopy(ent->r.currentOrigin, te->s.origin);
+	//		VectorCopy(trace->plane.normal, te->s.angles);
+	//		te->s.eventParm = 0;
 
-			/*if (otherOwner->client->ps.velocity[2] > 0 ||
-				otherOwner->client->pers.cmd.forwardmove ||
-				otherOwner->client->pers.cmd.rightmove)*/
-			if (otherOwner->client->ps.velocity[2] > 0 ||
-				otherOwner->client->pers.cmd.forwardmove < 0) //now we only do it if jumping or running backward. Should be able to full-on charge.
-			{
-				otherDefLevel -= 1;
-				if (otherDefLevel < 0)
-				{
-					otherDefLevel = 0;
-				}
-			}
+	//		/*if (otherOwner->client->ps.velocity[2] > 0 ||
+	//			otherOwner->client->pers.cmd.forwardmove ||
+	//			otherOwner->client->pers.cmd.rightmove)*/
+	//		if (otherOwner->client->ps.velocity[2] > 0 ||
+	//			otherOwner->client->pers.cmd.forwardmove < 0) //now we only do it if jumping or running backward. Should be able to full-on charge.
+	//		{
+	//			otherDefLevel -= 1;
+	//			if (otherDefLevel < 0)
+	//			{
+	//				otherDefLevel = 0;
+	//			}
+	//		}
 
-			AngleVectors(otherOwner->client->ps.viewangles, fwd, NULL, NULL);
+	//		AngleVectors(otherOwner->client->ps.viewangles, fwd, NULL, NULL);
 
-			if (otherDefLevel == FORCE_LEVEL_1)
-			{
-				//if def is only level 1, instead of deflecting the shot it should just die here
-			}
-			else if (otherDefLevel == FORCE_LEVEL_2)
-			{
-				G_DeflectMissile(otherOwner, ent, fwd);
-			}
-			else
-			{
-				G_ReflectMissile(otherOwner, ent, fwd);
-			}
-			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherDefLevel*100));//200;
+	//		if (otherDefLevel == FORCE_LEVEL_1)
+	//		{
+	//			//if def is only level 1, instead of deflecting the shot it should just die here
+	//		}
+	//		else if (otherDefLevel == FORCE_LEVEL_2)
+	//		{
+	//			G_DeflectMissile(otherOwner, ent, fwd);
+	//		}
+	//		else
+	//		{
+	//			G_ReflectMissile(otherOwner, ent, fwd);
+	//		}
+	//		otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherDefLevel*100));//200;
 
-			if (otherDefLevel == FORCE_LEVEL_3)
-			{
-				otherOwner->client->ps.saberBlockTime = 0; //^_^
-			}
+	//		if (otherDefLevel == FORCE_LEVEL_3)
+	//		{
+	//			otherOwner->client->ps.saberBlockTime = 0; //^_^
+	//		}
 
-			if (otherDefLevel == FORCE_LEVEL_1)
-			{
-				goto killProj;
-			}
-			return;
-		}
-	}
+	//		if (otherDefLevel == FORCE_LEVEL_1)
+	//		{
+	//			goto killProj;
+	//		}
+	//		return;
+	//	}
+	//}
 
 	// check for sticking
 	if ( !other->takedamage && ( ent->s.eFlags & EF_MISSILE_STICK ) ) 

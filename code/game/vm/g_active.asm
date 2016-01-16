@@ -5782,7 +5782,7 @@ line 1000
 ;999:	usercmd_t	*ucmd;
 ;1000:	bootSession_t *boot = &bootSession[ent - g_entities];
 ADDRLP4 1420
-CNSTI4 56
+CNSTI4 60
 ADDRFP4 0
 INDIRP4
 CVPU4 4
@@ -11213,7 +11213,7 @@ line 1822
 line 1823
 ;1823:	bootSession_t *boot = &bootSession[ent - g_entities];
 ADDRLP4 0
-CNSTI4 56
+CNSTI4 60
 ADDRFP4 0
 INDIRP4
 CVPU4 4
@@ -11976,7 +11976,7 @@ line 1976
 ;1975:	vec3_t viewAngles;
 ;1976:	bootSession_t *boot = &bootSession[ent - g_entities];
 ADDRLP4 12
-CNSTI4 56
+CNSTI4 60
 ADDRFP4 0
 INDIRP4
 CVPU4 4

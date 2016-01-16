@@ -523,13 +523,6 @@ void Cmd_Info_Boot(gentity_t *ent)
 	trap_SendServerCommand(ent - g_entities, va("print \"%s%s%s%s%s\"", s1, s2, s3, s4, s5));
 }
 
-Cmd_ToggleMouseMovementBlock_Boot(gentity_t *ent)
-{
-	bootSession_t *boot = &bootSession[ent - g_entities];
-
-	boot->usesMouseMovementBlock = !boot->usesMouseMovementBlock;
-}
-
 gentity_t *G_GetDuelWinner(gclient_t *client)
 {
 	gclient_t *wCl;
@@ -2406,8 +2399,8 @@ void ClientCommand( int clientNum ) {
 	}
 	else if (Q_stricmp (cmd, "info") == 0)	//Boot
 		Cmd_Info_Boot( ent );
-	else if (Q_stricmp(cmd, "switchBlockingMethod") == 0)	//Boot
-		Cmd_ToggleMouseMovementBlock_Boot(ent);
+	else if (Q_stricmp(cmd, "dualBlade") == 0)	//Boot
+		ent->client->ps.dualBlade = qtrue;
 #ifdef _DEBUG
 	else if (Q_stricmp(cmd, "gotocoord") == 0 && CheatsOk( ent ))
 	{

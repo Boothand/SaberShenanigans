@@ -2744,7 +2744,7 @@ RETP4
 LABELV $216
 endproc CreateMissile 20 0
 export G_MissileImpact
-proc G_MissileImpact 132 32
+proc G_MissileImpact 104 32
 line 323
 ;315:}
 ;316:
@@ -3537,425 +3537,75 @@ line 439
 ;438:		}
 ;439:		return;
 LABELV $241
-line 441
-;440:	}
-;441:	else if (other->r.contents & CONTENTS_LIGHTSABER)
-ADDRLP4 0
-INDIRP4
-CNSTI4 340
-ADDP4
-INDIRI4
-CNSTI4 262144
-BANDI4
-CNSTI4 0
-EQI4 $258
-line 442
-;442:	{ //hit this person's saber, so..
-line 443
-;443:		gentity_t *otherOwner = &g_entities[other->r.ownerNum];
-ADDRLP4 68
-CNSTI4 828
-ADDRLP4 0
-INDIRP4
-CNSTI4 396
-ADDP4
-INDIRI4
-MULI4
-ADDRGP4 g_entities
-ADDP4
-ASGNP4
-line 445
-;444:
-;445:		if (otherOwner->takedamage && otherOwner->client &&
-ADDRLP4 72
-ADDRLP4 68
-INDIRP4
-ASGNP4
-ADDRLP4 72
-INDIRP4
-CNSTI4 680
-ADDP4
-INDIRI4
-CNSTI4 0
-EQI4 $260
-ADDRLP4 72
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CVPU4 4
-CNSTU4 0
-EQU4 $260
-ADDRLP4 76
-ADDRFP4 0
-INDIRP4
-ASGNP4
-ADDRLP4 80
-ADDRLP4 76
-INDIRP4
-CNSTI4 276
-ADDP4
-INDIRI4
-ASGNI4
-ADDRLP4 80
-INDIRI4
-CNSTI4 10
-EQI4 $260
-ADDRLP4 80
-INDIRI4
-CNSTI4 11
-EQI4 $260
-ADDRLP4 84
-CNSTI4 12
-ASGNI4
-ADDRLP4 80
-INDIRI4
-ADDRLP4 84
-INDIRI4
-EQI4 $260
-ADDRLP4 80
-INDIRI4
-CNSTI4 13
-EQI4 $260
-ADDRLP4 80
-INDIRI4
-CNSTI4 8
-EQI4 $260
-ADDRLP4 88
-ADDRLP4 76
-INDIRP4
-CNSTI4 704
-ADDP4
-INDIRI4
-ASGNI4
-ADDRLP4 88
-INDIRI4
-ADDRLP4 84
-INDIRI4
-EQI4 $260
-ADDRLP4 88
-INDIRI4
-CNSTI4 17
-EQI4 $260
-line 454
-;446:			ent->s.weapon != WP_ROCKET_LAUNCHER &&
-;447:			ent->s.weapon != WP_THERMAL &&
-;448:			ent->s.weapon != WP_TRIP_MINE &&
-;449:			ent->s.weapon != WP_DET_PACK &&
-;450:			ent->s.weapon != WP_DEMP2 &&
-;451:			ent->methodOfDeath != MOD_REPEATER_ALT &&
-;452:			ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH /*&&
-;453:			otherOwner->client->ps.saberBlockTime < level.time*/)
-;454:		{ //for now still deflect even if saberBlockTime >= level.time because it hit the actual saber
-line 457
-;455:			vec3_t fwd;
-;456:			gentity_t *te;
-;457:			int otherDefLevel = otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND];
-ADDRLP4 92
-ADDRLP4 68
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 996
-ADDP4
-INDIRI4
-ASGNI4
-line 460
-;458:
-;459:			//in this case, deflect it even if we can't actually block it because it hit our saber
-;460:			WP_SaberCanBlock(otherOwner, ent, ent->r.currentOrigin, 0, 0, qtrue, 0);
-ADDRLP4 68
-INDIRP4
-ARGP4
-ADDRLP4 112
-ADDRFP4 0
-INDIRP4
-ASGNP4
-ADDRLP4 112
-INDIRP4
-ARGP4
-ADDRLP4 112
-INDIRP4
-CNSTI4 368
-ADDP4
-ARGP4
-ADDRLP4 116
-CNSTI4 0
-ASGNI4
-ADDRLP4 116
-INDIRI4
-ARGI4
-ADDRLP4 116
-INDIRI4
-ARGI4
-CNSTI4 1
-ARGI4
-ADDRLP4 116
-INDIRI4
-ARGI4
-ADDRGP4 WP_SaberCanBlock
-CALLI4
-pop
-line 462
-;461:
-;462:			te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
-ADDRFP4 0
-INDIRP4
-CNSTI4 368
-ADDP4
-ARGP4
-CNSTI4 28
-ARGI4
-ADDRLP4 120
-ADDRGP4 G_TempEntity
-CALLP4
-ASGNP4
-ADDRLP4 96
-ADDRLP4 120
-INDIRP4
-ASGNP4
-line 463
-;463:			VectorCopy(ent->r.currentOrigin, te->s.origin);
-ADDRLP4 96
-INDIRP4
-CNSTI4 92
-ADDP4
-ADDRFP4 0
-INDIRP4
-CNSTI4 368
-ADDP4
-INDIRB
-ASGNB 12
-line 464
-;464:			VectorCopy(trace->plane.normal, te->s.angles);
-ADDRLP4 96
-INDIRP4
-CNSTI4 116
-ADDP4
-ADDRFP4 4
-INDIRP4
-CNSTI4 24
-ADDP4
-INDIRB
-ASGNB 12
-line 465
-;465:			te->s.eventParm = 0;
-ADDRLP4 96
-INDIRP4
-CNSTI4 256
-ADDP4
-CNSTI4 0
-ASGNI4
-line 470
-;466:
-;467:			/*if (otherOwner->client->ps.velocity[2] > 0 ||
-;468:				otherOwner->client->pers.cmd.forwardmove ||
-;469:				otherOwner->client->pers.cmd.rightmove)*/
-;470:			if (otherOwner->client->ps.velocity[2] > 0 ||
-ADDRLP4 124
-ADDRLP4 68
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-ASGNP4
-ADDRLP4 124
-INDIRP4
-CNSTI4 40
-ADDP4
-INDIRF4
-CNSTF4 0
-GTF4 $264
-ADDRLP4 124
-INDIRP4
-CNSTI4 1396
-ADDP4
-INDIRI1
-CVII4 1
-CNSTI4 0
-GEI4 $262
-LABELV $264
-line 472
-;471:				otherOwner->client->pers.cmd.forwardmove < 0) //now we only do it if jumping or running backward. Should be able to full-on charge.
-;472:			{
-line 473
-;473:				otherDefLevel -= 1;
-ADDRLP4 92
-ADDRLP4 92
-INDIRI4
-CNSTI4 1
-SUBI4
-ASGNI4
-line 474
-;474:				if (otherDefLevel < 0)
-ADDRLP4 92
-INDIRI4
-CNSTI4 0
-GEI4 $265
-line 475
-;475:				{
-line 476
-;476:					otherDefLevel = 0;
-ADDRLP4 92
-CNSTI4 0
-ASGNI4
-line 477
-;477:				}
-LABELV $265
-line 478
-;478:			}
-LABELV $262
-line 480
-;479:
-;480:			AngleVectors(otherOwner->client->ps.viewangles, fwd, NULL, NULL);
-ADDRLP4 68
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 156
-ADDP4
-ARGP4
-ADDRLP4 100
-ARGP4
-ADDRLP4 128
-CNSTP4 0
-ASGNP4
-ADDRLP4 128
-INDIRP4
-ARGP4
-ADDRLP4 128
-INDIRP4
-ARGP4
-ADDRGP4 AngleVectors
-CALLV
-pop
-line 482
-;481:
-;482:			if (otherDefLevel == FORCE_LEVEL_1)
-ADDRLP4 92
-INDIRI4
-CNSTI4 1
-NEI4 $267
-line 483
-;483:			{
-line 485
-;484:				//if def is only level 1, instead of deflecting the shot it should just die here
-;485:			}
-ADDRGP4 $268
-JUMPV
-LABELV $267
-line 486
-;486:			else if (otherDefLevel == FORCE_LEVEL_2)
-ADDRLP4 92
-INDIRI4
-CNSTI4 2
-NEI4 $269
-line 487
-;487:			{
-line 488
-;488:				G_DeflectMissile(otherOwner, ent, fwd);
-ADDRLP4 68
-INDIRP4
-ARGP4
-ADDRFP4 0
-INDIRP4
-ARGP4
-ADDRLP4 100
-ARGP4
-ADDRGP4 G_DeflectMissile
-CALLV
-pop
-line 489
-;489:			}
-ADDRGP4 $270
-JUMPV
-LABELV $269
-line 491
-;490:			else
-;491:			{
-line 492
-;492:				G_ReflectMissile(otherOwner, ent, fwd);
-ADDRLP4 68
-INDIRP4
-ARGP4
-ADDRFP4 0
-INDIRP4
-ARGP4
-ADDRLP4 100
-ARGP4
-ADDRGP4 G_ReflectMissile
-CALLV
-pop
-line 493
-;493:			}
-LABELV $270
-LABELV $268
-line 494
-;494:			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherDefLevel*100));//200;
-ADDRLP4 68
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 744
-ADDP4
-ADDRGP4 level+32
-INDIRI4
-CNSTI4 350
-CNSTI4 100
-ADDRLP4 92
-INDIRI4
-MULI4
-SUBI4
-ADDI4
-ASGNI4
-line 496
-;495:
-;496:			if (otherDefLevel == FORCE_LEVEL_3)
-ADDRLP4 92
-INDIRI4
-CNSTI4 3
-NEI4 $272
-line 497
-;497:			{
-line 498
-;498:				otherOwner->client->ps.saberBlockTime = 0; //^_^
-ADDRLP4 68
-INDIRP4
-CNSTI4 408
-ADDP4
-INDIRP4
-CNSTI4 744
-ADDP4
-CNSTI4 0
-ASGNI4
-line 499
-;499:			}
-LABELV $272
-line 501
-;500:
-;501:			if (otherDefLevel == FORCE_LEVEL_1)
-ADDRLP4 92
-INDIRI4
-CNSTI4 1
-NEI4 $221
-line 502
-;502:			{
-line 503
-;503:				goto killProj;
-ADDRGP4 $238
-JUMPV
-line 505
-;504:			}
-;505:			return;
-LABELV $260
-line 507
-;506:		}
-;507:	}
-LABELV $258
 line 510
+;440:	}
+;441:	//else if (other->r.contents & CONTENTS_LIGHTSABER)	//Boot comment - don't reflect projectiles if not blocking manually
+;442:	//{ //hit this person's saber, so..
+;443:	//	gentity_t *otherOwner = &g_entities[other->r.ownerNum];
+;444:
+;445:	//	if (otherOwner->takedamage && otherOwner->client &&
+;446:	//		ent->s.weapon != WP_ROCKET_LAUNCHER &&
+;447:	//		ent->s.weapon != WP_THERMAL &&
+;448:	//		ent->s.weapon != WP_TRIP_MINE &&
+;449:	//		ent->s.weapon != WP_DET_PACK &&
+;450:	//		ent->s.weapon != WP_DEMP2 &&
+;451:	//		ent->methodOfDeath != MOD_REPEATER_ALT &&
+;452:	//		ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH /*&&
+;453:	//		otherOwner->client->ps.saberBlockTime < level.time*/)
+;454:	//	{ //for now still deflect even if saberBlockTime >= level.time because it hit the actual saber
+;455:	//		vec3_t fwd;
+;456:	//		gentity_t *te;
+;457:	//		int otherDefLevel = otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND];
+;458:
+;459:	//		//in this case, deflect it even if we can't actually block it because it hit our saber
+;460:	//		WP_SaberCanBlock(otherOwner, ent, ent->r.currentOrigin, 0, 0, qtrue, 0);
+;461:
+;462:	//		te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
+;463:	//		VectorCopy(ent->r.currentOrigin, te->s.origin);
+;464:	//		VectorCopy(trace->plane.normal, te->s.angles);
+;465:	//		te->s.eventParm = 0;
+;466:
+;467:	//		/*if (otherOwner->client->ps.velocity[2] > 0 ||
+;468:	//			otherOwner->client->pers.cmd.forwardmove ||
+;469:	//			otherOwner->client->pers.cmd.rightmove)*/
+;470:	//		if (otherOwner->client->ps.velocity[2] > 0 ||
+;471:	//			otherOwner->client->pers.cmd.forwardmove < 0) //now we only do it if jumping or running backward. Should be able to full-on charge.
+;472:	//		{
+;473:	//			otherDefLevel -= 1;
+;474:	//			if (otherDefLevel < 0)
+;475:	//			{
+;476:	//				otherDefLevel = 0;
+;477:	//			}
+;478:	//		}
+;479:
+;480:	//		AngleVectors(otherOwner->client->ps.viewangles, fwd, NULL, NULL);
+;481:
+;482:	//		if (otherDefLevel == FORCE_LEVEL_1)
+;483:	//		{
+;484:	//			//if def is only level 1, instead of deflecting the shot it should just die here
+;485:	//		}
+;486:	//		else if (otherDefLevel == FORCE_LEVEL_2)
+;487:	//		{
+;488:	//			G_DeflectMissile(otherOwner, ent, fwd);
+;489:	//		}
+;490:	//		else
+;491:	//		{
+;492:	//			G_ReflectMissile(otherOwner, ent, fwd);
+;493:	//		}
+;494:	//		otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherDefLevel*100));//200;
+;495:
+;496:	//		if (otherDefLevel == FORCE_LEVEL_3)
+;497:	//		{
+;498:	//			otherOwner->client->ps.saberBlockTime = 0; //^_^
+;499:	//		}
+;500:
+;501:	//		if (otherDefLevel == FORCE_LEVEL_1)
+;502:	//		{
+;503:	//			goto killProj;
+;504:	//		}
+;505:	//		return;
+;506:	//	}
+;507:	//}
 ;508:
 ;509:	// check for sticking
 ;510:	if ( !other->takedamage && ( ent->s.eFlags & EF_MISSILE_STICK ) ) 
@@ -3969,7 +3619,7 @@ ADDP4
 INDIRI4
 ADDRLP4 68
 INDIRI4
-NEI4 $276
+NEI4 $258
 ADDRFP4 0
 INDIRP4
 CNSTI4 8
@@ -3979,7 +3629,7 @@ CNSTI4 2097152
 BANDI4
 ADDRLP4 68
 INDIRI4
-EQI4 $276
+EQI4 $258
 line 511
 ;511:	{
 line 512
@@ -4020,7 +3670,7 @@ line 514
 ;514:		return;
 ADDRGP4 $221
 JUMPV
-LABELV $276
+LABELV $258
 line 518
 ;515:	}
 ;516:
@@ -4032,7 +3682,7 @@ CNSTI4 680
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $278
+EQI4 $260
 line 520
 ;519:		// FIXME: wrong damage direction?
 ;520:		if ( ent->damage ) {
@@ -4042,7 +3692,7 @@ CNSTI4 688
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $280
+EQI4 $262
 line 523
 ;521:			vec3_t	velocity;
 ;522:
@@ -4067,7 +3717,7 @@ ASGNI4
 ADDRLP4 84
 INDIRI4
 CNSTI4 0
-EQI4 $282
+EQI4 $264
 line 524
 ;524:				g_entities[ent->r.ownerNum].client->accuracy_hits++;
 ADDRLP4 88
@@ -4099,7 +3749,7 @@ CNSTI4 1
 ASGNI4
 line 526
 ;526:			}
-LABELV $282
+LABELV $264
 line 527
 ;527:			BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, velocity );
 ADDRFP4 0
@@ -4126,7 +3776,7 @@ ASGNF4
 ADDRLP4 88
 INDIRF4
 CNSTF4 0
-NEF4 $286
+NEF4 $268
 line 529
 ;529:				velocity[2] = 1;	// stepped on a grenade
 ADDRLP4 72+8
@@ -4134,7 +3784,7 @@ CNSTF4 1065353216
 ASGNF4
 line 530
 ;530:			}
-LABELV $286
+LABELV $268
 line 532
 ;531:
 ;532:			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE ||
@@ -4148,16 +3798,16 @@ ASGNI4
 ADDRLP4 92
 INDIRI4
 CNSTI4 6
-EQI4 $292
+EQI4 $274
 ADDRLP4 92
 INDIRI4
 CNSTI4 9
-EQI4 $292
+EQI4 $274
 ADDRLP4 92
 INDIRI4
 CNSTI4 10
-NEI4 $289
-LABELV $292
+NEI4 $271
+LABELV $274
 line 534
 ;533:				ent->s.weapon == WP_ROCKET_LAUNCHER)
 ;534:			{
@@ -4173,7 +3823,7 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 9
-NEI4 $293
+NEI4 $275
 ADDRLP4 96
 INDIRP4
 CNSTI4 8
@@ -4182,7 +3832,7 @@ INDIRI4
 CNSTI4 512
 BANDI4
 CNSTI4 0
-EQI4 $293
+EQI4 $275
 line 536
 ;536:				{
 line 537
@@ -4203,9 +3853,9 @@ CALLV
 pop
 line 538
 ;538:				}
-ADDRGP4 $290
+ADDRGP4 $272
 JUMPV
-LABELV $293
+LABELV $275
 line 540
 ;539:				else
 ;540:				{
@@ -4261,9 +3911,9 @@ line 544
 ;544:				}
 line 545
 ;545:			}
-ADDRGP4 $290
+ADDRGP4 $272
 JUMPV
-LABELV $289
+LABELV $271
 line 547
 ;546:			else
 ;547:			{
@@ -4317,13 +3967,13 @@ line 551
 ;549:					/*ent->s.origin*/ent->r.currentOrigin, ent->damage, 
 ;550:					0, ent->methodOfDeath);
 ;551:			}
-LABELV $290
+LABELV $272
 line 552
 ;552:		}
-LABELV $280
+LABELV $262
 line 553
 ;553:	}
-LABELV $278
+LABELV $260
 LABELV $238
 line 558
 ;554:killProj:
@@ -4337,7 +3987,7 @@ CNSTI4 680
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $295
+EQI4 $277
 ADDRLP4 0
 INDIRP4
 CNSTI4 408
@@ -4345,7 +3995,7 @@ ADDP4
 INDIRP4
 CVPU4 4
 CNSTU4 0
-EQU4 $295
+EQU4 $277
 line 559
 ;559:		G_AddEvent( ent, EV_MISSILE_HIT, DirToByte( trace->plane.normal ) );
 ADDRFP4 4
@@ -4380,9 +4030,9 @@ INDIRI4
 ASGNI4
 line 561
 ;561:	} else if( trace->surfaceFlags & SURF_METALSTEPS ) {
-ADDRGP4 $296
+ADDRGP4 $278
 JUMPV
-LABELV $295
+LABELV $277
 ADDRFP4 4
 INDIRP4
 CNSTI4 44
@@ -4391,7 +4041,7 @@ INDIRI4
 CNSTI4 32768
 BANDI4
 CNSTI4 0
-EQI4 $297
+EQI4 $279
 line 562
 ;562:		G_AddEvent( ent, EV_MISSILE_MISS_METAL, DirToByte( trace->plane.normal ) );
 ADDRFP4 4
@@ -4416,16 +4066,16 @@ CALLV
 pop
 line 563
 ;563:	} else if (ent->s.weapon != G2_MODEL_PART) {
-ADDRGP4 $298
+ADDRGP4 $280
 JUMPV
-LABELV $297
+LABELV $279
 ADDRFP4 0
 INDIRP4
 CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-EQI4 $299
+EQI4 $281
 line 564
 ;564:		G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( trace->plane.normal ) );
 ADDRFP4 4
@@ -4450,9 +4100,9 @@ CALLV
 pop
 line 565
 ;565:	}
-LABELV $299
-LABELV $298
-LABELV $296
+LABELV $281
+LABELV $280
+LABELV $278
 line 567
 ;566:
 ;567:	ent->freeAfterEvent = qtrue;
@@ -4512,7 +4162,7 @@ CNSTI4 696
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $301
+EQI4 $283
 line 578
 ;578:		if( G_RadiusDamage( trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius, 
 ADDRFP4 4
@@ -4560,7 +4210,7 @@ ASGNI4
 ADDRLP4 80
 INDIRI4
 CNSTI4 0
-EQI4 $303
+EQI4 $285
 line 579
 ;579:			other, ent->splashMethodOfDeath ) ) {
 line 580
@@ -4568,7 +4218,7 @@ line 580
 ADDRLP4 4
 INDIRI4
 CNSTI4 0
-NEI4 $305
+NEI4 $287
 line 581
 ;581:				g_entities[ent->r.ownerNum].client->accuracy_hits++;
 ADDRLP4 84
@@ -4595,13 +4245,13 @@ ADDI4
 ASGNI4
 line 582
 ;582:			}
-LABELV $305
+LABELV $287
 line 583
 ;583:		}
-LABELV $303
+LABELV $285
 line 584
 ;584:	}
-LABELV $301
+LABELV $283
 line 586
 ;585:
 ;586:	if (ent->s.weapon == G2_MODEL_PART)
@@ -4611,7 +4261,7 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-NEI4 $308
+NEI4 $290
 line 587
 ;587:	{
 line 588
@@ -4624,7 +4274,7 @@ CNSTI4 0
 ASGNI4
 line 589
 ;589:	}
-LABELV $308
+LABELV $290
 line 591
 ;590:
 ;591:	trap_LinkEntity( ent );
@@ -4637,7 +4287,7 @@ pop
 line 592
 ;592:}
 LABELV $221
-endproc G_MissileImpact 132 32
+endproc G_MissileImpact 104 32
 export G_RunMissile
 proc G_RunMissile 2224 28
 line 599
@@ -4679,7 +4329,7 @@ ADDP4
 INDIRP4
 CVPU4 4
 CNSTU4 0
-EQU4 $312
+EQU4 $294
 line 609
 ;609:		passent = ent->target_ent->s.number;
 ADDRLP4 1080
@@ -4692,9 +4342,9 @@ INDIRI4
 ASGNI4
 line 610
 ;610:	}
-ADDRGP4 $313
+ADDRGP4 $295
 JUMPV
-LABELV $312
+LABELV $294
 line 611
 ;611:	else {
 line 613
@@ -4709,7 +4359,7 @@ INDIRI4
 ASGNI4
 line 614
 ;614:	}
-LABELV $313
+LABELV $295
 line 616
 ;615:	// trace a line from the previous position to the current position
 ;616:	trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask );
@@ -4758,13 +4408,13 @@ ADDRLP4 0+4
 INDIRI4
 ADDRLP4 1112
 INDIRI4
-NEI4 $317
+NEI4 $299
 ADDRLP4 0
 INDIRI4
 ADDRLP4 1112
 INDIRI4
-EQI4 $314
-LABELV $317
+EQI4 $296
+LABELV $299
 line 620
 ;619:		// make sure the tr.entityNum is set to the entity we're stuck in
 ;620:		trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, passent, ent->clipmask );
@@ -4815,9 +4465,9 @@ CNSTF4 0
 ASGNF4
 line 622
 ;622:	}
-ADDRGP4 $315
+ADDRGP4 $297
 JUMPV
-LABELV $314
+LABELV $296
 line 623
 ;623:	else {
 line 624
@@ -4831,7 +4481,7 @@ INDIRB
 ASGNB 12
 line 625
 ;625:	}
-LABELV $315
+LABELV $297
 line 627
 ;626:
 ;627:	if (ent->passThroughNum && tr.entityNum == (ent->passThroughNum-1))
@@ -4845,14 +4495,14 @@ ASGNI4
 ADDRLP4 1116
 INDIRI4
 CNSTI4 0
-EQI4 $320
+EQI4 $302
 ADDRLP4 0+52
 INDIRI4
 ADDRLP4 1116
 INDIRI4
 CNSTI4 1
 SUBI4
-NEI4 $320
+NEI4 $302
 line 628
 ;628:	{
 line 629
@@ -4874,9 +4524,9 @@ CALLV
 pop
 line 631
 ;631:		goto passthrough;
-ADDRGP4 $323
+ADDRGP4 $305
 JUMPV
-LABELV $320
+LABELV $302
 line 634
 ;632:	}
 ;633:
@@ -4900,14 +4550,14 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-NEI4 $324
+NEI4 $306
 ADDRLP4 1120
 INDIRP4
 CNSTI4 716
 ADDP4
 INDIRI4
 CNSTI4 0
-NEI4 $324
+NEI4 $306
 line 637
 ;637:	{
 line 641
@@ -4984,16 +4634,16 @@ ADDRLP4 1124+4
 INDIRI4
 ADDRLP4 2220
 INDIRI4
-NEI4 $328
+NEI4 $310
 ADDRLP4 1124
 INDIRI4
 ADDRLP4 2220
 INDIRI4
-NEI4 $328
+NEI4 $310
 ADDRLP4 1124+52
 INDIRI4
 CNSTI4 1022
-NEI4 $328
+NEI4 $310
 line 648
 ;648:		{
 line 649
@@ -5007,9 +4657,9 @@ INDIRI4
 ASGNI4
 line 650
 ;650:		}
-ADDRGP4 $329
+ADDRGP4 $311
 JUMPV
-LABELV $328
+LABELV $310
 line 652
 ;651:		else
 ;652:		{
@@ -5023,17 +4673,17 @@ CNSTI4 1023
 ASGNI4
 line 654
 ;654:		}
-LABELV $329
+LABELV $311
 line 655
 ;655:	}
-LABELV $324
+LABELV $306
 line 657
 ;656:
 ;657:	if ( tr.fraction != 1) {
 ADDRLP4 0+8
 INDIRF4
 CNSTF4 1065353216
-EQF4 $333
+EQF4 $315
 line 659
 ;658:		// never explode or bounce on sky
 ;659:		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
@@ -5042,7 +4692,7 @@ INDIRI4
 CNSTI4 524288
 BANDI4
 CNSTI4 0
-EQI4 $336
+EQI4 $318
 line 661
 ;660:			// If grapple, reset owner
 ;661:			if (ent->parent && ent->parent->client && ent->parent->client->hook == ent) {
@@ -5065,7 +4715,7 @@ INDIRP4
 CVPU4 4
 ADDRLP4 1132
 INDIRU4
-EQU4 $339
+EQU4 $321
 ADDRLP4 1136
 ADDRLP4 1128
 INDIRP4
@@ -5078,7 +4728,7 @@ INDIRP4
 CVPU4 4
 ADDRLP4 1132
 INDIRU4
-EQU4 $339
+EQU4 $321
 ADDRLP4 1136
 INDIRP4
 CNSTI4 1700
@@ -5088,7 +4738,7 @@ CVPU4 4
 ADDRLP4 1124
 INDIRP4
 CVPU4 4
-NEU4 $339
+NEU4 $321
 line 662
 ;662:				ent->parent->client->hook = NULL;
 ADDRFP4 0
@@ -5105,7 +4755,7 @@ CNSTP4 0
 ASGNP4
 line 663
 ;663:			}
-LABELV $339
+LABELV $321
 line 665
 ;664:
 ;665:			if (ent->s.weapon == WP_SABER && ent->isSaberEntity)
@@ -5119,14 +4769,14 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 2
-NEI4 $341
+NEI4 $323
 ADDRLP4 1140
 INDIRP4
 CNSTI4 812
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $341
+EQI4 $323
 line 666
 ;666:			{
 line 667
@@ -5139,9 +4789,9 @@ CALLV
 pop
 line 668
 ;668:				return;
-ADDRGP4 $310
+ADDRGP4 $292
 JUMPV
-LABELV $341
+LABELV $323
 line 670
 ;669:			}
 ;670:			else if (ent->s.weapon != G2_MODEL_PART)
@@ -5151,7 +4801,7 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-EQI4 $343
+EQI4 $325
 line 671
 ;671:			{
 line 672
@@ -5164,13 +4814,13 @@ CALLV
 pop
 line 673
 ;673:				return;
-ADDRGP4 $310
+ADDRGP4 $292
 JUMPV
-LABELV $343
+LABELV $325
 line 675
 ;674:			}
 ;675:		}
-LABELV $336
+LABELV $318
 line 676
 ;676:		G_MissileImpact( ent, &tr );
 ADDRFP4 0
@@ -5193,24 +4843,24 @@ CNSTI4 4
 ADDP4
 INDIRI4
 CNSTI4 3
-EQI4 $345
+EQI4 $327
 ADDRLP4 1124
 INDIRP4
 CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-EQI4 $345
+EQI4 $327
 line 678
 ;678:			return;		// exploded
-ADDRGP4 $310
+ADDRGP4 $292
 JUMPV
-LABELV $345
+LABELV $327
 line 680
 ;679:		}
 ;680:	}
-LABELV $333
-LABELV $323
+LABELV $315
+LABELV $305
 line 683
 ;681:
 ;682:passthrough:
@@ -5229,7 +4879,7 @@ ADDP4
 INDIRI4
 ADDRLP4 1128
 INDIRI4
-NEI4 $347
+NEI4 $329
 ADDRLP4 1124
 INDIRP4
 CNSTI4 8
@@ -5239,7 +4889,7 @@ CNSTI4 2097152
 BANDI4
 ADDRLP4 1128
 INDIRI4
-EQI4 $347
+EQI4 $329
 line 684
 ;684:	{//stuck missiles should check some special stuff
 line 685
@@ -5252,9 +4902,9 @@ CALLV
 pop
 line 686
 ;686:		return;
-ADDRGP4 $310
+ADDRGP4 $292
 JUMPV
-LABELV $347
+LABELV $329
 line 689
 ;687:	}
 ;688:
@@ -5265,7 +4915,7 @@ CNSTI4 276
 ADDP4
 INDIRI4
 CNSTI4 50
-NEI4 $349
+NEI4 $331
 line 690
 ;690:	{
 line 691
@@ -5276,7 +4926,7 @@ CNSTI4 192
 ADDP4
 INDIRI4
 CNSTI4 1022
-NEI4 $351
+NEI4 $333
 line 692
 ;692:		{
 line 693
@@ -5354,7 +5004,7 @@ CNSTI4 48
 ADDP4
 INDIRI4
 CNSTI4 0
-EQI4 $354
+EQI4 $336
 line 701
 ;701:			{
 line 702
@@ -5393,13 +5043,13 @@ CNSTF4 0
 ASGNF4
 line 707
 ;707:			}
-LABELV $354
+LABELV $336
 line 708
 ;708:		}
-LABELV $351
+LABELV $333
 line 709
 ;709:	}
-LABELV $349
+LABELV $331
 line 712
 ;710:
 ;711:	// check think function after bouncing
@@ -5412,7 +5062,7 @@ CALLV
 pop
 line 713
 ;713:}
-LABELV $310
+LABELV $292
 endproc G_RunMissile 2224 28
 import RandFloat
 import laserTrapStick
