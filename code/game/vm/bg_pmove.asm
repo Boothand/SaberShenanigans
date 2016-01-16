@@ -1,0 +1,28062 @@
+data
+export gPMDoSlowFall
+align 4
+LABELV gPMDoSlowFall
+byte 4 0
+export pm_stopspeed
+align 4
+LABELV pm_stopspeed
+byte 4 1120403456
+export pm_duckScale
+align 4
+LABELV pm_duckScale
+byte 4 1056964608
+export pm_swimScale
+align 4
+LABELV pm_swimScale
+byte 4 1056964608
+export pm_wadeScale
+align 4
+LABELV pm_wadeScale
+byte 4 1060320051
+export pm_accelerate
+align 4
+LABELV pm_accelerate
+byte 4 1092616192
+export pm_airaccelerate
+align 4
+LABELV pm_airaccelerate
+byte 4 1065353216
+export pm_wateraccelerate
+align 4
+LABELV pm_wateraccelerate
+byte 4 1082130432
+export pm_flyaccelerate
+align 4
+LABELV pm_flyaccelerate
+byte 4 1090519040
+export pm_friction
+align 4
+LABELV pm_friction
+byte 4 1086324736
+export pm_waterfriction
+align 4
+LABELV pm_waterfriction
+byte 4 1065353216
+export pm_flightfriction
+align 4
+LABELV pm_flightfriction
+byte 4 1077936128
+export pm_spectatorfriction
+align 4
+LABELV pm_spectatorfriction
+byte 4 1084227584
+export c_pmove
+align 4
+LABELV c_pmove
+byte 4 0
+export forceSpeedLevels
+align 4
+LABELV forceSpeedLevels
+byte 4 1065353216
+byte 4 1067450368
+byte 4 1069547520
+byte 4 1071644672
+export forcePowerNeeded
+align 4
+LABELV forcePowerNeeded
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 999
+byte 4 25
+byte 4 10
+byte 4 50
+byte 4 20
+byte 4 20
+byte 4 20
+byte 4 30
+byte 4 1
+byte 4 50
+byte 4 50
+byte 4 50
+byte 4 50
+byte 4 50
+byte 4 10
+byte 4 20
+byte 4 0
+byte 4 2
+byte 4 20
+byte 4 25
+byte 4 10
+byte 4 50
+byte 4 20
+byte 4 20
+byte 4 20
+byte 4 30
+byte 4 1
+byte 4 50
+byte 4 25
+byte 4 25
+byte 4 33
+byte 4 33
+byte 4 10
+byte 4 20
+byte 4 0
+byte 4 1
+byte 4 20
+byte 4 25
+byte 4 10
+byte 4 50
+byte 4 20
+byte 4 20
+byte 4 20
+byte 4 60
+byte 4 1
+byte 4 50
+byte 4 10
+byte 4 10
+byte 4 25
+byte 4 25
+byte 4 10
+byte 4 20
+byte 4 0
+byte 4 0
+byte 4 20
+export forceJumpHeight
+align 4
+LABELV forceJumpHeight
+byte 4 1107296256
+byte 4 1119879168
+byte 4 1128267776
+byte 4 1136656384
+export forceJumpStrength
+align 4
+LABELV forceJumpStrength
+byte 4 1130430464
+byte 4 1137836032
+byte 4 1142128640
+byte 4 1146224640
+export PM_GetSaberStance
+code
+proc PM_GetSaberStance 0 0
+file "../bg_pmove.c"
+line 148
+;1:// Copyright (C) 1999-2000 Id Software, Inc.
+;2://
+;3:// bg_pmove.c -- both games player movement code
+;4:// takes a playerstate and a usercmd as input and returns a modifed playerstate
+;5:
+;6:#include "q_shared.h"
+;7:#include "bg_public.h"
+;8:#include "bg_local.h"
+;9:
+;10:#define MAX_WEAPON_CHARGE_TIME 5000
+;11:
+;12:pmove_t		*pm;
+;13:pml_t		pml;
+;14:
+;15:qboolean gPMDoSlowFall = qfalse;
+;16:
+;17:// movement parameters
+;18:float	pm_stopspeed = 100.0f;
+;19:float	pm_duckScale = 0.50f;
+;20:float	pm_swimScale = 0.50f;
+;21:float	pm_wadeScale = 0.70f;
+;22:
+;23:float	pm_accelerate = 10.0f;
+;24:float	pm_airaccelerate = 1.0f;
+;25:float	pm_wateraccelerate = 4.0f;
+;26:float	pm_flyaccelerate = 8.0f;
+;27:
+;28:float	pm_friction = 6.0f;
+;29:float	pm_waterfriction = 1.0f;
+;30:float	pm_flightfriction = 3.0f;
+;31:float	pm_spectatorfriction = 5.0f;
+;32:
+;33:int		c_pmove = 0;
+;34:
+;35:float forceSpeedLevels[4] = 
+;36:{
+;37:	1, //rank 0?
+;38:	1.25,
+;39:	1.5,
+;40:	1.75
+;41:};
+;42:
+;43:int forcePowerNeeded[NUM_FORCE_POWER_LEVELS][NUM_FORCE_POWERS] = 
+;44:{
+;45:	{ //nothing should be usable at rank 0..
+;46:		999,//FP_HEAL,//instant
+;47:		999,//FP_LEVITATION,//hold/duration
+;48:		999,//FP_SPEED,//duration
+;49:		999,//FP_PUSH,//hold/duration
+;50:		999,//FP_PULL,//hold/duration
+;51:		999,//FP_TELEPATHY,//instant
+;52:		999,//FP_GRIP,//hold/duration
+;53:		999,//FP_LIGHTNING,//hold/duration
+;54:		999,//FP_RAGE,//duration
+;55:		999,//FP_PROTECT,//duration
+;56:		999,//FP_ABSORB,//duration
+;57:		999,//FP_TEAM_HEAL,//instant
+;58:		999,//FP_TEAM_FORCE,//instant
+;59:		999,//FP_DRAIN,//hold/duration
+;60:		999,//FP_SEE,//duration
+;61:		999,//FP_SABERATTACK,
+;62:		999,//FP_SABERDEFEND,
+;63:		999//FP_SABERTHROW,
+;64:		//NUM_FORCE_POWERS
+;65:	},
+;66:	{
+;67:		25,//FP_HEAL,//instant
+;68:		10,//FP_LEVITATION,//hold/duration
+;69:		50,//FP_SPEED,//duration
+;70:		20,//FP_PUSH,//hold/duration
+;71:		20,//FP_PULL,//hold/duration
+;72:		20,//FP_TELEPATHY,//instant
+;73:		30,//FP_GRIP,//hold/duration
+;74:		1,//FP_LIGHTNING,//hold/duration
+;75:		50,//FP_RAGE,//duration
+;76:		50,//FP_PROTECT,//duration
+;77:		50,//FP_ABSORB,//duration
+;78:		50,//FP_TEAM_HEAL,//instant
+;79:		50,//FP_TEAM_FORCE,//instant
+;80:		10,//FP_DRAIN,//hold/duration
+;81:		20,//FP_SEE,//duration
+;82:		0,//FP_SABERATTACK,
+;83:		2,//FP_SABERDEFEND,
+;84:		20//FP_SABERTHROW,
+;85:		//NUM_FORCE_POWERS
+;86:	},
+;87:	{
+;88:		25,//FP_HEAL,//instant
+;89:		10,//FP_LEVITATION,//hold/duration
+;90:		50,//FP_SPEED,//duration
+;91:		20,//FP_PUSH,//hold/duration
+;92:		20,//FP_PULL,//hold/duration
+;93:		20,//FP_TELEPATHY,//instant
+;94:		30,//FP_GRIP,//hold/duration
+;95:		1,//FP_LIGHTNING,//hold/duration
+;96:		50,//FP_RAGE,//duration
+;97:		25,//FP_PROTECT,//duration
+;98:		25,//FP_ABSORB,//duration
+;99:		33,//FP_TEAM_HEAL,//instant
+;100:		33,//FP_TEAM_FORCE,//instant
+;101:		10,//FP_DRAIN,//hold/duration
+;102:		20,//FP_SEE,//duration
+;103:		0,//FP_SABERATTACK,
+;104:		1,//FP_SABERDEFEND,
+;105:		20//FP_SABERTHROW,
+;106:		//NUM_FORCE_POWERS
+;107:	},
+;108:	{
+;109:		25,//FP_HEAL,//instant
+;110:		10,//FP_LEVITATION,//hold/duration
+;111:		50,//FP_SPEED,//duration
+;112:		20,//FP_PUSH,//hold/duration
+;113:		20,//FP_PULL,//hold/duration
+;114:		20,//FP_TELEPATHY,//instant
+;115:		60,//FP_GRIP,//hold/duration
+;116:		1,//FP_LIGHTNING,//hold/duration
+;117:		50,//FP_RAGE,//duration
+;118:		10,//FP_PROTECT,//duration
+;119:		10,//FP_ABSORB,//duration
+;120:		25,//FP_TEAM_HEAL,//instant
+;121:		25,//FP_TEAM_FORCE,//instant
+;122:		10,//FP_DRAIN,//hold/duration
+;123:		20,//FP_SEE,//duration
+;124:		0,//FP_SABERATTACK,
+;125:		0,//FP_SABERDEFEND,
+;126:		20//FP_SABERTHROW,
+;127:		//NUM_FORCE_POWERS
+;128:	}
+;129:};
+;130:
+;131:float forceJumpHeight[NUM_FORCE_POWER_LEVELS] = 
+;132:{
+;133:	32,//normal jump (+stepheight+crouchdiff = 66)
+;134:	96,//(+stepheight+crouchdiff = 130)
+;135:	192,//(+stepheight+crouchdiff = 226)
+;136:	384//(+stepheight+crouchdiff = 418)
+;137:};
+;138:
+;139:float forceJumpStrength[NUM_FORCE_POWER_LEVELS] = 
+;140:{
+;141:	JUMP_VELOCITY,//normal jump
+;142:	420,
+;143:	590,
+;144:	840
+;145:};
+;146:
+;147:int PM_GetSaberStance(void)
+;148:{
+line 149
+;149:	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $66
+line 150
+;150:	{ //medium
+line 151
+;151:		return BOTH_STAND2;
+CNSTI4 553
+RETI4
+ADDRGP4 $65
+JUMPV
+LABELV $66
+line 153
+;152:	}
+;153:	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $68
+line 154
+;154:	{ //strong
+line 155
+;155:		return BOTH_SABERSLOW_STANCE;
+CNSTI4 801
+RETI4
+ADDRGP4 $65
+JUMPV
+LABELV $68
+line 159
+;156:	}
+;157:
+;158:	//fast
+;159:	return BOTH_SABERFAST_STANCE;
+CNSTI4 800
+RETI4
+LABELV $65
+endproc PM_GetSaberStance 0 0
+export PM_DoSlowFall
+proc PM_DoSlowFall 4 0
+line 163
+;160:}
+;161:
+;162:qboolean PM_DoSlowFall(void)
+;163:{
+line 164
+;164:	if ( ( (pm->ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT || (pm->ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_LEFT ) && pm->ps->legsTimer > 500 )
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 820
+EQI4 $73
+ADDRLP4 0
+INDIRI4
+CNSTI4 823
+NEI4 $71
+LABELV $73
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 500
+LEI4 $71
+line 165
+;165:	{
+line 166
+;166:		return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $70
+JUMPV
+LABELV $71
+line 169
+;167:	}
+;168:
+;169:	return qfalse;
+CNSTI4 0
+RETI4
+LABELV $70
+endproc PM_DoSlowFall 4 0
+export PM_AddEvent
+proc PM_AddEvent 0 12
+line 178
+;170:}
+;171:
+;172:/*
+;173:===============
+;174:PM_AddEvent
+;175:
+;176:===============
+;177:*/
+;178:void PM_AddEvent( int newEvent ) {
+line 179
+;179:	BG_AddPredictableEventToPlayerstate( newEvent, 0, pm->ps );
+ADDRFP4 0
+INDIRI4
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+ADDRGP4 BG_AddPredictableEventToPlayerstate
+CALLV
+pop
+line 180
+;180:}
+LABELV $74
+endproc PM_AddEvent 0 12
+export PM_AddEventWithParm
+proc PM_AddEventWithParm 0 12
+line 183
+;181:
+;182:void PM_AddEventWithParm( int newEvent, int parm ) 
+;183:{
+line 184
+;184:	BG_AddPredictableEventToPlayerstate( newEvent, parm, pm->ps );
+ADDRFP4 0
+INDIRI4
+ARGI4
+ADDRFP4 4
+INDIRI4
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+ADDRGP4 BG_AddPredictableEventToPlayerstate
+CALLV
+pop
+line 185
+;185:}
+LABELV $75
+endproc PM_AddEventWithParm 0 12
+export PM_AddTouchEnt
+proc PM_AddTouchEnt 12 0
+line 192
+;186:
+;187:/*
+;188:===============
+;189:PM_AddTouchEnt
+;190:===============
+;191:*/
+;192:void PM_AddTouchEnt( int entityNum ) {
+line 195
+;193:	int		i;
+;194:
+;195:	if ( entityNum == ENTITYNUM_WORLD ) {
+ADDRFP4 0
+INDIRI4
+CNSTI4 1022
+NEI4 $77
+line 196
+;196:		return;
+ADDRGP4 $76
+JUMPV
+LABELV $77
+line 198
+;197:	}
+;198:	if ( pm->numtouch == MAXTOUCH ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 52
+ADDP4
+INDIRI4
+CNSTI4 32
+NEI4 $79
+line 199
+;199:		return;
+ADDRGP4 $76
+JUMPV
+LABELV $79
+line 203
+;200:	}
+;201:
+;202:	// see if it is already added
+;203:	for ( i = 0 ; i < pm->numtouch ; i++ ) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+ADDRGP4 $84
+JUMPV
+LABELV $81
+line 204
+;204:		if ( pm->touchents[ i ] == entityNum ) {
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 56
+ADDP4
+ADDP4
+INDIRI4
+ADDRFP4 0
+INDIRI4
+NEI4 $85
+line 205
+;205:			return;
+ADDRGP4 $76
+JUMPV
+LABELV $85
+line 207
+;206:		}
+;207:	}
+LABELV $82
+line 203
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+LABELV $84
+ADDRLP4 0
+INDIRI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 52
+ADDP4
+INDIRI4
+LTI4 $81
+line 210
+;208:
+;209:	// add it
+;210:	pm->touchents[pm->numtouch] = entityNum;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+CNSTI4 52
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 4
+INDIRP4
+CNSTI4 56
+ADDP4
+ADDP4
+ADDRFP4 0
+INDIRI4
+ASGNI4
+line 211
+;211:	pm->numtouch++;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+CNSTI4 52
+ADDP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+ADDRLP4 8
+INDIRP4
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+line 212
+;212:}
+LABELV $76
+endproc PM_AddTouchEnt 12 0
+export PM_ClipVelocity
+proc PM_ClipVelocity 32 0
+line 222
+;213:
+;214:
+;215:/*
+;216:==================
+;217:PM_ClipVelocity
+;218:
+;219:Slide off of the impacting surface
+;220:==================
+;221:*/
+;222:void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce ) {
+line 227
+;223:	float	backoff;
+;224:	float	change;
+;225:	int		i;
+;226:	
+;227:	backoff = DotProduct (in, normal);
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 16
+ADDRFP4 4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+CNSTI4 4
+ASGNI4
+ADDRLP4 24
+CNSTI4 8
+ASGNI4
+ADDRLP4 8
+ADDRLP4 12
+INDIRP4
+INDIRF4
+ADDRLP4 16
+INDIRP4
+INDIRF4
+MULF4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 20
+INDIRI4
+ADDP4
+INDIRF4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 20
+INDIRI4
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 24
+INDIRI4
+ADDP4
+INDIRF4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 24
+INDIRI4
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 229
+;228:	
+;229:	if ( backoff < 0 ) {
+ADDRLP4 8
+INDIRF4
+CNSTF4 0
+GEF4 $88
+line 230
+;230:		backoff *= overbounce;
+ADDRLP4 8
+ADDRLP4 8
+INDIRF4
+ADDRFP4 12
+INDIRF4
+MULF4
+ASGNF4
+line 231
+;231:	} else {
+ADDRGP4 $89
+JUMPV
+LABELV $88
+line 232
+;232:		backoff /= overbounce;
+ADDRLP4 8
+ADDRLP4 8
+INDIRF4
+ADDRFP4 12
+INDIRF4
+DIVF4
+ASGNF4
+line 233
+;233:	}
+LABELV $89
+line 235
+;234:
+;235:	for ( i=0 ; i<3 ; i++ ) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $90
+line 236
+;236:		change = normal[i]*backoff;
+ADDRLP4 4
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRFP4 4
+INDIRP4
+ADDP4
+INDIRF4
+ADDRLP4 8
+INDIRF4
+MULF4
+ASGNF4
+line 237
+;237:		out[i] = in[i] - change;
+ADDRLP4 28
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 28
+INDIRI4
+ADDRFP4 8
+INDIRP4
+ADDP4
+ADDRLP4 28
+INDIRI4
+ADDRFP4 0
+INDIRP4
+ADDP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+SUBF4
+ASGNF4
+line 238
+;238:	}
+LABELV $91
+line 235
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $90
+line 239
+;239:}
+LABELV $87
+endproc PM_ClipVelocity 32 0
+proc PM_Friction 52 4
+line 249
+;240:
+;241:
+;242:/*
+;243:==================
+;244:PM_Friction
+;245:
+;246:Handles both ground friction and water friction
+;247:==================
+;248:*/
+;249:static void PM_Friction( void ) {
+line 255
+;250:	vec3_t	vec;
+;251:	float	*vel;
+;252:	float	speed, newspeed, control;
+;253:	float	drop;
+;254:	
+;255:	vel = pm->ps->velocity;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+line 257
+;256:	
+;257:	VectorCopy( vel, vec );
+ADDRLP4 16
+ADDRLP4 0
+INDIRP4
+INDIRB
+ASGNB 12
+line 258
+;258:	if ( pml.walking ) {
+ADDRGP4 pml+44
+INDIRI4
+CNSTI4 0
+EQI4 $95
+line 259
+;259:		vec[2] = 0;	// ignore slope movement
+ADDRLP4 16+8
+CNSTF4 0
+ASGNF4
+line 260
+;260:	}
+LABELV $95
+line 262
+;261:
+;262:	speed = VectorLength(vec);
+ADDRLP4 16
+ARGP4
+ADDRLP4 32
+ADDRGP4 VectorLength
+CALLF4
+ASGNF4
+ADDRLP4 8
+ADDRLP4 32
+INDIRF4
+ASGNF4
+line 263
+;263:	if (speed < 1) {
+ADDRLP4 8
+INDIRF4
+CNSTF4 1065353216
+GEF4 $99
+line 264
+;264:		vel[0] = 0;
+ADDRLP4 0
+INDIRP4
+CNSTF4 0
+ASGNF4
+line 265
+;265:		vel[1] = 0;		// allow sinking underwater
+ADDRLP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+CNSTF4 0
+ASGNF4
+line 267
+;266:		// FIXME: still have z friction underwater?
+;267:		return;
+ADDRGP4 $94
+JUMPV
+LABELV $99
+line 270
+;268:	}
+;269:
+;270:	drop = 0;
+ADDRLP4 12
+CNSTF4 0
+ASGNF4
+line 273
+;271:
+;272:	// apply ground friction
+;273:	if ( pm->waterlevel <= 1 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+GTI4 $101
+line 274
+;274:		if ( pml.walking && !(pml.groundTrace.surfaceFlags & SURF_SLICK) ) {
+ADDRLP4 36
+CNSTI4 0
+ASGNI4
+ADDRGP4 pml+44
+INDIRI4
+ADDRLP4 36
+INDIRI4
+EQI4 $103
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 16384
+BANDI4
+ADDRLP4 36
+INDIRI4
+NEI4 $103
+line 276
+;275:			// if getting knocked back, no friction
+;276:			if ( ! (pm->ps->pm_flags & PMF_TIME_KNOCKBACK) ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 64
+BANDI4
+CNSTI4 0
+NEI4 $108
+line 277
+;277:				control = speed < pm_stopspeed ? pm_stopspeed : speed;
+ADDRLP4 8
+INDIRF4
+ADDRGP4 pm_stopspeed
+INDIRF4
+GEF4 $111
+ADDRLP4 40
+ADDRGP4 pm_stopspeed
+INDIRF4
+ASGNF4
+ADDRGP4 $112
+JUMPV
+LABELV $111
+ADDRLP4 40
+ADDRLP4 8
+INDIRF4
+ASGNF4
+LABELV $112
+ADDRLP4 28
+ADDRLP4 40
+INDIRF4
+ASGNF4
+line 278
+;278:				drop += control*pm_friction*pml.frametime;
+ADDRLP4 12
+ADDRLP4 12
+INDIRF4
+ADDRLP4 28
+INDIRF4
+ADDRGP4 pm_friction
+INDIRF4
+MULF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 279
+;279:			}
+LABELV $108
+line 280
+;280:		}
+LABELV $103
+line 281
+;281:	}
+LABELV $101
+line 284
+;282:
+;283:	// apply water friction even if just wading
+;284:	if ( pm->waterlevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $114
+line 285
+;285:		drop += speed*pm_waterfriction*pm->waterlevel*pml.frametime;
+ADDRLP4 12
+ADDRLP4 12
+INDIRF4
+ADDRLP4 8
+INDIRF4
+ADDRGP4 pm_waterfriction
+INDIRF4
+MULF4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CVIF4 4
+MULF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 286
+;286:	}
+LABELV $114
+line 288
+;287:
+;288:	if ( pm->ps->pm_type == PM_SPECTATOR || pm->ps->pm_type == PM_FLOAT )
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 36
+INDIRI4
+CNSTI4 3
+EQI4 $119
+ADDRLP4 36
+INDIRI4
+CNSTI4 1
+NEI4 $117
+LABELV $119
+line 289
+;289:	{
+line 290
+;290:		if (pm->ps->pm_type == PM_FLOAT)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $120
+line 291
+;291:		{ //almost no friction while floating
+line 292
+;292:			drop += speed*0.1*pml.frametime;
+ADDRLP4 12
+ADDRLP4 12
+INDIRF4
+CNSTF4 1036831949
+ADDRLP4 8
+INDIRF4
+MULF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 293
+;293:		}
+ADDRGP4 $121
+JUMPV
+LABELV $120
+line 295
+;294:		else
+;295:		{
+line 296
+;296:			drop += speed*pm_spectatorfriction*pml.frametime;
+ADDRLP4 12
+ADDRLP4 12
+INDIRF4
+ADDRLP4 8
+INDIRF4
+ADDRGP4 pm_spectatorfriction
+INDIRF4
+MULF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 297
+;297:		}
+LABELV $121
+line 298
+;298:	}
+LABELV $117
+line 301
+;299:
+;300:	// scale the velocity
+;301:	newspeed = speed - drop;
+ADDRLP4 4
+ADDRLP4 8
+INDIRF4
+ADDRLP4 12
+INDIRF4
+SUBF4
+ASGNF4
+line 302
+;302:	if (newspeed < 0) {
+ADDRLP4 4
+INDIRF4
+CNSTF4 0
+GEF4 $124
+line 303
+;303:		newspeed = 0;
+ADDRLP4 4
+CNSTF4 0
+ASGNF4
+line 304
+;304:	}
+LABELV $124
+line 305
+;305:	newspeed /= speed;
+ADDRLP4 4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 8
+INDIRF4
+DIVF4
+ASGNF4
+line 307
+;306:
+;307:	vel[0] = vel[0] * newspeed;
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+MULF4
+ASGNF4
+line 308
+;308:	vel[1] = vel[1] * newspeed;
+ADDRLP4 44
+ADDRLP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+ADDRLP4 44
+INDIRP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+MULF4
+ASGNF4
+line 309
+;309:	vel[2] = vel[2] * newspeed;
+ADDRLP4 48
+ADDRLP4 0
+INDIRP4
+CNSTI4 8
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+MULF4
+ASGNF4
+line 310
+;310:}
+LABELV $94
+endproc PM_Friction 52 4
+proc PM_Accelerate 32 0
+line 320
+;311:
+;312:
+;313:/*
+;314:==============
+;315:PM_Accelerate
+;316:
+;317:Handles user intended acceleration
+;318:==============
+;319:*/
+;320:static void PM_Accelerate( vec3_t wishdir, float wishspeed, float accel ) {
+line 326
+;321:#if 1
+;322:	// q2 style
+;323:	int			i;
+;324:	float		addspeed, accelspeed, currentspeed;
+;325:
+;326:	currentspeed = DotProduct (pm->ps->velocity, wishdir);
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+ADDRLP4 16
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRP4
+INDIRF4
+MULF4
+ADDRLP4 16
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 16
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRP4
+CNSTI4 8
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 327
+;327:	addspeed = wishspeed - currentspeed;
+ADDRLP4 8
+ADDRFP4 4
+INDIRF4
+ADDRLP4 12
+INDIRF4
+SUBF4
+ASGNF4
+line 328
+;328:	if (addspeed <= 0) {
+ADDRLP4 8
+INDIRF4
+CNSTF4 0
+GTF4 $127
+line 329
+;329:		return;
+ADDRGP4 $126
+JUMPV
+LABELV $127
+line 331
+;330:	}
+;331:	accelspeed = accel*pml.frametime*wishspeed;
+ADDRLP4 4
+ADDRFP4 8
+INDIRF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDRFP4 4
+INDIRF4
+MULF4
+ASGNF4
+line 332
+;332:	if (accelspeed > addspeed) {
+ADDRLP4 4
+INDIRF4
+ADDRLP4 8
+INDIRF4
+LEF4 $130
+line 333
+;333:		accelspeed = addspeed;
+ADDRLP4 4
+ADDRLP4 8
+INDIRF4
+ASGNF4
+line 334
+;334:	}
+LABELV $130
+line 336
+;335:	
+;336:	for (i=0 ; i<3 ; i++) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $132
+line 337
+;337:		pm->ps->velocity[i] += accelspeed*wishdir[i];	
+ADDRLP4 24
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 28
+ADDRLP4 24
+INDIRI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+ADDRLP4 28
+INDIRP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 24
+INDIRI4
+ADDRFP4 0
+INDIRP4
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 338
+;338:	}
+LABELV $133
+line 336
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $132
+line 357
+;339:#else
+;340:	// proper way (avoids strafe jump maxspeed bug), but feels bad
+;341:	vec3_t		wishVelocity;
+;342:	vec3_t		pushDir;
+;343:	float		pushLen;
+;344:	float		canPush;
+;345:
+;346:	VectorScale( wishdir, wishspeed, wishVelocity );
+;347:	VectorSubtract( wishVelocity, pm->ps->velocity, pushDir );
+;348:	pushLen = VectorNormalize( pushDir );
+;349:
+;350:	canPush = accel*pml.frametime*wishspeed;
+;351:	if (canPush > pushLen) {
+;352:		canPush = pushLen;
+;353:	}
+;354:
+;355:	VectorMA( pm->ps->velocity, canPush, pushDir, pm->ps->velocity );
+;356:#endif
+;357:}
+LABELV $126
+endproc PM_Accelerate 32 0
+proc PM_CmdScale 48 4
+line 370
+;358:
+;359:
+;360:
+;361:/*
+;362:============
+;363:PM_CmdScale
+;364:
+;365:Returns the scale factor to apply to cmd movements
+;366:This allows the clients to use axial -127 to 127 values for all directions
+;367:without getting a sqrt(2) distortion in speed.
+;368:============
+;369:*/
+;370:static float PM_CmdScale( usercmd_t *cmd ) {
+line 374
+;371:	int		max;
+;372:	float	total;
+;373:	float	scale;
+;374:	int		umove = 0; //cmd->upmove;
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+line 377
+;375:			//don't factor upmove into scaling speed
+;376:
+;377:	max = abs( cmd->forwardmove );
+ADDRFP4 0
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+ARGI4
+ADDRLP4 16
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 16
+INDIRI4
+ASGNI4
+line 378
+;378:	if ( abs( cmd->rightmove ) > max ) {
+ADDRFP4 0
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRI1
+CVII4 1
+ARGI4
+ADDRLP4 20
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+ADDRLP4 0
+INDIRI4
+LEI4 $137
+line 379
+;379:		max = abs( cmd->rightmove );
+ADDRFP4 0
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRI1
+CVII4 1
+ARGI4
+ADDRLP4 24
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 24
+INDIRI4
+ASGNI4
+line 380
+;380:	}
+LABELV $137
+line 381
+;381:	if ( abs( umove ) > max ) {
+ADDRLP4 4
+INDIRI4
+ARGI4
+ADDRLP4 24
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 24
+INDIRI4
+ADDRLP4 0
+INDIRI4
+LEI4 $139
+line 382
+;382:		max = abs( umove );
+ADDRLP4 4
+INDIRI4
+ARGI4
+ADDRLP4 28
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 28
+INDIRI4
+ASGNI4
+line 383
+;383:	}
+LABELV $139
+line 384
+;384:	if ( !max ) {
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+NEI4 $141
+line 385
+;385:		return 0;
+CNSTF4 0
+RETF4
+ADDRGP4 $136
+JUMPV
+LABELV $141
+line 388
+;386:	}
+;387:
+;388:	total = sqrt( cmd->forwardmove * cmd->forwardmove
+ADDRLP4 28
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 32
+ADDRLP4 28
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+ASGNI4
+ADDRLP4 36
+ADDRLP4 28
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRI1
+CVII4 1
+ASGNI4
+ADDRLP4 32
+INDIRI4
+ADDRLP4 32
+INDIRI4
+MULI4
+ADDRLP4 36
+INDIRI4
+ADDRLP4 36
+INDIRI4
+MULI4
+ADDI4
+ADDRLP4 4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+MULI4
+ADDI4
+CVIF4 4
+ARGF4
+ADDRLP4 44
+ADDRGP4 sqrt
+CALLF4
+ASGNF4
+ADDRLP4 8
+ADDRLP4 44
+INDIRF4
+ASGNF4
+line 390
+;389:		+ cmd->rightmove * cmd->rightmove + umove * umove );
+;390:	scale = (float)pm->ps->speed * max / ( 127.0 * total );
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 0
+INDIRI4
+CVIF4 4
+MULF4
+CNSTF4 1123942400
+ADDRLP4 8
+INDIRF4
+MULF4
+DIVF4
+ASGNF4
+line 392
+;391:
+;392:	return scale;
+ADDRLP4 12
+INDIRF4
+RETF4
+LABELV $136
+endproc PM_CmdScale 48 4
+proc PM_SetMovementDir 72 0
+line 404
+;393:}
+;394:
+;395:
+;396:/*
+;397:================
+;398:PM_SetMovementDir
+;399:
+;400:Determine the rotation of the legs reletive
+;401:to the facing dir
+;402:================
+;403:*/
+;404:static void PM_SetMovementDir( void ) {
+line 405
+;405:	if ( pm->cmd.forwardmove || pm->cmd.rightmove ) {
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+ADDRLP4 0
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 4
+INDIRI4
+NEI4 $146
+ADDRLP4 0
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 4
+INDIRI4
+EQI4 $144
+LABELV $146
+line 406
+;406:		if ( pm->cmd.rightmove == 0 && pm->cmd.forwardmove > 0 ) {
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTI4 0
+ASGNI4
+ADDRLP4 8
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 12
+INDIRI4
+NEI4 $147
+ADDRLP4 8
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 12
+INDIRI4
+LEI4 $147
+line 407
+;407:			pm->ps->movementDir = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 0
+ASGNI4
+line 408
+;408:		} else if ( pm->cmd.rightmove < 0 && pm->cmd.forwardmove > 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $147
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 20
+CNSTI4 0
+ASGNI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 20
+INDIRI4
+GEI4 $149
+ADDRLP4 16
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 20
+INDIRI4
+LEI4 $149
+line 409
+;409:			pm->ps->movementDir = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 1
+ASGNI4
+line 410
+;410:		} else if ( pm->cmd.rightmove < 0 && pm->cmd.forwardmove == 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $149
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 28
+CNSTI4 0
+ASGNI4
+ADDRLP4 24
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 28
+INDIRI4
+GEI4 $151
+ADDRLP4 24
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 28
+INDIRI4
+NEI4 $151
+line 411
+;411:			pm->ps->movementDir = 2;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 2
+ASGNI4
+line 412
+;412:		} else if ( pm->cmd.rightmove < 0 && pm->cmd.forwardmove < 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $151
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 36
+CNSTI4 0
+ASGNI4
+ADDRLP4 32
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 36
+INDIRI4
+GEI4 $153
+ADDRLP4 32
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 36
+INDIRI4
+GEI4 $153
+line 413
+;413:			pm->ps->movementDir = 3;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 3
+ASGNI4
+line 414
+;414:		} else if ( pm->cmd.rightmove == 0 && pm->cmd.forwardmove < 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $153
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 44
+CNSTI4 0
+ASGNI4
+ADDRLP4 40
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 44
+INDIRI4
+NEI4 $155
+ADDRLP4 40
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 44
+INDIRI4
+GEI4 $155
+line 415
+;415:			pm->ps->movementDir = 4;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 4
+ASGNI4
+line 416
+;416:		} else if ( pm->cmd.rightmove > 0 && pm->cmd.forwardmove < 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $155
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 52
+CNSTI4 0
+ASGNI4
+ADDRLP4 48
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 52
+INDIRI4
+LEI4 $157
+ADDRLP4 48
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 52
+INDIRI4
+GEI4 $157
+line 417
+;417:			pm->ps->movementDir = 5;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 5
+ASGNI4
+line 418
+;418:		} else if ( pm->cmd.rightmove > 0 && pm->cmd.forwardmove == 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $157
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 60
+CNSTI4 0
+ASGNI4
+ADDRLP4 56
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 60
+INDIRI4
+LEI4 $159
+ADDRLP4 56
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 60
+INDIRI4
+NEI4 $159
+line 419
+;419:			pm->ps->movementDir = 6;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 6
+ASGNI4
+line 420
+;420:		} else if ( pm->cmd.rightmove > 0 && pm->cmd.forwardmove > 0 ) {
+ADDRGP4 $145
+JUMPV
+LABELV $159
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 68
+CNSTI4 0
+ASGNI4
+ADDRLP4 64
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 68
+INDIRI4
+LEI4 $145
+ADDRLP4 64
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 68
+INDIRI4
+LEI4 $145
+line 421
+;421:			pm->ps->movementDir = 7;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 7
+ASGNI4
+line 422
+;422:		}
+line 423
+;423:	} else {
+ADDRGP4 $145
+JUMPV
+LABELV $144
+line 427
+;424:		// if they aren't actively going directly sideways,
+;425:		// change the animation to the diagonal so they
+;426:		// don't stop too crooked
+;427:		if ( pm->ps->movementDir == 2 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $163
+line 428
+;428:			pm->ps->movementDir = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 1
+ASGNI4
+line 429
+;429:		} else if ( pm->ps->movementDir == 6 ) {
+ADDRGP4 $164
+JUMPV
+LABELV $163
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+INDIRI4
+CNSTI4 6
+NEI4 $165
+line 430
+;430:			pm->ps->movementDir = 7;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 104
+ADDP4
+CNSTI4 7
+ASGNI4
+line 431
+;431:		} 
+LABELV $165
+LABELV $164
+line 432
+;432:	}
+LABELV $145
+line 433
+;433:}
+LABELV $143
+endproc PM_SetMovementDir 72 0
+export PM_ForceJumpingUp
+proc PM_ForceJumpingUp 40 16
+line 438
+;434:
+;435:#define METROID_JUMP 1
+;436:
+;437:qboolean PM_ForceJumpingUp(void)
+;438:{
+line 439
+;439:	if ( !(pm->ps->fd.forcePowersActive&(1<<FP_LEVITATION)) && pm->ps->fd.forceJumpCharge )
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+NEI4 $168
+ADDRLP4 0
+INDIRP4
+CNSTI4 1084
+ADDP4
+INDIRF4
+CNSTF4 0
+EQF4 $168
+line 440
+;440:	{//already jumped and let go
+line 441
+;441:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $168
+line 444
+;442:	}
+;443:
+;444:	if ( BG_InSpecialJump( pm->ps->legsAnim ) )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 4
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 4
+INDIRI4
+CNSTI4 0
+EQI4 $170
+line 445
+;445:	{
+line 446
+;446:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $170
+line 449
+;447:	}
+;448:
+;449:	if (BG_SaberInSpecial(pm->ps->saberMove))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 8
+ADDRGP4 BG_SaberInSpecial
+CALLI4
+ASGNI4
+ADDRLP4 8
+INDIRI4
+CNSTI4 0
+EQI4 $172
+line 450
+;450:	{
+line 451
+;451:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $172
+line 454
+;452:	}
+;453:
+;454:	if (BG_SaberInSpecialAttack(pm->ps->legsAnim))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 12
+ADDRGP4 BG_SaberInSpecialAttack
+CALLI4
+ASGNI4
+ADDRLP4 12
+INDIRI4
+CNSTI4 0
+EQI4 $174
+line 455
+;455:	{
+line 456
+;456:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $174
+line 459
+;457:	}
+;458:
+;459:	if (BG_HasYsalamiri(pm->gametype, pm->ps))
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 16
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 20
+ADDRGP4 BG_HasYsalamiri
+CALLI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+CNSTI4 0
+EQI4 $176
+line 460
+;460:	{
+line 461
+;461:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $176
+line 464
+;462:	}
+;463:
+;464:	if (!BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_LEVITATION))
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 24
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRLP4 28
+ADDRGP4 BG_CanUseFPNow
+CALLI4
+ASGNI4
+ADDRLP4 28
+INDIRI4
+CNSTI4 0
+NEI4 $178
+line 465
+;465:	{
+line 466
+;466:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $178
+line 469
+;467:	}
+;468:
+;469:	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE && //in air
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $180
+ADDRLP4 36
+CNSTI4 0
+ASGNI4
+ADDRLP4 32
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+ADDRLP4 36
+INDIRI4
+EQI4 $180
+ADDRLP4 32
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+ADDRLP4 36
+INDIRI4
+LEI4 $180
+ADDRLP4 32
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+CNSTF4 0
+LEF4 $180
+line 473
+;470:		(pm->ps->pm_flags & PMF_JUMP_HELD) &&//forceJumpZStart && //jumped
+;471:		pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_0 && //force-jump capable
+;472:		pm->ps->velocity[2] > 0 )//going up
+;473:	{
+line 474
+;474:		return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $167
+JUMPV
+LABELV $180
+line 476
+;475:	}
+;476:	return qfalse;
+CNSTI4 0
+RETI4
+LABELV $167
+endproc PM_ForceJumpingUp 40 16
+proc PM_JumpForDir 8 16
+line 480
+;477:}
+;478:
+;479:static void PM_JumpForDir( void )
+;480:{
+line 481
+;481:	int anim = BOTH_JUMP1;
+ADDRLP4 0
+CNSTI4 752
+ASGNI4
+line 482
+;482:	if ( pm->cmd.forwardmove > 0 ) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $183
+line 483
+;483:	{
+line 484
+;484:		anim = BOTH_JUMP1;
+ADDRLP4 0
+CNSTI4 752
+ASGNI4
+line 485
+;485:		pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 486
+;486:	} 
+ADDRGP4 $184
+JUMPV
+LABELV $183
+line 487
+;487:	else if ( pm->cmd.forwardmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $185
+line 488
+;488:	{
+line 489
+;489:		anim = BOTH_JUMPBACK1;
+ADDRLP4 0
+CNSTI4 756
+ASGNI4
+line 490
+;490:		pm->ps->pm_flags |= PMF_BACKWARDS_JUMP;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 8
+BORI4
+ASGNI4
+line 491
+;491:	}
+ADDRGP4 $186
+JUMPV
+LABELV $185
+line 492
+;492:	else if ( pm->cmd.rightmove > 0 ) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $187
+line 493
+;493:	{
+line 494
+;494:		anim = BOTH_JUMPRIGHT1;
+ADDRLP4 0
+CNSTI4 762
+ASGNI4
+line 495
+;495:		pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 496
+;496:	}
+ADDRGP4 $188
+JUMPV
+LABELV $187
+line 497
+;497:	else if ( pm->cmd.rightmove < 0 ) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $189
+line 498
+;498:	{
+line 499
+;499:		anim = BOTH_JUMPLEFT1;
+ADDRLP4 0
+CNSTI4 759
+ASGNI4
+line 500
+;500:		pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 501
+;501:	}
+ADDRGP4 $190
+JUMPV
+LABELV $189
+line 503
+;502:	else
+;503:	{
+line 504
+;504:		anim = BOTH_JUMP1;
+ADDRLP4 0
+CNSTI4 752
+ASGNI4
+line 505
+;505:		pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 506
+;506:	}
+LABELV $190
+LABELV $188
+LABELV $186
+LABELV $184
+line 507
+;507:	if(!BG_InDeathAnim(pm->ps->legsAnim))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 4
+ADDRGP4 BG_InDeathAnim
+CALLI4
+ASGNI4
+ADDRLP4 4
+INDIRI4
+CNSTI4 0
+NEI4 $191
+line 508
+;508:	{
+line 509
+;509:		PM_SetAnim(SETANIM_LEGS,anim,SETANIM_FLAG_OVERRIDE, 100);		// Only blend over 100ms
+CNSTI4 2
+ARGI4
+ADDRLP4 0
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 510
+;510:	}
+LABELV $191
+line 511
+;511:}
+LABELV $182
+endproc PM_JumpForDir 8 16
+export PM_SetPMViewAngle
+proc PM_SetPMViewAngle 12 0
+line 514
+;512:
+;513:void PM_SetPMViewAngle(playerState_t *ps, vec3_t angle, usercmd_t *ucmd)
+;514:{
+line 518
+;515:	int			i;
+;516:
+;517:	// set the delta angle
+;518:	for (i=0 ; i<3 ; i++) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $194
+line 521
+;519:		int		cmdAngle;
+;520:
+;521:		cmdAngle = ANGLE2SHORT(angle[i]);
+ADDRLP4 4
+CNSTF4 1199570944
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRFP4 4
+INDIRP4
+ADDP4
+INDIRF4
+MULF4
+CNSTF4 1135869952
+DIVF4
+CVFI4 4
+CNSTI4 65535
+BANDI4
+ASGNI4
+line 522
+;522:		ps->delta_angles[i] = cmdAngle - ucmd->angles[i];
+ADDRLP4 8
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 68
+ADDP4
+ADDP4
+ADDRLP4 4
+INDIRI4
+ADDRLP4 8
+INDIRI4
+ADDRFP4 8
+INDIRP4
+CNSTI4 4
+ADDP4
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 523
+;523:	}
+LABELV $195
+line 518
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $194
+line 525
+;524:	//VectorCopy( angle, ent->s.angles );
+;525:	VectorCopy (angle, ps->viewangles);
+ADDRFP4 0
+INDIRP4
+CNSTI4 156
+ADDP4
+ADDRFP4 4
+INDIRP4
+INDIRB
+ASGNB 12
+line 526
+;526:}
+LABELV $193
+endproc PM_SetPMViewAngle 12 0
+export PM_AdjustAngleForWallRun
+proc PM_AdjustAngleForWallRun 1216 28
+line 529
+;527:
+;528:qboolean PM_AdjustAngleForWallRun( playerState_t *ps, usercmd_t *ucmd, qboolean doMove )
+;529:{
+line 530
+;530:	if (( (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT || (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_LEFT ) && ps->legsTimer > 500 )
+ADDRLP4 0
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 820
+EQI4 $201
+ADDRLP4 0
+INDIRI4
+CNSTI4 823
+NEI4 $199
+LABELV $201
+ADDRFP4 0
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 500
+LEI4 $199
+line 531
+;531:	{//wall-running and not at end of anim
+line 537
+;532:		//stick to wall, if there is one
+;533:		vec3_t	rt, traceTo, mins, maxs, fwdAngles;
+;534:		trace_t	trace;
+;535:		float	dist, yawAdjust;
+;536:
+;537:		VectorSet(mins, -15, -15, 0);
+ADDRLP4 1152
+CNSTF4 3245342720
+ASGNF4
+ADDRLP4 44
+ADDRLP4 1152
+INDIRF4
+ASGNF4
+ADDRLP4 44+4
+ADDRLP4 1152
+INDIRF4
+ASGNF4
+ADDRLP4 44+8
+CNSTF4 0
+ASGNF4
+line 538
+;538:		VectorSet(maxs, 15, 15, 24);
+ADDRLP4 1156
+CNSTF4 1097859072
+ASGNF4
+ADDRLP4 56
+ADDRLP4 1156
+INDIRF4
+ASGNF4
+ADDRLP4 56+4
+ADDRLP4 1156
+INDIRF4
+ASGNF4
+ADDRLP4 56+8
+CNSTF4 1103101952
+ASGNF4
+line 539
+;539:		VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0);
+ADDRLP4 20
+CNSTF4 0
+ASGNF4
+ADDRLP4 20+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 20+8
+CNSTF4 0
+ASGNF4
+line 541
+;540:
+;541:		AngleVectors( fwdAngles, NULL, rt, NULL );
+ADDRLP4 20
+ARGP4
+ADDRLP4 1160
+CNSTP4 0
+ASGNP4
+ADDRLP4 1160
+INDIRP4
+ARGP4
+ADDRLP4 4
+ARGP4
+ADDRLP4 1160
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 542
+;542:		if ( (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT )
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+CNSTI4 820
+NEI4 $208
+line 543
+;543:		{
+line 544
+;544:			dist = 128;
+ADDRLP4 16
+CNSTF4 1124073472
+ASGNF4
+line 545
+;545:			yawAdjust = -90;
+ADDRLP4 1148
+CNSTF4 3266576384
+ASGNF4
+line 546
+;546:		}
+ADDRGP4 $209
+JUMPV
+LABELV $208
+line 548
+;547:		else
+;548:		{
+line 549
+;549:			dist = -128;
+ADDRLP4 16
+CNSTF4 3271557120
+ASGNF4
+line 550
+;550:			yawAdjust = 90;
+ADDRLP4 1148
+CNSTF4 1119092736
+ASGNF4
+line 551
+;551:		}
+LABELV $209
+line 552
+;552:		VectorMA( ps->origin, dist, rt, traceTo );
+ADDRLP4 1164
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1168
+ADDRLP4 16
+INDIRF4
+ASGNF4
+ADDRLP4 32
+ADDRLP4 1164
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 1168
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 32+4
+ADDRLP4 1164
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 4+4
+INDIRF4
+ADDRLP4 1168
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 32+8
+ADDRFP4 0
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ADDRLP4 4+8
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 554
+;553:		
+;554:		pm->trace( &trace, ps->origin, mins, maxs, traceTo, ps->clientNum, MASK_PLAYERSOLID );
+ADDRLP4 68
+ARGP4
+ADDRLP4 1172
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1172
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 44
+ARGP4
+ADDRLP4 56
+ARGP4
+ADDRLP4 32
+ARGP4
+ADDRLP4 1172
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 273
+ARGI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 556
+;555:
+;556:		if ( trace.fraction < 1.0f )
+ADDRLP4 68+8
+INDIRF4
+CNSTF4 1065353216
+GEF4 $214
+line 557
+;557:		{//still a wall there
+line 560
+;558:			//FIXME: don't pull around 90 turns
+;559:			//FIXME: simulate stepping up steps here, somehow?
+;560:			if ( (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT )
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+CNSTI4 820
+NEI4 $217
+line 561
+;561:			{
+line 562
+;562:				ucmd->rightmove = 127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 127
+ASGNI1
+line 563
+;563:			}
+ADDRGP4 $218
+JUMPV
+LABELV $217
+line 565
+;564:			else
+;565:			{
+line 566
+;566:				ucmd->rightmove = -127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 -127
+ASGNI1
+line 567
+;567:			}
+LABELV $218
+line 568
+;568:			if ( ucmd->upmove < 0 )
+ADDRFP4 4
+INDIRP4
+CNSTI4 26
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $219
+line 569
+;569:			{
+line 570
+;570:				ucmd->upmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 26
+ADDP4
+CNSTI1 0
+ASGNI1
+line 571
+;571:			}
+LABELV $219
+line 573
+;572:			//make me face perpendicular to the wall
+;573:			ps->viewangles[YAW] = vectoyaw( trace.plane.normal )+yawAdjust;
+ADDRLP4 68+24
+ARGP4
+ADDRLP4 1176
+ADDRGP4 vectoyaw
+CALLF4
+ASGNF4
+ADDRFP4 0
+INDIRP4
+CNSTI4 160
+ADDP4
+ADDRLP4 1176
+INDIRF4
+ADDRLP4 1148
+INDIRF4
+ADDF4
+ASGNF4
+line 576
+;574:
+;575:			//SetClientViewAngle( ent, ent->client->ps.viewangles );
+;576:			PM_SetPMViewAngle(ps, ps->viewangles, ucmd);
+ADDRLP4 1180
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1180
+INDIRP4
+ARGP4
+ADDRLP4 1180
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRFP4 4
+INDIRP4
+ARGP4
+ADDRGP4 PM_SetPMViewAngle
+CALLV
+pop
+line 578
+;577:
+;578:			ucmd->angles[YAW] = ANGLE2SHORT( ps->viewangles[YAW] ) - ps->delta_angles[YAW];
+ADDRLP4 1184
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRFP4 4
+INDIRP4
+CNSTI4 8
+ADDP4
+CNSTF4 1199570944
+ADDRLP4 1184
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+MULF4
+CNSTF4 1135869952
+DIVF4
+CVFI4 4
+CNSTI4 65535
+BANDI4
+ADDRLP4 1184
+INDIRP4
+CNSTI4 72
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 579
+;579:			if ( doMove )
+ADDRFP4 8
+INDIRI4
+CNSTI4 0
+EQI4 $222
+line 580
+;580:			{
+line 583
+;581:				//push me forward
+;582:				vec3_t	fwd;
+;583:				float	zVel = ps->velocity[2];
+ADDRLP4 1188
+ADDRFP4 0
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+ASGNF4
+line 584
+;584:				if ( ps->legsTimer > 500 )
+ADDRFP4 0
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 500
+LEI4 $224
+line 585
+;585:				{//not at end of anim yet
+line 586
+;586:					float speed = 175;
+ADDRLP4 1204
+CNSTF4 1127153664
+ASGNF4
+line 588
+;587:
+;588:					fwdAngles[YAW] = ps->viewangles[YAW];
+ADDRLP4 20+4
+ADDRFP4 0
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+line 589
+;589:					AngleVectors( fwdAngles, fwd, NULL, NULL );
+ADDRLP4 20
+ARGP4
+ADDRLP4 1192
+ARGP4
+ADDRLP4 1208
+CNSTP4 0
+ASGNP4
+ADDRLP4 1208
+INDIRP4
+ARGP4
+ADDRLP4 1208
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 591
+;590:					//FIXME: or MA?
+;591:					if ( ucmd->forwardmove < 0 )
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $227
+line 592
+;592:					{//slower
+line 593
+;593:						speed = 100;
+ADDRLP4 1204
+CNSTF4 1120403456
+ASGNF4
+line 594
+;594:					}
+ADDRGP4 $228
+JUMPV
+LABELV $227
+line 595
+;595:					else if ( ucmd->forwardmove > 0 )
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $229
+line 596
+;596:					{
+line 597
+;597:						speed = 250;//running speed
+ADDRLP4 1204
+CNSTF4 1132068864
+ASGNF4
+line 598
+;598:					}
+LABELV $229
+LABELV $228
+line 599
+;599:					VectorScale( fwd, speed, ps->velocity );
+ADDRFP4 0
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRLP4 1192
+INDIRF4
+ADDRLP4 1204
+INDIRF4
+MULF4
+ASGNF4
+ADDRFP4 0
+INDIRP4
+CNSTI4 36
+ADDP4
+ADDRLP4 1192+4
+INDIRF4
+ADDRLP4 1204
+INDIRF4
+MULF4
+ASGNF4
+ADDRFP4 0
+INDIRP4
+CNSTI4 40
+ADDP4
+ADDRLP4 1192+8
+INDIRF4
+ADDRLP4 1204
+INDIRF4
+MULF4
+ASGNF4
+line 600
+;600:				}
+LABELV $224
+line 601
+;601:				ps->velocity[2] = zVel;//preserve z velocity
+ADDRFP4 0
+INDIRP4
+CNSTI4 40
+ADDP4
+ADDRLP4 1188
+INDIRF4
+ASGNF4
+line 603
+;602:				//pull me toward the wall, too
+;603:				VectorMA( ps->velocity, dist, rt, ps->velocity );
+ADDRLP4 1204
+ADDRFP4 0
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+ADDRLP4 1204
+INDIRP4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208
+ADDRFP4 0
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1208
+INDIRP4
+ADDRLP4 1208
+INDIRP4
+INDIRF4
+ADDRLP4 4+4
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1212
+ADDRFP4 0
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1212
+INDIRP4
+ADDRLP4 1212
+INDIRP4
+INDIRF4
+ADDRLP4 4+8
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 604
+;604:			}
+LABELV $222
+line 605
+;605:			ucmd->forwardmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTI1 0
+ASGNI1
+line 606
+;606:			return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $198
+JUMPV
+LABELV $214
+line 608
+;607:		}
+;608:		else if ( doMove )
+ADDRFP4 8
+INDIRI4
+CNSTI4 0
+EQI4 $235
+line 609
+;609:		{//stop it
+line 610
+;610:			if ( (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT )
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+CNSTI4 820
+NEI4 $237
+line 611
+;611:			{
+line 612
+;612:				PM_SetAnim(SETANIM_BOTH, BOTH_WALL_RUN_RIGHT_STOP, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0);
+ADDRLP4 1176
+CNSTI4 3
+ASGNI4
+ADDRLP4 1176
+INDIRI4
+ARGI4
+CNSTI4 822
+ARGI4
+ADDRLP4 1176
+INDIRI4
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 613
+;613:			}
+ADDRGP4 $238
+JUMPV
+LABELV $237
+line 614
+;614:			else if ( (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_LEFT )
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+CNSTI4 823
+NEI4 $239
+line 615
+;615:			{
+line 616
+;616:				PM_SetAnim(SETANIM_BOTH, BOTH_WALL_RUN_LEFT_STOP, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0);
+ADDRLP4 1176
+CNSTI4 3
+ASGNI4
+ADDRLP4 1176
+INDIRI4
+ARGI4
+CNSTI4 825
+ARGI4
+ADDRLP4 1176
+INDIRI4
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 617
+;617:			}
+LABELV $239
+LABELV $238
+line 618
+;618:		}
+LABELV $235
+line 619
+;619:	}
+LABELV $199
+line 621
+;620:
+;621:	return qfalse;
+CNSTI4 0
+RETI4
+LABELV $198
+endproc PM_AdjustAngleForWallRun 1216 28
+proc PM_CheckJump 1284 28
+line 631
+;622:}
+;623:
+;624:/*
+;625:=============
+;626:PM_CheckJump
+;627:=============
+;628:*/
+;629:
+;630:static qboolean PM_CheckJump( void ) 
+;631:{
+line 632
+;632:	if (pm->ps->usingATST)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $242
+line 633
+;633:	{
+line 634
+;634:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $242
+line 637
+;635:	}
+;636:
+;637:	if (pm->ps->forceHandExtend == HANDEXTEND_KNOCKDOWN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 8
+NEI4 $244
+line 638
+;638:	{
+line 639
+;639:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $244
+line 643
+;640:	}
+;641:
+;642:	//Don't allow jump until all buttons are up
+;643:	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 512
+BANDI4
+CNSTI4 0
+EQI4 $246
+line 644
+;644:		return qfalse;		
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $246
+line 647
+;645:	}
+;646:
+;647:	if ( PM_InKnockDown( pm->ps ) || BG_InRoll( pm->ps, pm->ps->legsAnim ) ) 
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 0
+ADDRGP4 PM_InKnockDown
+CALLI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+NEI4 $250
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ARGP4
+ADDRLP4 4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 8
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 8
+INDIRI4
+CNSTI4 0
+EQI4 $248
+LABELV $250
+line 648
+;648:	{//in knockdown
+line 649
+;649:		return qfalse;		
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $248
+line 652
+;650:	}
+;651:
+;652:	if (pm->ps->groundEntityNum != ENTITYNUM_NONE || pm->ps->origin[2] < pm->ps->fd.forceJumpZStart)
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $253
+ADDRLP4 12
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ADDRLP4 12
+INDIRP4
+CNSTI4 1080
+ADDP4
+INDIRF4
+GEF4 $251
+LABELV $253
+line 653
+;653:	{
+line 654
+;654:		pm->ps->fd.forcePowersActive &= ~(1<<FP_LEVITATION);
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 16
+INDIRP4
+INDIRI4
+CNSTI4 -3
+BANDI4
+ASGNI4
+line 655
+;655:	}
+LABELV $251
+line 663
+;656:	/*
+;657:	if ( pm->cmd.buttons & BUTTON_FORCEJUMP )
+;658:	{
+;659:		pm->ps->pm_flags |= PMF_JUMP_HELD;
+;660:	}
+;661:	*/
+;662:
+;663:	if (pm->ps->fd.forcePowersActive & (1 << FP_LEVITATION))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+EQI4 $254
+line 664
+;664:	{
+line 665
+;665:		if (pm->ps->fd.forcePowerDebounce[FP_LEVITATION] < pm->cmd.serverTime)
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+INDIRP4
+CNSTI4 764
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $256
+line 666
+;666:		{
+line 667
+;667:			BG_ForcePowerDrain( pm->ps, FP_LEVITATION, 5 );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+CNSTI4 1
+ARGI4
+CNSTI4 5
+ARGI4
+ADDRGP4 BG_ForcePowerDrain
+CALLV
+pop
+line 668
+;668:			if (pm->ps->fd.forcePowerLevel[FP_LEVITATION] >= FORCE_LEVEL_2)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 2
+LTI4 $258
+line 669
+;669:			{
+line 670
+;670:				pm->ps->fd.forcePowerDebounce[FP_LEVITATION] = pm->cmd.serverTime + 300;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+INDIRP4
+CNSTI4 764
+ADDP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 300
+ADDI4
+ASGNI4
+line 671
+;671:			}
+ADDRGP4 $259
+JUMPV
+LABELV $258
+line 673
+;672:			else
+;673:			{
+line 674
+;674:				pm->ps->fd.forcePowerDebounce[FP_LEVITATION] = pm->cmd.serverTime + 200;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+INDIRP4
+CNSTI4 764
+ADDP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 200
+ADDI4
+ASGNI4
+line 675
+;675:			}
+LABELV $259
+line 676
+;676:		}
+LABELV $256
+line 677
+;677:	}
+LABELV $254
+line 679
+;678:
+;679:	if (pm->ps->forceJumpFlip)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1232
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $260
+line 680
+;680:	{
+line 681
+;681:		int anim = BOTH_FORCEINAIR1;
+ADDRLP4 16
+CNSTI4 766
+ASGNI4
+line 682
+;682:		int	parts = SETANIM_BOTH;
+ADDRLP4 20
+CNSTI4 3
+ASGNI4
+line 684
+;683:
+;684:		if ( pm->cmd.forwardmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $262
+line 685
+;685:		{
+line 686
+;686:			anim = BOTH_FLIP_F;
+ADDRLP4 16
+CNSTI4 777
+ASGNI4
+line 687
+;687:		}
+ADDRGP4 $263
+JUMPV
+LABELV $262
+line 688
+;688:		else if ( pm->cmd.forwardmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $264
+line 689
+;689:		{
+line 690
+;690:			anim = BOTH_FLIP_B;
+ADDRLP4 16
+CNSTI4 778
+ASGNI4
+line 691
+;691:		}
+ADDRGP4 $265
+JUMPV
+LABELV $264
+line 692
+;692:		else if ( pm->cmd.rightmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $266
+line 693
+;693:		{
+line 694
+;694:			anim = BOTH_FLIP_R;
+ADDRLP4 16
+CNSTI4 780
+ASGNI4
+line 695
+;695:		}
+ADDRGP4 $267
+JUMPV
+LABELV $266
+line 696
+;696:		else if ( pm->cmd.rightmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $268
+line 697
+;697:		{
+line 698
+;698:			anim = BOTH_FLIP_L;
+ADDRLP4 16
+CNSTI4 779
+ASGNI4
+line 699
+;699:		}
+LABELV $268
+LABELV $267
+LABELV $265
+LABELV $263
+line 700
+;700:		if ( pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $270
+line 701
+;701:		{//FIXME: really only care if we're in a saber attack anim...
+line 702
+;702:			parts = SETANIM_LEGS;
+ADDRLP4 20
+CNSTI4 2
+ASGNI4
+line 703
+;703:		}
+LABELV $270
+line 705
+;704:
+;705:		PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
+ADDRLP4 20
+INDIRI4
+ARGI4
+ADDRLP4 16
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 706
+;706:		pm->ps->forceJumpFlip = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1232
+ADDP4
+CNSTI4 0
+ASGNI4
+line 707
+;707:		return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $260
+line 710
+;708:	}
+;709:#if METROID_JUMP
+;710:	if ( pm->waterlevel < 2 ) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 2
+GEI4 $272
+line 711
+;711:	{
+line 712
+;712:		if ( pm->ps->gravity > 0 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $274
+line 713
+;713:		{//can't do this in zero-G
+line 715
+;714:			//FIXME: still able to pogo-jump...
+;715:			if ( PM_ForceJumpingUp() )
+ADDRLP4 16
+ADDRGP4 PM_ForceJumpingUp
+CALLI4
+ASGNI4
+ADDRLP4 16
+INDIRI4
+CNSTI4 0
+EQI4 $276
+line 716
+;716:			{//holding jump in air
+line 717
+;717:				float curHeight = pm->ps->origin[2] - pm->ps->fd.forceJumpZStart;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+ADDRLP4 24
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ADDRLP4 24
+INDIRP4
+CNSTI4 1080
+ADDP4
+INDIRF4
+SUBF4
+ASGNF4
+line 719
+;718:				//check for max force jump level and cap off & cut z vel
+;719:				if ( ( curHeight<=forceJumpHeight[0] ||//still below minimum jump height
+ADDRLP4 20
+INDIRF4
+ADDRGP4 forceJumpHeight
+INDIRF4
+LEF4 $280
+ADDRLP4 28
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+INDIRP4
+CNSTI4 920
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $278
+ADDRLP4 28
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 10
+LTI4 $278
+LABELV $280
+ADDRLP4 20
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 forceJumpHeight
+ADDP4
+INDIRF4
+GEF4 $278
+line 722
+;720:						(pm->ps->fd.forcePower&&pm->cmd.upmove>=10) ) &&////still have force power available and still trying to jump up 
+;721:					curHeight < forceJumpHeight[pm->ps->fd.forcePowerLevel[FP_LEVITATION]] )//still below maximum jump height
+;722:				{//can still go up
+line 726
+;723:					//FIXME: after a certain amount of time of held jump, play force jump sound and flip if a dir is being held
+;724:					//FIXME: if hit a wall... should we cut velocity or allow them to slide up it?
+;725:					//FIXME: constantly drain force power at a rate by which the usage for maximum height would use up the full cost of force jump
+;726:					if ( curHeight > forceJumpHeight[0] )
+ADDRLP4 20
+INDIRF4
+ADDRGP4 forceJumpHeight
+INDIRF4
+LEF4 $281
+line 727
+;727:					{//passed normal jump height  *2?
+line 728
+;728:						if ( !(pm->ps->fd.forcePowersActive&(1<<FP_LEVITATION)) )//haven't started forcejump yet
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+NEI4 $283
+line 729
+;729:						{
+line 731
+;730:							//start force jump
+;731:							pm->ps->fd.forcePowersActive |= (1<<FP_LEVITATION);
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+ADDRLP4 32
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 732
+;732:							pm->ps->fd.forceJumpSound = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1088
+ADDP4
+CNSTI4 1
+ASGNI4
+line 735
+;733:							//play flip
+;734:							//FIXME: do this only when they stop the jump (below) or when they're just about to hit the peak of the jump
+;735:							if ((pm->cmd.forwardmove || pm->cmd.rightmove) && //pushing in a dir
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 40
+CNSTI4 0
+ASGNI4
+ADDRLP4 36
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 40
+INDIRI4
+NEI4 $287
+ADDRLP4 36
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 40
+INDIRI4
+EQI4 $285
+LABELV $287
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 44
+INDIRI4
+CNSTI4 777
+EQI4 $285
+ADDRLP4 44
+INDIRI4
+CNSTI4 778
+EQI4 $285
+ADDRLP4 44
+INDIRI4
+CNSTI4 780
+EQI4 $285
+ADDRLP4 44
+INDIRI4
+CNSTI4 779
+EQI4 $285
+line 740
+;736:								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_F &&//not already flipping
+;737:								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_B &&
+;738:								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_R &&
+;739:								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_L )
+;740:							{//FIXME: this could end up playing twice if the jump is very long...
+line 741
+;741:								int anim = BOTH_FORCEINAIR1;
+ADDRLP4 48
+CNSTI4 766
+ASGNI4
+line 742
+;742:								int	parts = SETANIM_BOTH;
+ADDRLP4 52
+CNSTI4 3
+ASGNI4
+line 744
+;743:
+;744:								if ( pm->cmd.forwardmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $288
+line 745
+;745:								{
+line 746
+;746:									anim = BOTH_FLIP_F;
+ADDRLP4 48
+CNSTI4 777
+ASGNI4
+line 747
+;747:								}
+ADDRGP4 $289
+JUMPV
+LABELV $288
+line 748
+;748:								else if ( pm->cmd.forwardmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $290
+line 749
+;749:								{
+line 750
+;750:									anim = BOTH_FLIP_B;
+ADDRLP4 48
+CNSTI4 778
+ASGNI4
+line 751
+;751:								}
+ADDRGP4 $291
+JUMPV
+LABELV $290
+line 752
+;752:								else if ( pm->cmd.rightmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $292
+line 753
+;753:								{
+line 754
+;754:									anim = BOTH_FLIP_R;
+ADDRLP4 48
+CNSTI4 780
+ASGNI4
+line 755
+;755:								}
+ADDRGP4 $293
+JUMPV
+LABELV $292
+line 756
+;756:								else if ( pm->cmd.rightmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $294
+line 757
+;757:								{
+line 758
+;758:									anim = BOTH_FLIP_L;
+ADDRLP4 48
+CNSTI4 779
+ASGNI4
+line 759
+;759:								}
+LABELV $294
+LABELV $293
+LABELV $291
+LABELV $289
+line 760
+;760:								if ( pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $296
+line 761
+;761:								{//FIXME: really only care if we're in a saber attack anim...
+line 762
+;762:									parts = SETANIM_LEGS;
+ADDRLP4 52
+CNSTI4 2
+ASGNI4
+line 763
+;763:								}
+LABELV $296
+line 765
+;764:
+;765:								PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
+ADDRLP4 52
+INDIRI4
+ARGI4
+ADDRLP4 48
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 766
+;766:							}
+ADDRGP4 $284
+JUMPV
+LABELV $285
+line 767
+;767:							else if ( pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $284
+line 768
+;768:							{//FIXME: really want to know how far off ground we are, probably...
+line 770
+;769:								vec3_t facingFwd, facingRight, facingAngles;// = {0, pm->ps->viewangles[YAW], 0};
+;770:								int	anim = -1;
+ADDRLP4 48
+CNSTI4 -1
+ASGNI4
+line 773
+;771:								float dotR, dotF;
+;772:								
+;773:								VectorSet(facingAngles, 0, pm->ps->viewangles[YAW], 0);
+ADDRLP4 76
+CNSTF4 0
+ASGNF4
+ADDRLP4 76+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 76+8
+CNSTF4 0
+ASGNF4
+line 775
+;774:
+;775:								AngleVectors( facingAngles, facingFwd, facingRight, NULL );
+ADDRLP4 76
+ARGP4
+ADDRLP4 52
+ARGP4
+ADDRLP4 64
+ARGP4
+CNSTP4 0
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 776
+;776:								dotR = DotProduct( facingRight, pm->ps->velocity );
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 88
+ADDRLP4 64
+INDIRF4
+ADDRLP4 96
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 64+4
+INDIRF4
+ADDRLP4 96
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 64+8
+INDIRF4
+ADDRLP4 96
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 777
+;777:								dotF = DotProduct( facingFwd, pm->ps->velocity );
+ADDRLP4 100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 92
+ADDRLP4 52
+INDIRF4
+ADDRLP4 100
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 52+4
+INDIRF4
+ADDRLP4 100
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 52+8
+INDIRF4
+ADDRLP4 100
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 779
+;778:
+;779:								if ( fabs(dotR) > fabs(dotF) * 1.5 )
+ADDRLP4 88
+INDIRF4
+ARGF4
+ADDRLP4 104
+ADDRGP4 fabs
+CALLF4
+ASGNF4
+ADDRLP4 92
+INDIRF4
+ARGF4
+ADDRLP4 108
+ADDRGP4 fabs
+CALLF4
+ASGNF4
+ADDRLP4 104
+INDIRF4
+CNSTF4 1069547520
+ADDRLP4 108
+INDIRF4
+MULF4
+LEF4 $306
+line 780
+;780:								{
+line 781
+;781:									if ( dotR > 150 )
+ADDRLP4 88
+INDIRF4
+CNSTF4 1125515264
+LEF4 $308
+line 782
+;782:									{
+line 783
+;783:										anim = BOTH_FORCEJUMPRIGHT1;
+ADDRLP4 48
+CNSTI4 774
+ASGNI4
+line 784
+;784:									}
+ADDRGP4 $307
+JUMPV
+LABELV $308
+line 785
+;785:									else if ( dotR < -150 )
+ADDRLP4 88
+INDIRF4
+CNSTF4 3272998912
+GEF4 $307
+line 786
+;786:									{
+line 787
+;787:										anim = BOTH_FORCEJUMPLEFT1;
+ADDRLP4 48
+CNSTI4 771
+ASGNI4
+line 788
+;788:									}
+line 789
+;789:								}
+ADDRGP4 $307
+JUMPV
+LABELV $306
+line 791
+;790:								else
+;791:								{
+line 792
+;792:									if ( dotF > 150 )
+ADDRLP4 92
+INDIRF4
+CNSTF4 1125515264
+LEF4 $312
+line 793
+;793:									{
+line 794
+;794:										anim = BOTH_FORCEJUMP1;
+ADDRLP4 48
+CNSTI4 765
+ASGNI4
+line 795
+;795:									}
+ADDRGP4 $313
+JUMPV
+LABELV $312
+line 796
+;796:									else if ( dotF < -150 )
+ADDRLP4 92
+INDIRF4
+CNSTF4 3272998912
+GEF4 $314
+line 797
+;797:									{
+line 798
+;798:										anim = BOTH_FORCEJUMPBACK1;
+ADDRLP4 48
+CNSTI4 768
+ASGNI4
+line 799
+;799:									}
+LABELV $314
+LABELV $313
+line 800
+;800:								}
+LABELV $307
+line 801
+;801:								if ( anim != -1 )
+ADDRLP4 48
+INDIRI4
+CNSTI4 -1
+EQI4 $284
+line 802
+;802:								{
+line 803
+;803:									int parts = SETANIM_BOTH;
+ADDRLP4 112
+CNSTI4 3
+ASGNI4
+line 804
+;804:									if ( pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $318
+line 805
+;805:									{//FIXME: really only care if we're in a saber attack anim...
+line 806
+;806:										parts = SETANIM_LEGS;
+ADDRLP4 112
+CNSTI4 2
+ASGNI4
+line 807
+;807:									}
+LABELV $318
+line 809
+;808:
+;809:									PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
+ADDRLP4 112
+INDIRI4
+ARGI4
+ADDRLP4 48
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 810
+;810:								}
+line 811
+;811:							}
+line 812
+;812:						}
+ADDRGP4 $284
+JUMPV
+LABELV $283
+line 814
+;813:						else
+;814:						{
+line 815
+;815:							if ( pm->ps->legsTimer < 1 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 1
+GEI4 $320
+line 816
+;816:							{//not in the middle of a legsAnim
+line 817
+;817:								int anim = (pm->ps->legsAnim&~ANIM_TOGGLEBIT);
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+line 818
+;818:								int newAnim = -1;
+ADDRLP4 32
+CNSTI4 -1
+ASGNI4
+line 819
+;819:								switch ( anim )
+ADDRLP4 40
+ADDRLP4 36
+INDIRI4
+ASGNI4
+ADDRLP4 44
+CNSTI4 765
+ASGNI4
+ADDRLP4 40
+INDIRI4
+ADDRLP4 44
+INDIRI4
+EQI4 $324
+ADDRLP4 40
+INDIRI4
+CNSTI4 768
+EQI4 $325
+ADDRLP4 40
+INDIRI4
+ADDRLP4 44
+INDIRI4
+LTI4 $322
+LABELV $328
+ADDRLP4 48
+ADDRLP4 36
+INDIRI4
+ASGNI4
+ADDRLP4 48
+INDIRI4
+CNSTI4 771
+EQI4 $326
+ADDRLP4 48
+INDIRI4
+CNSTI4 774
+EQI4 $327
+ADDRGP4 $322
+JUMPV
+line 820
+;820:								{
+LABELV $324
+line 822
+;821:								case BOTH_FORCEJUMP1:
+;822:									newAnim = BOTH_FORCELAND1;//BOTH_FORCEINAIR1;
+ADDRLP4 32
+CNSTI4 767
+ASGNI4
+line 823
+;823:									break;
+ADDRGP4 $323
+JUMPV
+LABELV $325
+line 825
+;824:								case BOTH_FORCEJUMPBACK1:
+;825:									newAnim = BOTH_FORCELANDBACK1;//BOTH_FORCEINAIRBACK1;
+ADDRLP4 32
+CNSTI4 770
+ASGNI4
+line 826
+;826:									break;
+ADDRGP4 $323
+JUMPV
+LABELV $326
+line 828
+;827:								case BOTH_FORCEJUMPLEFT1:
+;828:									newAnim = BOTH_FORCELANDLEFT1;//BOTH_FORCEINAIRLEFT1;
+ADDRLP4 32
+CNSTI4 773
+ASGNI4
+line 829
+;829:									break;
+ADDRGP4 $323
+JUMPV
+LABELV $327
+line 831
+;830:								case BOTH_FORCEJUMPRIGHT1:
+;831:									newAnim = BOTH_FORCELANDRIGHT1;//BOTH_FORCEINAIRRIGHT1;
+ADDRLP4 32
+CNSTI4 776
+ASGNI4
+line 832
+;832:									break;
+LABELV $322
+LABELV $323
+line 834
+;833:								}
+;834:								if ( newAnim != -1 )
+ADDRLP4 32
+INDIRI4
+CNSTI4 -1
+EQI4 $329
+line 835
+;835:								{
+line 836
+;836:									int parts = SETANIM_BOTH;
+ADDRLP4 52
+CNSTI4 3
+ASGNI4
+line 837
+;837:									if ( pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $331
+line 838
+;838:									{//FIXME: really only care if we're in a saber attack anim...
+line 839
+;839:										parts = SETANIM_LEGS;
+ADDRLP4 52
+CNSTI4 2
+ASGNI4
+line 840
+;840:									}
+LABELV $331
+line 842
+;841:
+;842:									PM_SetAnim( parts, newAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
+ADDRLP4 52
+INDIRI4
+ARGI4
+ADDRLP4 32
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 843
+;843:								}
+LABELV $329
+line 844
+;844:							}
+LABELV $320
+line 845
+;845:						}
+LABELV $284
+line 846
+;846:					}
+LABELV $281
+line 849
+;847:
+;848:					//need to scale this down, start with height velocity (based on max force jump height) and scale down to regular jump vel
+;849:					pm->ps->velocity[2] = (forceJumpHeight[pm->ps->fd.forcePowerLevel[FP_LEVITATION]]-curHeight)/forceJumpHeight[pm->ps->fd.forcePowerLevel[FP_LEVITATION]]*forceJumpStrength[pm->ps->fd.forcePowerLevel[FP_LEVITATION]];//JUMP_VELOCITY;
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 36
+ADDRLP4 32
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 40
+ADDRLP4 36
+INDIRI4
+ADDRGP4 forceJumpHeight
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 32
+INDIRP4
+CNSTI4 40
+ADDP4
+ADDRLP4 40
+INDIRF4
+ADDRLP4 20
+INDIRF4
+SUBF4
+ADDRLP4 40
+INDIRF4
+DIVF4
+ADDRLP4 36
+INDIRI4
+ADDRGP4 forceJumpStrength
+ADDP4
+INDIRF4
+MULF4
+ASGNF4
+line 850
+;850:					pm->ps->velocity[2] /= 10;
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+ADDRLP4 44
+INDIRP4
+INDIRF4
+CNSTF4 1092616192
+DIVF4
+ASGNF4
+line 851
+;851:					pm->ps->velocity[2] += JUMP_VELOCITY;
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRF4
+CNSTF4 1130430464
+ADDF4
+ASGNF4
+line 852
+;852:					pm->ps->pm_flags |= PMF_JUMP_HELD;
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+ADDRLP4 52
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 853
+;853:				}
+ADDRGP4 $279
+JUMPV
+LABELV $278
+line 854
+;854:				else if ( curHeight > forceJumpHeight[0] && curHeight < forceJumpHeight[pm->ps->fd.forcePowerLevel[FP_LEVITATION]] - forceJumpHeight[0] )
+ADDRLP4 32
+ADDRLP4 20
+INDIRF4
+ASGNF4
+ADDRLP4 36
+ADDRGP4 forceJumpHeight
+ASGNP4
+ADDRLP4 40
+ADDRLP4 36
+INDIRP4
+INDIRF4
+ASGNF4
+ADDRLP4 32
+INDIRF4
+ADDRLP4 40
+INDIRF4
+LEF4 $333
+ADDRLP4 32
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 36
+INDIRP4
+ADDP4
+INDIRF4
+ADDRLP4 40
+INDIRF4
+SUBF4
+GEF4 $333
+line 855
+;855:				{//still have some headroom, don't totally stop it
+line 856
+;856:					if ( pm->ps->velocity[2] > JUMP_VELOCITY )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+CNSTF4 1130430464
+LEF4 $334
+line 857
+;857:					{
+line 858
+;858:						pm->ps->velocity[2] = JUMP_VELOCITY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 1130430464
+ASGNF4
+line 859
+;859:					}
+line 860
+;860:				}
+ADDRGP4 $334
+JUMPV
+LABELV $333
+line 862
+;861:				else
+;862:				{
+line 866
+;863:					//pm->ps->velocity[2] = 0;
+;864:					//rww - changed for the sake of balance in multiplayer
+;865:
+;866:					if ( pm->ps->velocity[2] > JUMP_VELOCITY )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+CNSTF4 1130430464
+LEF4 $337
+line 867
+;867:					{
+line 868
+;868:						pm->ps->velocity[2] = JUMP_VELOCITY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 1130430464
+ASGNF4
+line 869
+;869:					}
+LABELV $337
+line 870
+;870:				}
+LABELV $334
+LABELV $279
+line 871
+;871:				pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 872
+;872:				return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $276
+line 874
+;873:			}
+;874:			else if ( pm->ps->groundEntityNum == ENTITYNUM_NONE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $339
+line 875
+;875:			{
+line 876
+;876:				int legsAnim = (pm->ps->legsAnim&~ANIM_TOGGLEBIT);
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+line 877
+;877:				if ( legsAnim != BOTH_WALL_RUN_LEFT && legsAnim != BOTH_WALL_RUN_RIGHT )
+ADDRLP4 24
+ADDRLP4 20
+INDIRI4
+ASGNI4
+ADDRLP4 24
+INDIRI4
+CNSTI4 823
+EQI4 $341
+ADDRLP4 24
+INDIRI4
+CNSTI4 820
+EQI4 $341
+line 878
+;878:				{//special case.. these let you jump off a wall
+line 879
+;879:					return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $341
+line 881
+;880:				}
+;881:			}
+LABELV $339
+line 882
+;882:		}
+LABELV $274
+line 883
+;883:	}
+LABELV $272
+line 888
+;884:
+;885:#endif
+;886:
+;887:	//Not jumping
+;888:	if ( pm->cmd.upmove < 10 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 10
+GEI4 $343
+line 889
+;889:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $343
+line 893
+;890:	}
+;891:
+;892:	// must wait for jump to be released
+;893:	if ( pm->ps->pm_flags & PMF_JUMP_HELD ) 
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+EQI4 $345
+line 894
+;894:	{
+line 896
+;895:		// clear upmove so cmdscale doesn't lower running speed
+;896:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 897
+;897:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $345
+line 900
+;898:	}
+;899:
+;900:	if ( pm->ps->gravity <= 0 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+CNSTI4 0
+GTI4 $347
+line 901
+;901:	{//in low grav, you push in the dir you're facing as long as there is something behind you to shove off of
+line 905
+;902:		vec3_t	forward, back;
+;903:		trace_t	trace;
+;904:
+;905:		AngleVectors( pm->ps->viewangles, forward, NULL, NULL );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRLP4 16
+ARGP4
+ADDRLP4 1120
+CNSTP4 0
+ASGNP4
+ADDRLP4 1120
+INDIRP4
+ARGP4
+ADDRLP4 1120
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 906
+;906:		VectorMA( pm->ps->origin, -8, forward, back );
+ADDRLP4 1124
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1128
+CNSTF4 3238002688
+ASGNF4
+ADDRLP4 28
+ADDRLP4 1124
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1128
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 28+4
+ADDRLP4 1124
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1128
+INDIRF4
+ADDRLP4 16+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 28+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3238002688
+ADDRLP4 16+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 907
+;907:		pm->trace( &trace, pm->ps->origin, pm->mins, pm->maxs, back, pm->ps->clientNum, pm->tracemask );
+ADDRLP4 40
+ARGP4
+ADDRLP4 1132
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1136
+ADDRLP4 1132
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1136
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1132
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1132
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 28
+ARGP4
+ADDRLP4 1136
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1132
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1132
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 909
+;908:
+;909:		if ( trace.fraction <= 1.0f )
+ADDRLP4 40+8
+INDIRF4
+CNSTF4 1065353216
+GTF4 $353
+line 910
+;910:		{
+line 911
+;911:			VectorMA( pm->ps->velocity, JUMP_VELOCITY*2, forward, pm->ps->velocity );
+ADDRLP4 1140
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1140
+INDIRP4
+ADDRLP4 1140
+INDIRP4
+INDIRF4
+CNSTF4 1138819072
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1144
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1144
+INDIRP4
+ADDRLP4 1144
+INDIRP4
+INDIRF4
+CNSTF4 1138819072
+ADDRLP4 16+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1148
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1148
+INDIRP4
+ADDRLP4 1148
+INDIRP4
+INDIRF4
+CNSTF4 1138819072
+ADDRLP4 16+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 913
+;912:			//FIXME: kicking off wall anim?  At least check what anim we're in?
+;913:			PM_SetAnim(SETANIM_LEGS,BOTH_FORCEJUMP1,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD|SETANIM_FLAG_RESTART, 150);
+CNSTI4 2
+ARGI4
+CNSTI4 765
+ARGI4
+CNSTI4 7
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 914
+;914:		}//else no surf close enough to push off of
+LABELV $353
+line 915
+;915:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 916
+;916:	}
+ADDRGP4 $348
+JUMPV
+LABELV $347
+line 917
+;917:	else if ( pm->cmd.upmove > 0 && pm->waterlevel < 2 &&
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 20
+CNSTI4 0
+ASGNI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 20
+INDIRI4
+LEI4 $358
+ADDRLP4 24
+CNSTI4 2
+ASGNI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 24
+INDIRI4
+GEI4 $358
+ADDRLP4 28
+ADDRLP4 16
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+ADDRLP4 20
+INDIRI4
+LEI4 $358
+ADDRLP4 28
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+ADDRLP4 24
+INDIRI4
+BANDI4
+ADDRLP4 20
+INDIRI4
+NEI4 $358
+ADDRLP4 28
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ADDRLP4 24
+INDIRI4
+NEI4 $358
+ADDRLP4 16
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 28
+INDIRP4
+ARGP4
+ADDRLP4 32
+ADDRGP4 BG_HasYsalamiri
+CALLI4
+ASGNI4
+ADDRLP4 32
+INDIRI4
+CNSTI4 0
+NEI4 $358
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 36
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 36
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRLP4 40
+ADDRGP4 BG_CanUseFPNow
+CALLI4
+ASGNI4
+ADDRLP4 40
+INDIRI4
+CNSTI4 0
+EQI4 $358
+line 925
+;918:		pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_0 &&
+;919:		!(pm->ps->pm_flags&PMF_JUMP_HELD) /*&&
+;920:		WP_ForcePowerAvailable( pm->gent, FP_LEVITATION, 0 ) */ &&
+;921:		pm->ps->weapon == WP_SABER &&
+;922:		!BG_HasYsalamiri(pm->gametype, pm->ps) &&
+;923:		BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_LEVITATION)
+;924:		 )
+;925:	{
+line 926
+;926:		if ( pm->ps->groundEntityNum != ENTITYNUM_NONE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+EQI4 $360
+line 927
+;927:		{//on the ground
+line 929
+;928:			//check for left-wall and right-wall special jumps
+;929:			int anim = -1;
+ADDRLP4 44
+CNSTI4 -1
+ASGNI4
+line 930
+;930:			float	vertPush = 0;
+ADDRLP4 48
+CNSTF4 0
+ASGNF4
+line 931
+;931:			if ( pm->cmd.rightmove > 0 && pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $362
+ADDRLP4 52
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $362
+line 932
+;932:			{//strafing right
+line 933
+;933:				if ( pm->cmd.forwardmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $364
+line 934
+;934:				{//wall-run
+line 935
+;935:					vertPush = forceJumpStrength[FORCE_LEVEL_2]/2.0f;
+ADDRLP4 48
+ADDRGP4 forceJumpStrength+8
+INDIRF4
+CNSTF4 1073741824
+DIVF4
+ASGNF4
+line 936
+;936:					anim = BOTH_WALL_RUN_RIGHT;
+ADDRLP4 44
+CNSTI4 820
+ASGNI4
+line 937
+;937:				}
+ADDRGP4 $363
+JUMPV
+LABELV $364
+line 938
+;938:				else if ( pm->cmd.forwardmove == 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+NEI4 $363
+line 939
+;939:				{//wall-flip
+line 940
+;940:					vertPush = forceJumpStrength[FORCE_LEVEL_2]/2.25f;
+ADDRLP4 48
+ADDRGP4 forceJumpStrength+8
+INDIRF4
+CNSTF4 1074790400
+DIVF4
+ASGNF4
+line 941
+;941:					anim = BOTH_WALL_FLIP_RIGHT;
+ADDRLP4 44
+CNSTI4 826
+ASGNI4
+line 942
+;942:				}
+line 943
+;943:			}
+ADDRGP4 $363
+JUMPV
+LABELV $362
+line 944
+;944:			else if ( pm->cmd.rightmove < 0 && pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $370
+ADDRLP4 56
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $370
+line 945
+;945:			{//strafing left
+line 946
+;946:				if ( pm->cmd.forwardmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $372
+line 947
+;947:				{//wall-run
+line 948
+;948:					vertPush = forceJumpStrength[FORCE_LEVEL_2]/2.0f;
+ADDRLP4 48
+ADDRGP4 forceJumpStrength+8
+INDIRF4
+CNSTF4 1073741824
+DIVF4
+ASGNF4
+line 949
+;949:					anim = BOTH_WALL_RUN_LEFT;
+ADDRLP4 44
+CNSTI4 823
+ASGNI4
+line 950
+;950:				}
+ADDRGP4 $371
+JUMPV
+LABELV $372
+line 951
+;951:				else if ( pm->cmd.forwardmove == 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+NEI4 $371
+line 952
+;952:				{//wall-flip
+line 953
+;953:					vertPush = forceJumpStrength[FORCE_LEVEL_2]/2.25f;
+ADDRLP4 48
+ADDRGP4 forceJumpStrength+8
+INDIRF4
+CNSTF4 1074790400
+DIVF4
+ASGNF4
+line 954
+;954:					anim = BOTH_WALL_FLIP_LEFT;
+ADDRLP4 44
+CNSTI4 827
+ASGNI4
+line 955
+;955:				}
+line 956
+;956:			}
+ADDRGP4 $371
+JUMPV
+LABELV $370
+line 957
+;957:			else if ( pm->cmd.forwardmove > 0 && pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $378
+ADDRLP4 60
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $378
+line 958
+;958:			{//run up wall, flip backwards
+line 959
+;959:				vertPush = forceJumpStrength[FORCE_LEVEL_2]/2.25f;
+ADDRLP4 48
+ADDRGP4 forceJumpStrength+8
+INDIRF4
+CNSTF4 1074790400
+DIVF4
+ASGNF4
+line 960
+;960:				anim = BOTH_WALL_FLIP_BACK1;
+ADDRLP4 44
+CNSTI4 849
+ASGNI4
+line 961
+;961:			}
+ADDRGP4 $379
+JUMPV
+LABELV $378
+line 962
+;962:			else if ( pm->cmd.forwardmove < 0 && !(pm->cmd.buttons&BUTTON_ATTACK) )
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 68
+CNSTI4 0
+ASGNI4
+ADDRLP4 64
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 68
+INDIRI4
+GEI4 $381
+ADDRLP4 64
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+ADDRLP4 68
+INDIRI4
+NEI4 $381
+line 963
+;963:			{//backflip
+line 964
+;964:				vertPush = JUMP_VELOCITY;
+ADDRLP4 48
+CNSTF4 1130430464
+ASGNF4
+line 965
+;965:				anim = BOTH_FLIP_BACK1;//PM_PickAnim( BOTH_FLIP_BACK1, BOTH_FLIP_BACK3 );
+ADDRLP4 44
+CNSTI4 815
+ASGNI4
+line 966
+;966:			}
+LABELV $381
+LABELV $379
+LABELV $371
+LABELV $363
+line 979
+;967:			/*
+;968:			else if ( VectorLengthSquared( pm->ps->velocity ) < 256 )
+;969:			{//not moving
+;970:				if ( pm->ps->weapon == WP_SABER && (pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 )
+;971:				{//butterfly... FIXME: does direction matter?
+;972:					vertPush = JUMP_VELOCITY;
+;973:					anim = BOTH_BUTTERFLY_LEFT;
+;974:				}
+;975:			}
+;976:			*/
+;977:			//FIXME: Do we want special moves in MP?
+;978:
+;979:			vertPush += 128; //is gravity different in SP or something?
+ADDRLP4 48
+ADDRLP4 48
+INDIRF4
+CNSTF4 1124073472
+ADDF4
+ASGNF4
+line 981
+;980:
+;981:			if ( anim != -1 /*&& PM_HasAnimation( pm->gent, anim )*/ )
+ADDRLP4 44
+INDIRI4
+CNSTI4 -1
+EQI4 $361
+line 982
+;982:			{
+line 986
+;983:				vec3_t fwd, right, traceto, mins, maxs, fwdAngles;
+;984:				vec3_t	idealNormal;
+;985:				trace_t	trace;
+;986:				qboolean doTrace = qfalse;
+ADDRLP4 72
+CNSTI4 0
+ASGNI4
+line 987
+;987:				int contents = /*CONTENTS_SOLID*/MASK_PLAYERSOLID;
+ADDRLP4 76
+CNSTI4 273
+ASGNI4
+line 989
+;988:
+;989:				VectorSet(mins, pm->mins[0],pm->mins[1],0);
+ADDRLP4 1244
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1184
+ADDRLP4 1244
+INDIRP4
+CNSTI4 188
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1184+4
+ADDRLP4 1244
+INDIRP4
+CNSTI4 192
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1184+8
+CNSTF4 0
+ASGNF4
+line 990
+;990:				VectorSet(maxs, pm->maxs[0],pm->maxs[1],24);
+ADDRLP4 1248
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1196
+ADDRLP4 1248
+INDIRP4
+CNSTI4 200
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1196+4
+ADDRLP4 1248
+INDIRP4
+CNSTI4 204
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1196+8
+CNSTF4 1103101952
+ASGNF4
+line 991
+;991:				VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0);
+ADDRLP4 1172
+CNSTF4 0
+ASGNF4
+ADDRLP4 1172+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1172+8
+CNSTF4 0
+ASGNF4
+line 993
+;992:
+;993:				memset(&trace, 0, sizeof(trace)); //to shut the compiler up
+ADDRLP4 80
+ARGP4
+CNSTI4 0
+ARGI4
+CNSTI4 1080
+ARGI4
+ADDRGP4 memset
+CALLP4
+pop
+line 995
+;994:
+;995:				AngleVectors( fwdAngles, fwd, right, NULL );
+ADDRLP4 1172
+ARGP4
+ADDRLP4 1232
+ARGP4
+ADDRLP4 1220
+ARGP4
+CNSTP4 0
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 998
+;996:
+;997:				//trace-check for a wall, if necc.
+;998:				switch ( anim )
+ADDRLP4 1252
+ADDRLP4 44
+INDIRI4
+ASGNI4
+ADDRLP4 1252
+INDIRI4
+CNSTI4 820
+LTI4 $391
+ADDRLP4 1252
+INDIRI4
+CNSTI4 827
+GTI4 $408
+ADDRLP4 1252
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 $409-3280
+ADDP4
+INDIRP4
+JUMPV
+lit
+align 4
+LABELV $409
+address $398
+address $391
+address $391
+address $393
+address $391
+address $391
+address $398
+address $393
+code
+LABELV $408
+ADDRLP4 44
+INDIRI4
+CNSTI4 849
+EQI4 $403
+ADDRGP4 $391
+JUMPV
+line 999
+;999:				{
+LABELV $393
+line 1004
+;1000:				case BOTH_WALL_FLIP_LEFT:
+;1001:					//contents |= CONTENTS_BODY;
+;1002:					//NOTE: purposely falls through to next case!
+;1003:				case BOTH_WALL_RUN_LEFT:
+;1004:					doTrace = qtrue;
+ADDRLP4 72
+CNSTI4 1
+ASGNI4
+line 1005
+;1005:					VectorMA( pm->ps->origin, -16, right, traceto );
+ADDRLP4 1256
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1260
+CNSTF4 3246391296
+ASGNF4
+ADDRLP4 1208
+ADDRLP4 1256
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1260
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+4
+ADDRLP4 1256
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1260
+INDIRF4
+ADDRLP4 1220+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3246391296
+ADDRLP4 1220+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1006
+;1006:					break;
+ADDRGP4 $392
+JUMPV
+LABELV $398
+line 1012
+;1007:
+;1008:				case BOTH_WALL_FLIP_RIGHT:
+;1009:					//contents |= CONTENTS_BODY;
+;1010:					//NOTE: purposely falls through to next case!
+;1011:				case BOTH_WALL_RUN_RIGHT:
+;1012:					doTrace = qtrue;
+ADDRLP4 72
+CNSTI4 1
+ASGNI4
+line 1013
+;1013:					VectorMA( pm->ps->origin, 16, right, traceto );
+ADDRLP4 1264
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1268
+CNSTF4 1098907648
+ASGNF4
+ADDRLP4 1208
+ADDRLP4 1264
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1268
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+4
+ADDRLP4 1264
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1268
+INDIRF4
+ADDRLP4 1220+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 1220+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1014
+;1014:					break;
+ADDRGP4 $392
+JUMPV
+LABELV $403
+line 1018
+;1015:
+;1016:				case BOTH_WALL_FLIP_BACK1:
+;1017:					//contents |= CONTENTS_BODY;
+;1018:					doTrace = qtrue;
+ADDRLP4 72
+CNSTI4 1
+ASGNI4
+line 1019
+;1019:					VectorMA( pm->ps->origin, 16, fwd, traceto );
+ADDRLP4 1272
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1276
+CNSTF4 1098907648
+ASGNF4
+ADDRLP4 1208
+ADDRLP4 1272
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1276
+INDIRF4
+ADDRLP4 1232
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+4
+ADDRLP4 1272
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1276
+INDIRF4
+ADDRLP4 1232+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1208+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 1232+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1020
+;1020:					break;
+LABELV $391
+LABELV $392
+line 1023
+;1021:				}
+;1022:
+;1023:				if ( doTrace )
+ADDRLP4 72
+INDIRI4
+CNSTI4 0
+EQI4 $411
+line 1024
+;1024:				{
+line 1025
+;1025:					pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, contents );
+ADDRLP4 80
+ARGP4
+ADDRLP4 1256
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1260
+ADDRLP4 1256
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1184
+ARGP4
+ADDRLP4 1196
+ARGP4
+ADDRLP4 1208
+ARGP4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 76
+INDIRI4
+ARGI4
+ADDRLP4 1256
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 1026
+;1026:					VectorSubtract( pm->ps->origin, traceto, idealNormal );
+ADDRLP4 1264
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1160
+ADDRLP4 1264
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1208
+INDIRF4
+SUBF4
+ASGNF4
+ADDRLP4 1160+4
+ADDRLP4 1264
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1208+4
+INDIRF4
+SUBF4
+ASGNF4
+ADDRLP4 1160+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ADDRLP4 1208+8
+INDIRF4
+SUBF4
+ASGNF4
+line 1027
+;1027:					VectorNormalize( idealNormal );
+ADDRLP4 1160
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1028
+;1028:				}
+LABELV $411
+line 1032
+;1029:	//			gentity_t *traceEnt = &g_entities[trace.entityNum];
+;1030:				
+;1031:				//if ( !doTrace || (trace.fraction < 1.0f&&((trace.entityNum<ENTITYNUM_WORLD&&traceEnt&&traceEnt->s.solid!=SOLID_BMODEL)||DotProduct(trace.plane.normal,idealNormal)>0.7)) )
+;1032:				if ( !doTrace || (trace.fraction < 1.0f && (trace.entityNum < MAX_CLIENTS || DotProduct(trace.plane.normal,idealNormal) > 0.7)) )
+ADDRLP4 72
+INDIRI4
+CNSTI4 0
+EQI4 $429
+ADDRLP4 80+8
+INDIRF4
+CNSTF4 1065353216
+GEF4 $361
+ADDRLP4 80+52
+INDIRI4
+CNSTI4 32
+LTI4 $429
+ADDRLP4 80+24
+INDIRF4
+ADDRLP4 1160
+INDIRF4
+MULF4
+ADDRLP4 80+24+4
+INDIRF4
+ADDRLP4 1160+4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 80+24+8
+INDIRF4
+ADDRLP4 1160+8
+INDIRF4
+MULF4
+ADDF4
+CNSTF4 1060320051
+LEF4 $361
+LABELV $429
+line 1033
+;1033:				{//there is a wall there
+line 1036
+;1034:					int parts;
+;1035:					//move me to side
+;1036:					if ( anim == BOTH_WALL_FLIP_LEFT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 827
+NEI4 $430
+line 1037
+;1037:					{
+line 1038
+;1038:						pm->ps->velocity[0] = pm->ps->velocity[1] = 0;
+ADDRLP4 1260
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1264
+CNSTF4 0
+ASGNF4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 36
+ADDP4
+ADDRLP4 1264
+INDIRF4
+ASGNF4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRLP4 1264
+INDIRF4
+ASGNF4
+line 1039
+;1039:						VectorMA( pm->ps->velocity, 150, right, pm->ps->velocity );
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+ADDRLP4 1268
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 1220
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1272
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1272
+INDIRP4
+ADDRLP4 1272
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 1220+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1276
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1276
+INDIRP4
+ADDRLP4 1276
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 1220+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1040
+;1040:					}
+ADDRGP4 $431
+JUMPV
+LABELV $430
+line 1041
+;1041:					else if ( anim == BOTH_WALL_FLIP_RIGHT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 826
+NEI4 $434
+line 1042
+;1042:					{
+line 1043
+;1043:						pm->ps->velocity[0] = pm->ps->velocity[1] = 0;
+ADDRLP4 1260
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1264
+CNSTF4 0
+ASGNF4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 36
+ADDP4
+ADDRLP4 1264
+INDIRF4
+ASGNF4
+ADDRLP4 1260
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRLP4 1264
+INDIRF4
+ASGNF4
+line 1044
+;1044:						VectorMA( pm->ps->velocity, -150, right, pm->ps->velocity );
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+ADDRLP4 1268
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1220
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1272
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1272
+INDIRP4
+ADDRLP4 1272
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1220+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1276
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1276
+INDIRP4
+ADDRLP4 1276
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1220+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1045
+;1045:					}
+ADDRGP4 $435
+JUMPV
+LABELV $434
+line 1046
+;1046:					else if ( anim == BOTH_FLIP_BACK1 
+ADDRLP4 1260
+ADDRLP4 44
+INDIRI4
+ASGNI4
+ADDRLP4 1260
+INDIRI4
+CNSTI4 815
+EQI4 $442
+ADDRLP4 1260
+INDIRI4
+CNSTI4 816
+EQI4 $442
+ADDRLP4 1260
+INDIRI4
+CNSTI4 817
+EQI4 $442
+ADDRLP4 1260
+INDIRI4
+CNSTI4 849
+NEI4 $438
+LABELV $442
+line 1050
+;1047:						|| anim == BOTH_FLIP_BACK2 
+;1048:						|| anim == BOTH_FLIP_BACK3 
+;1049:						|| anim == BOTH_WALL_FLIP_BACK1 )
+;1050:					{
+line 1051
+;1051:						pm->ps->velocity[0] = pm->ps->velocity[1] = 0;
+ADDRLP4 1264
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1268
+CNSTF4 0
+ASGNF4
+ADDRLP4 1264
+INDIRP4
+CNSTI4 36
+ADDP4
+ADDRLP4 1268
+INDIRF4
+ASGNF4
+ADDRLP4 1264
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRLP4 1268
+INDIRF4
+ASGNF4
+line 1052
+;1052:						VectorMA( pm->ps->velocity, -150, fwd, pm->ps->velocity );
+ADDRLP4 1272
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1272
+INDIRP4
+ADDRLP4 1272
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1232
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1276
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1276
+INDIRP4
+ADDRLP4 1276
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1232+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1280
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1280
+INDIRP4
+ADDRLP4 1280
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 1232+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1053
+;1053:					}
+LABELV $438
+LABELV $435
+LABELV $431
+line 1074
+;1054:					//kick if jumping off an ent
+;1055:					/*
+;1056:					if ( doTrace && anim != BOTH_WALL_RUN_LEFT && anim != BOTH_WALL_RUN_RIGHT )
+;1057:					{
+;1058:						if ( pm->gent && trace.entityNum < ENTITYNUM_WORLD )
+;1059:						{
+;1060:							if ( traceEnt && traceEnt->client && traceEnt->health && traceEnt->takedamage )
+;1061:							{//push them away and do pain
+;1062:								vec3_t oppDir;
+;1063:								float strength = VectorNormalize2( pm->ps->velocity, oppDir );
+;1064:								VectorScale( oppDir, -1, oppDir );
+;1065:								//FIXME: need knockdown anim
+;1066:								G_Damage( traceEnt, pm->gent, pm->gent, oppDir, traceEnt->currentOrigin, 10, DAMAGE_NO_ARMOR|DAMAGE_NO_HIT_LOC|DAMAGE_NO_KNOCKBACK, MOD_MELEE );
+;1067:								NPC_SetAnim( traceEnt, SETANIM_BOTH, BOTH_KNOCKDOWN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+;1068:								G_Throw( traceEnt, oppDir, strength );
+;1069:								G_Sound( traceEnt, G_SoundIndex( va("sound/weapons/melee/punch%d", Q_irand(1, 4)) ) );
+;1070:							}
+;1071:						}
+;1072:					}
+;1073:					*/
+;1074:					if ( doTrace && anim != BOTH_WALL_RUN_LEFT && anim != BOTH_WALL_RUN_RIGHT )
+ADDRLP4 72
+INDIRI4
+CNSTI4 0
+EQI4 $445
+ADDRLP4 1264
+ADDRLP4 44
+INDIRI4
+ASGNI4
+ADDRLP4 1264
+INDIRI4
+CNSTI4 823
+EQI4 $445
+ADDRLP4 1264
+INDIRI4
+CNSTI4 820
+EQI4 $445
+line 1075
+;1075:					{
+line 1076
+;1076:						if (trace.entityNum < MAX_CLIENTS)
+ADDRLP4 80+52
+INDIRI4
+CNSTI4 32
+GEI4 $447
+line 1077
+;1077:						{
+line 1078
+;1078:							pm->ps->forceKickFlip = trace.entityNum+1; //let the server know that this person gets kicked by this client
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1280
+ADDP4
+ADDRLP4 80+52
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+line 1079
+;1079:						}
+LABELV $447
+line 1080
+;1080:					}
+LABELV $445
+line 1085
+;1081:
+;1082:					//FIXMEFIXME
+;1083:
+;1084:					//up
+;1085:					if ( vertPush )
+ADDRLP4 48
+INDIRF4
+CNSTF4 0
+EQF4 $451
+line 1086
+;1086:					{
+line 1087
+;1087:						pm->ps->velocity[2] = vertPush;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ADDRLP4 48
+INDIRF4
+ASGNF4
+line 1088
+;1088:						pm->ps->fd.forcePowersActive |= (1 << FP_LEVITATION);
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+ADDRLP4 1268
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1089
+;1089:					}
+LABELV $451
+line 1091
+;1090:					//animate me
+;1091:					parts = SETANIM_LEGS;
+ADDRLP4 1256
+CNSTI4 2
+ASGNI4
+line 1092
+;1092:					if ( anim == BOTH_BUTTERFLY_LEFT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 818
+NEI4 $453
+line 1093
+;1093:					{
+line 1094
+;1094:						parts = SETANIM_BOTH;
+ADDRLP4 1256
+CNSTI4 3
+ASGNI4
+line 1095
+;1095:						pm->cmd.buttons&=~BUTTON_ATTACK;
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+ADDRLP4 1268
+INDIRP4
+INDIRI4
+CNSTI4 -2
+BANDI4
+ASGNI4
+line 1096
+;1096:						pm->ps->saberMove = LS_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+CNSTI4 0
+ASGNI4
+line 1097
+;1097:					}
+ADDRGP4 $454
+JUMPV
+LABELV $453
+line 1098
+;1098:					else if ( !pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $455
+line 1099
+;1099:					{
+line 1100
+;1100:						parts = SETANIM_BOTH;
+ADDRLP4 1256
+CNSTI4 3
+ASGNI4
+line 1101
+;1101:					}
+LABELV $455
+LABELV $454
+line 1102
+;1102:					PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+ADDRLP4 1256
+INDIRI4
+ARGI4
+ADDRLP4 44
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 1103
+;1103:					if ( anim == BOTH_BUTTERFLY_LEFT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 818
+NEI4 $457
+line 1104
+;1104:					{
+line 1105
+;1105:						pm->ps->weaponTime = pm->ps->torsoTimer;
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+CNSTI4 44
+ADDP4
+ADDRLP4 1268
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+ASGNI4
+line 1106
+;1106:					}
+LABELV $457
+line 1107
+;1107:					pm->ps->fd.forceJumpZStart = pm->ps->origin[2];//so we don't take damage if we land at same height
+ADDRLP4 1268
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1268
+INDIRP4
+CNSTI4 1080
+ADDP4
+ADDRLP4 1268
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ASGNF4
+line 1108
+;1108:					pm->ps->pm_flags |= PMF_JUMP_HELD;//PMF_JUMPING|PMF_SLOW_MO_FALL;
+ADDRLP4 1272
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1272
+INDIRP4
+ADDRLP4 1272
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1109
+;1109:					pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 1111
+;1110:					//WP_ForcePowerDrain( pm->gent, FP_LEVITATION, 0 );
+;1111:					pm->ps->fd.forceJumpSound = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1088
+ADDP4
+CNSTI4 1
+ASGNI4
+line 1112
+;1112:				}
+line 1113
+;1113:			}
+line 1114
+;1114:		}
+ADDRGP4 $361
+JUMPV
+LABELV $360
+line 1116
+;1115:		else 
+;1116:		{//in the air
+line 1117
+;1117:			int legsAnim = (pm->ps->legsAnim&~ANIM_TOGGLEBIT);
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+line 1118
+;1118:			if ( legsAnim == BOTH_WALL_RUN_LEFT || legsAnim == BOTH_WALL_RUN_RIGHT )
+ADDRLP4 48
+ADDRLP4 44
+INDIRI4
+ASGNI4
+ADDRLP4 48
+INDIRI4
+CNSTI4 823
+EQI4 $461
+ADDRLP4 48
+INDIRI4
+CNSTI4 820
+NEI4 $459
+LABELV $461
+line 1119
+;1119:			{//running on a wall
+line 1122
+;1120:				vec3_t right, traceto, mins, maxs, fwdAngles;
+;1121:				trace_t	trace;
+;1122:				int		anim = -1;
+ADDRLP4 52
+CNSTI4 -1
+ASGNI4
+line 1124
+;1123:
+;1124:				VectorSet(mins, pm->mins[0], pm->mins[0], 0);
+ADDRLP4 1196
+ADDRGP4 pm
+INDIRP4
+CNSTI4 188
+ADDP4
+ASGNP4
+ADDRLP4 68
+ADDRLP4 1196
+INDIRP4
+INDIRF4
+ASGNF4
+ADDRLP4 68+4
+ADDRLP4 1196
+INDIRP4
+INDIRF4
+ASGNF4
+ADDRLP4 68+8
+CNSTF4 0
+ASGNF4
+line 1125
+;1125:				VectorSet(maxs, pm->maxs[0], pm->maxs[0], 24);
+ADDRLP4 1200
+ADDRGP4 pm
+INDIRP4
+CNSTI4 200
+ADDP4
+ASGNP4
+ADDRLP4 80
+ADDRLP4 1200
+INDIRP4
+INDIRF4
+ASGNF4
+ADDRLP4 80+4
+ADDRLP4 1200
+INDIRP4
+INDIRF4
+ASGNF4
+ADDRLP4 80+8
+CNSTF4 1103101952
+ASGNF4
+line 1126
+;1126:				VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0);
+ADDRLP4 56
+CNSTF4 0
+ASGNF4
+ADDRLP4 56+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 56+8
+CNSTF4 0
+ASGNF4
+line 1128
+;1127:
+;1128:				AngleVectors( fwdAngles, NULL, right, NULL );
+ADDRLP4 56
+ARGP4
+ADDRLP4 1204
+CNSTP4 0
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+ARGP4
+ADDRLP4 92
+ARGP4
+ADDRLP4 1204
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 1130
+;1129:
+;1130:				if ( legsAnim == BOTH_WALL_RUN_LEFT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 823
+NEI4 $468
+line 1131
+;1131:				{
+line 1132
+;1132:					if ( pm->ps->legsTimer > 400 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 400
+LEI4 $469
+line 1133
+;1133:					{//not at the end of the anim
+line 1134
+;1134:						float animLen = PM_AnimLength( 0, (animNumber_t)BOTH_WALL_RUN_LEFT );
+CNSTI4 0
+ARGI4
+CNSTI4 823
+ARGI4
+ADDRLP4 1212
+ADDRGP4 PM_AnimLength
+CALLI4
+ASGNI4
+ADDRLP4 1208
+ADDRLP4 1212
+INDIRI4
+CVIF4 4
+ASGNF4
+line 1135
+;1135:						if ( pm->ps->legsTimer < animLen - 400 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 1208
+INDIRF4
+CNSTF4 1137180672
+SUBF4
+GEF4 $469
+line 1136
+;1136:						{//not at start of anim
+line 1137
+;1137:							VectorMA( pm->ps->origin, -16, right, traceto );
+ADDRLP4 1216
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1220
+CNSTF4 3246391296
+ASGNF4
+ADDRLP4 104
+ADDRLP4 1216
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 92
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 104+4
+ADDRLP4 1216
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 92+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 104+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3246391296
+ADDRLP4 92+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1138
+;1138:							anim = BOTH_WALL_RUN_LEFT_FLIP;
+ADDRLP4 52
+CNSTI4 824
+ASGNI4
+line 1139
+;1139:						}
+line 1140
+;1140:					}
+line 1141
+;1141:				}
+ADDRGP4 $469
+JUMPV
+LABELV $468
+line 1142
+;1142:				else if ( legsAnim == BOTH_WALL_RUN_RIGHT )
+ADDRLP4 44
+INDIRI4
+CNSTI4 820
+NEI4 $478
+line 1143
+;1143:				{
+line 1144
+;1144:					if ( pm->ps->legsTimer > 400 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 400
+LEI4 $480
+line 1145
+;1145:					{//not at the end of the anim
+line 1146
+;1146:						float animLen = PM_AnimLength( 0, (animNumber_t)BOTH_WALL_RUN_RIGHT );
+CNSTI4 0
+ARGI4
+CNSTI4 820
+ARGI4
+ADDRLP4 1212
+ADDRGP4 PM_AnimLength
+CALLI4
+ASGNI4
+ADDRLP4 1208
+ADDRLP4 1212
+INDIRI4
+CVIF4 4
+ASGNF4
+line 1147
+;1147:						if ( pm->ps->legsTimer < animLen - 400 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 1208
+INDIRF4
+CNSTF4 1137180672
+SUBF4
+GEF4 $482
+line 1148
+;1148:						{//not at start of anim
+line 1149
+;1149:							VectorMA( pm->ps->origin, 16, right, traceto );
+ADDRLP4 1216
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1220
+CNSTF4 1098907648
+ASGNF4
+ADDRLP4 104
+ADDRLP4 1216
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 92
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 104+4
+ADDRLP4 1216
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 92+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 104+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 92+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1150
+;1150:							anim = BOTH_WALL_RUN_RIGHT_FLIP;
+ADDRLP4 52
+CNSTI4 821
+ASGNI4
+line 1151
+;1151:						}
+LABELV $482
+line 1152
+;1152:					}
+LABELV $480
+line 1153
+;1153:				}
+LABELV $478
+LABELV $469
+line 1154
+;1154:				if ( anim != -1 )
+ADDRLP4 52
+INDIRI4
+CNSTI4 -1
+EQI4 $488
+line 1155
+;1155:				{
+line 1156
+;1156:					pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID|CONTENTS_BODY );
+ADDRLP4 116
+ARGP4
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 68
+ARGP4
+ADDRLP4 80
+ARGP4
+ADDRLP4 104
+ARGP4
+ADDRLP4 1212
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 257
+ARGI4
+ADDRLP4 1208
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 1157
+;1157:					if ( trace.fraction < 1.0f )
+ADDRLP4 116+8
+INDIRF4
+CNSTF4 1065353216
+GEF4 $490
+line 1158
+;1158:					{//flip off wall
+line 1159
+;1159:						int parts = 0;
+ADDRLP4 1216
+CNSTI4 0
+ASGNI4
+line 1161
+;1160:
+;1161:						if ( anim == BOTH_WALL_RUN_LEFT_FLIP )
+ADDRLP4 52
+INDIRI4
+CNSTI4 824
+NEI4 $493
+line 1162
+;1162:						{
+line 1163
+;1163:							pm->ps->velocity[0] *= 0.5f;
+ADDRLP4 1220
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1220
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 1220
+INDIRP4
+INDIRF4
+MULF4
+ASGNF4
+line 1164
+;1164:							pm->ps->velocity[1] *= 0.5f;
+ADDRLP4 1224
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1224
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 1224
+INDIRP4
+INDIRF4
+MULF4
+ASGNF4
+line 1165
+;1165:							VectorMA( pm->ps->velocity, 150, right, pm->ps->velocity );
+ADDRLP4 1228
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1228
+INDIRP4
+ADDRLP4 1228
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 92
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1232
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1232
+INDIRP4
+ADDRLP4 1232
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 92+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1236
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1236
+INDIRP4
+ADDRLP4 1236
+INDIRP4
+INDIRF4
+CNSTF4 1125515264
+ADDRLP4 92+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1166
+;1166:						}
+ADDRGP4 $494
+JUMPV
+LABELV $493
+line 1167
+;1167:						else if ( anim == BOTH_WALL_RUN_RIGHT_FLIP )
+ADDRLP4 52
+INDIRI4
+CNSTI4 821
+NEI4 $497
+line 1168
+;1168:						{
+line 1169
+;1169:							pm->ps->velocity[0] *= 0.5f;
+ADDRLP4 1220
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1220
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 1220
+INDIRP4
+INDIRF4
+MULF4
+ASGNF4
+line 1170
+;1170:							pm->ps->velocity[1] *= 0.5f;
+ADDRLP4 1224
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1224
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 1224
+INDIRP4
+INDIRF4
+MULF4
+ASGNF4
+line 1171
+;1171:							VectorMA( pm->ps->velocity, -150, right, pm->ps->velocity );
+ADDRLP4 1228
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 1228
+INDIRP4
+ADDRLP4 1228
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 92
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1232
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 1232
+INDIRP4
+ADDRLP4 1232
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 92+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1236
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 1236
+INDIRP4
+ADDRLP4 1236
+INDIRP4
+INDIRF4
+CNSTF4 3272998912
+ADDRLP4 92+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1172
+;1172:						}
+LABELV $497
+LABELV $494
+line 1173
+;1173:						parts = SETANIM_LEGS;
+ADDRLP4 1216
+CNSTI4 2
+ASGNI4
+line 1174
+;1174:						if ( !pm->ps->weaponTime )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $501
+line 1175
+;1175:						{
+line 1176
+;1176:							parts = SETANIM_BOTH;
+ADDRLP4 1216
+CNSTI4 3
+ASGNI4
+line 1177
+;1177:						}
+LABELV $501
+line 1178
+;1178:						PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+ADDRLP4 1216
+INDIRI4
+ARGI4
+ADDRLP4 52
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 1181
+;1179:						//FIXME: do damage to traceEnt, like above?
+;1180:						//pm->ps->pm_flags |= PMF_JUMPING|PMF_SLOW_MO_FALL;
+;1181:						pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 1182
+;1182:					}
+LABELV $490
+line 1183
+;1183:				}
+LABELV $488
+line 1184
+;1184:				if ( pm->cmd.upmove != 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+EQI4 $460
+line 1185
+;1185:				{//jump failed, so don't try to do normal jump code, just return
+line 1186
+;1186:					return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+line 1188
+;1187:				}
+;1188:			}
+LABELV $459
+line 1190
+;1189:			else
+;1190:			{
+line 1192
+;1191:				//FIXME: if in a butterfly, kick people away?
+;1192:			}
+LABELV $460
+line 1193
+;1193:		}
+LABELV $361
+line 1194
+;1194:	}
+LABELV $358
+LABELV $348
+line 1196
+;1195:
+;1196:	if ( pm->cmd.upmove > 0 
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 48
+CNSTI4 0
+ASGNI4
+ADDRLP4 44
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 48
+INDIRI4
+LEI4 $505
+ADDRLP4 52
+ADDRLP4 44
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $505
+ADDRLP4 52
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+ADDRLP4 48
+INDIRI4
+GTI4 $507
+ADDRLP4 44
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+ADDRLP4 48
+INDIRI4
+EQI4 $505
+LABELV $507
+line 1199
+;1197:		&& pm->ps->weapon == WP_SABER
+;1198:		&& (pm->ps->weaponTime > 0||pm->cmd.buttons&BUTTON_ATTACK) )
+;1199:	{//okay, we just jumped and we're in an attack
+line 1200
+;1200:		if ( !BG_InRoll( pm->ps, pm->ps->legsAnim )
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+ARGP4
+ADDRLP4 56
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 60
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 60
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 64
+ADDRGP4 PM_InKnockDown
+CALLI4
+ASGNI4
+ADDRLP4 64
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 68
+ADDRGP4 BG_InDeathAnim
+CALLI4
+ASGNI4
+ADDRLP4 68
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 72
+ADDRGP4 BG_FlippingAnim
+CALLI4
+ASGNI4
+ADDRLP4 72
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 76
+ADDRGP4 PM_SpinningAnim
+CALLI4
+ASGNI4
+ADDRLP4 76
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 80
+ADDRGP4 BG_SaberInSpecialAttack
+CALLI4
+ASGNI4
+ADDRLP4 80
+INDIRI4
+CNSTI4 0
+NEI4 $508
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 84
+ADDRGP4 BG_SaberInAttack
+CALLI4
+ASGNI4
+ADDRLP4 84
+INDIRI4
+CNSTI4 0
+EQI4 $508
+line 1208
+;1201:			&& !PM_InKnockDown( pm->ps )
+;1202:			&& !BG_InDeathAnim(pm->ps->legsAnim)
+;1203:			&& !BG_FlippingAnim( pm->ps->legsAnim )
+;1204:			&& !PM_SpinningAnim( pm->ps->legsAnim )
+;1205:			&& !BG_SaberInSpecialAttack( pm->ps->torsoAnim )
+;1206:			&& ( BG_SaberInAttack( pm->ps->saberMove ) )
+;1207:			/*&& PM_InAnimForSaberMove( pm->ps->torsoAnim, pm->ps->saberMove )*/ )
+;1208:		{//not in an anim we shouldn't interrupt
+line 1210
+;1209:			//see if it's not too late to start a special jump-attack
+;1210:			float animLength = PM_AnimLength( 0, (animNumber_t)pm->ps->torsoAnim );
+CNSTI4 0
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 92
+ADDRGP4 PM_AnimLength
+CALLI4
+ASGNI4
+ADDRLP4 88
+ADDRLP4 92
+INDIRI4
+CVIF4 4
+ASGNF4
+line 1211
+;1211:			if ( animLength - pm->ps->torsoTimer < 500 )
+ADDRLP4 88
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+CVIF4 4
+SUBF4
+CNSTF4 1140457472
+GEF4 $510
+line 1212
+;1212:			{//just started the saberMove
+line 1214
+;1213:				//check for special-case jump attacks
+;1214:				if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $512
+line 1215
+;1215:				{//using medium attacks
+line 1217
+;1216:					if (/*pm->ps->velocity[2] > 100 &&*/
+;1217:						PM_GroundDistance() < 32 &&
+ADDRLP4 96
+ADDRGP4 PM_GroundDistance
+CALLF4
+ASGNF4
+ADDRLP4 96
+INDIRF4
+CNSTF4 1107296256
+GEF4 $513
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 100
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 100
+INDIRI4
+CNSTI4 0
+NEI4 $513
+line 1219
+;1218:						!BG_InSpecialJump(pm->ps->legsAnim))
+;1219:					{ //FLIP AND DOWNWARD ATTACK
+line 1222
+;1220:						trace_t tr;
+;1221:
+;1222:						if (PM_SomeoneInFront(&tr))
+ADDRLP4 104
+ARGP4
+ADDRLP4 1184
+ADDRGP4 PM_SomeoneInFront
+CALLI4
+ASGNI4
+ADDRLP4 1184
+INDIRI4
+CNSTI4 0
+EQI4 $513
+line 1223
+;1223:						{
+line 1224
+;1224:							PM_SetSaberMove(PM_SaberFlipOverAttackMove(&tr));
+ADDRLP4 104
+ARGP4
+ADDRLP4 1188
+ADDRGP4 PM_SaberFlipOverAttackMove
+CALLI4
+ASGNI4
+ADDRLP4 1188
+INDIRI4
+CVII2 4
+CVII4 2
+ARGI4
+ADDRGP4 PM_SetSaberMove
+CALLV
+pop
+line 1225
+;1225:							pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 1226
+;1226:							pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 1227
+;1227:							pm->ps->pm_flags |= PMF_JUMP_HELD;
+ADDRLP4 1192
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1192
+INDIRP4
+ADDRLP4 1192
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1228
+;1228:							pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 1229
+;1229:							VectorClear(pml.groundTrace.plane.normal);
+ADDRLP4 1196
+CNSTF4 0
+ASGNF4
+ADDRGP4 pml+52+24+8
+ADDRLP4 1196
+INDIRF4
+ASGNF4
+ADDRGP4 pml+52+24+4
+ADDRLP4 1196
+INDIRF4
+ASGNF4
+ADDRGP4 pml+52+24
+ADDRLP4 1196
+INDIRF4
+ASGNF4
+line 1231
+;1230:
+;1231:							pm->ps->weaponTime = pm->ps->torsoTimer;
+ADDRLP4 1200
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 44
+ADDP4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+ASGNI4
+line 1232
+;1232:						}
+line 1233
+;1233:					}
+line 1234
+;1234:				}
+ADDRGP4 $513
+JUMPV
+LABELV $512
+line 1235
+;1235:				else if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $528
+line 1236
+;1236:				{//using strong attacks
+line 1237
+;1237:					if ( pm->cmd.forwardmove > 0 && //going forward
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $530
+ADDRLP4 96
+ADDRGP4 PM_GroundDistance
+CALLF4
+ASGNF4
+ADDRLP4 96
+INDIRF4
+CNSTF4 1107296256
+GEF4 $530
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 100
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 100
+INDIRI4
+CNSTI4 0
+NEI4 $530
+line 1240
+;1238:						PM_GroundDistance() < 32 &&
+;1239:						!BG_InSpecialJump(pm->ps->legsAnim))
+;1240:					{//strong attack: jump-hack
+line 1241
+;1241:						PM_SetSaberMove( PM_SaberJumpAttackMove() );
+ADDRLP4 104
+ADDRGP4 PM_SaberJumpAttackMove
+CALLI4
+ASGNI4
+ADDRLP4 104
+INDIRI4
+CVII2 4
+CVII4 2
+ARGI4
+ADDRGP4 PM_SetSaberMove
+CALLV
+pop
+line 1242
+;1242:						pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 1243
+;1243:						pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 1244
+;1244:						pm->ps->pm_flags |= PMF_JUMP_HELD;
+ADDRLP4 108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 108
+INDIRP4
+ADDRLP4 108
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1245
+;1245:						pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 1246
+;1246:						VectorClear(pml.groundTrace.plane.normal);
+ADDRLP4 112
+CNSTF4 0
+ASGNF4
+ADDRGP4 pml+52+24+8
+ADDRLP4 112
+INDIRF4
+ASGNF4
+ADDRGP4 pml+52+24+4
+ADDRLP4 112
+INDIRF4
+ASGNF4
+ADDRGP4 pml+52+24
+ADDRLP4 112
+INDIRF4
+ASGNF4
+line 1248
+;1247:
+;1248:						pm->ps->weaponTime = pm->ps->torsoTimer;
+ADDRLP4 116
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 116
+INDIRP4
+CNSTI4 44
+ADDP4
+ADDRLP4 116
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+ASGNI4
+line 1249
+;1249:					}
+LABELV $530
+line 1250
+;1250:				}
+LABELV $528
+LABELV $513
+line 1251
+;1251:			}
+LABELV $510
+line 1252
+;1252:		}
+LABELV $508
+line 1253
+;1253:	}
+LABELV $505
+line 1254
+;1254:	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $542
+line 1255
+;1255:	{
+line 1256
+;1256:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $241
+JUMPV
+LABELV $542
+line 1258
+;1257:	}
+;1258:	if ( pm->cmd.upmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $544
+line 1259
+;1259:	{//no special jumps
+line 1268
+;1260:		/*
+;1261:		gentity_t *groundEnt = &g_entities[pm->ps->groundEntityNum];
+;1262:		if ( groundEnt && groundEnt->NPC )
+;1263:		{//Can't jump off of someone's head
+;1264:			return qfalse;
+;1265:		}
+;1266:		*/
+;1267:
+;1268:		pm->ps->velocity[2] = JUMP_VELOCITY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 1130430464
+ASGNF4
+line 1269
+;1269:		pm->ps->fd.forceJumpZStart = pm->ps->origin[2];//so we don't take damage if we land at same height
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+CNSTI4 1080
+ADDP4
+ADDRLP4 56
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ASGNF4
+line 1270
+;1270:		pm->ps->pm_flags |= PMF_JUMP_HELD;//PMF_JUMPING;
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+ADDRLP4 60
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1271
+;1271:	}
+LABELV $544
+line 1274
+;1272:
+;1273:	//Jumping
+;1274:	pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 1275
+;1275:	pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 1276
+;1276:	pm->ps->pm_flags |= PMF_JUMP_HELD;
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+ADDRLP4 56
+INDIRP4
+INDIRI4
+CNSTI4 2
+BORI4
+ASGNI4
+line 1277
+;1277:	pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 1278
+;1278:	pm->ps->fd.forceJumpZStart = pm->ps->origin[2];
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+CNSTI4 1080
+ADDP4
+ADDRLP4 60
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ASGNF4
+line 1280
+;1279:
+;1280:	PM_AddEvent( EV_JUMP );
+CNSTI4 14
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 1283
+;1281:
+;1282:	//Set the animations
+;1283:	if ( pm->ps->gravity > 0 && !BG_InSpecialJump( pm->ps->legsAnim ) )
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 64
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $548
+ADDRLP4 64
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 68
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 68
+INDIRI4
+CNSTI4 0
+NEI4 $548
+line 1284
+;1284:	{
+line 1285
+;1285:		PM_JumpForDir();
+ADDRGP4 PM_JumpForDir
+CALLV
+pop
+line 1286
+;1286:	}
+LABELV $548
+line 1288
+;1287:
+;1288:	return qtrue;
+CNSTI4 1
+RETI4
+LABELV $241
+endproc PM_CheckJump 1284 28
+proc PM_CheckWaterJump 56 8
+line 1295
+;1289:}
+;1290:/*
+;1291:=============
+;1292:PM_CheckWaterJump
+;1293:=============
+;1294:*/
+;1295:static qboolean	PM_CheckWaterJump( void ) {
+line 1300
+;1296:	vec3_t	spot;
+;1297:	int		cont;
+;1298:	vec3_t	flatforward;
+;1299:
+;1300:	if (pm->ps->pm_time) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $551
+line 1301
+;1301:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $550
+JUMPV
+LABELV $551
+line 1305
+;1302:	}
+;1303:
+;1304:	// check for water jump
+;1305:	if ( pm->waterlevel != 2 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 2
+EQI4 $553
+line 1306
+;1306:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $550
+JUMPV
+LABELV $553
+line 1309
+;1307:	}
+;1308:
+;1309:	flatforward[0] = pml.forward[0];
+ADDRLP4 12
+ADDRGP4 pml
+INDIRF4
+ASGNF4
+line 1310
+;1310:	flatforward[1] = pml.forward[1];
+ADDRLP4 12+4
+ADDRGP4 pml+4
+INDIRF4
+ASGNF4
+line 1311
+;1311:	flatforward[2] = 0;
+ADDRLP4 12+8
+CNSTF4 0
+ASGNF4
+line 1312
+;1312:	VectorNormalize (flatforward);
+ADDRLP4 12
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1314
+;1313:
+;1314:	VectorMA (pm->ps->origin, 30, flatforward, spot);
+ADDRLP4 28
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 32
+CNSTF4 1106247680
+ASGNF4
+ADDRLP4 0
+ADDRLP4 28
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 32
+INDIRF4
+ADDRLP4 12
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 0+4
+ADDRLP4 28
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 32
+INDIRF4
+ADDRLP4 12+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 0+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1106247680
+ADDRLP4 12+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1315
+;1315:	spot[2] += 4;
+ADDRLP4 0+8
+ADDRLP4 0+8
+INDIRF4
+CNSTF4 1082130432
+ADDF4
+ASGNF4
+line 1316
+;1316:	cont = pm->pointcontents (spot, pm->ps->clientNum );
+ADDRLP4 0
+ARGP4
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 40
+ADDRLP4 36
+INDIRP4
+CNSTI4 244
+ADDP4
+INDIRP4
+CALLI4
+ASGNI4
+ADDRLP4 24
+ADDRLP4 40
+INDIRI4
+ASGNI4
+line 1317
+;1317:	if ( !(cont & CONTENTS_SOLID) ) {
+ADDRLP4 24
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+NEI4 $563
+line 1318
+;1318:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $550
+JUMPV
+LABELV $563
+line 1321
+;1319:	}
+;1320:
+;1321:	spot[2] += 16;
+ADDRLP4 0+8
+ADDRLP4 0+8
+INDIRF4
+CNSTF4 1098907648
+ADDF4
+ASGNF4
+line 1322
+;1322:	cont = pm->pointcontents (spot, pm->ps->clientNum );
+ADDRLP4 0
+ARGP4
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 48
+ADDRLP4 44
+INDIRP4
+CNSTI4 244
+ADDP4
+INDIRP4
+CALLI4
+ASGNI4
+ADDRLP4 24
+ADDRLP4 48
+INDIRI4
+ASGNI4
+line 1323
+;1323:	if ( cont ) {
+ADDRLP4 24
+INDIRI4
+CNSTI4 0
+EQI4 $566
+line 1324
+;1324:		return qfalse;
+CNSTI4 0
+RETI4
+ADDRGP4 $550
+JUMPV
+LABELV $566
+line 1328
+;1325:	}
+;1326:
+;1327:	// jump out of water
+;1328:	VectorScale (pml.forward, 200, pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+CNSTF4 1128792064
+ADDRGP4 pml
+INDIRF4
+MULF4
+ASGNF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+CNSTF4 1128792064
+ADDRGP4 pml+4
+INDIRF4
+MULF4
+ASGNF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 1128792064
+ADDRGP4 pml+8
+INDIRF4
+MULF4
+ASGNF4
+line 1329
+;1329:	pm->ps->velocity[2] = 350;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 1135542272
+ASGNF4
+line 1331
+;1330:
+;1331:	pm->ps->pm_flags |= PMF_TIME_WATERJUMP;
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+ADDRLP4 52
+INDIRP4
+INDIRI4
+CNSTI4 256
+BORI4
+ASGNI4
+line 1332
+;1332:	pm->ps->pm_time = 2000;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+CNSTI4 2000
+ASGNI4
+line 1334
+;1333:
+;1334:	return qtrue;
+CNSTI4 1
+RETI4
+LABELV $550
+endproc PM_CheckWaterJump 56 8
+proc PM_WaterJumpMove 12 4
+line 1347
+;1335:}
+;1336:
+;1337://============================================================================
+;1338:
+;1339:
+;1340:/*
+;1341:===================
+;1342:PM_WaterJumpMove
+;1343:
+;1344:Flying out of the water
+;1345:===================
+;1346:*/
+;1347:static void PM_WaterJumpMove( void ) {
+line 1350
+;1348:	// waterjump has no control, but falls
+;1349:
+;1350:	PM_StepSlideMove( qtrue );
+CNSTI4 1
+ARGI4
+ADDRGP4 PM_StepSlideMove
+CALLV
+pop
+line 1352
+;1351:
+;1352:	pm->ps->velocity[2] -= pm->ps->gravity * pml.frametime;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 4
+ADDRLP4 0
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRF4
+ADDRLP4 0
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+SUBF4
+ASGNF4
+line 1353
+;1353:	if (pm->ps->velocity[2] < 0) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+CNSTF4 0
+GEF4 $572
+line 1355
+;1354:		// cancel as soon as we are falling down again
+;1355:		pm->ps->pm_flags &= ~PMF_ALL_TIMES;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+ADDRLP4 8
+INDIRP4
+INDIRI4
+CNSTI4 -353
+BANDI4
+ASGNI4
+line 1356
+;1356:		pm->ps->pm_time = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+CNSTI4 0
+ASGNI4
+line 1357
+;1357:	}
+LABELV $572
+line 1358
+;1358:}
+LABELV $570
+endproc PM_WaterJumpMove 12 4
+proc PM_WaterMove 76 16
+line 1366
+;1359:
+;1360:/*
+;1361:===================
+;1362:PM_WaterMove
+;1363:
+;1364:===================
+;1365:*/
+;1366:static void PM_WaterMove( void ) {
+line 1374
+;1367:	int		i;
+;1368:	vec3_t	wishvel;
+;1369:	float	wishspeed;
+;1370:	vec3_t	wishdir;
+;1371:	float	scale;
+;1372:	float	vel;
+;1373:
+;1374:	if ( PM_CheckWaterJump() ) {
+ADDRLP4 40
+ADDRGP4 PM_CheckWaterJump
+CALLI4
+ASGNI4
+ADDRLP4 40
+INDIRI4
+CNSTI4 0
+EQI4 $575
+line 1375
+;1375:		PM_WaterJumpMove();
+ADDRGP4 PM_WaterJumpMove
+CALLV
+pop
+line 1376
+;1376:		return;
+ADDRGP4 $574
+JUMPV
+LABELV $575
+line 1392
+;1377:	}
+;1378:#if 0
+;1379:	// jump = head for surface
+;1380:	if ( pm->cmd.upmove >= 10 ) {
+;1381:		if (pm->ps->velocity[2] > -300) {
+;1382:			if ( pm->watertype == CONTENTS_WATER ) {
+;1383:				pm->ps->velocity[2] = 100;
+;1384:			} else if (pm->watertype == CONTENTS_SLIME) {
+;1385:				pm->ps->velocity[2] = 80;
+;1386:			} else {
+;1387:				pm->ps->velocity[2] = 50;
+;1388:			}
+;1389:		}
+;1390:	}
+;1391:#endif
+;1392:	PM_Friction ();
+ADDRGP4 PM_Friction
+CALLV
+pop
+line 1394
+;1393:
+;1394:	scale = PM_CmdScale( &pm->cmd );
+ADDRGP4 pm
+INDIRP4
+CNSTI4 4
+ADDP4
+ARGP4
+ADDRLP4 44
+ADDRGP4 PM_CmdScale
+CALLF4
+ASGNF4
+ADDRLP4 4
+ADDRLP4 44
+INDIRF4
+ASGNF4
+line 1398
+;1395:	//
+;1396:	// user intentions
+;1397:	//
+;1398:	if ( !scale ) {
+ADDRLP4 4
+INDIRF4
+CNSTF4 0
+NEF4 $577
+line 1399
+;1399:		wishvel[0] = 0;
+ADDRLP4 8
+CNSTF4 0
+ASGNF4
+line 1400
+;1400:		wishvel[1] = 0;
+ADDRLP4 8+4
+CNSTF4 0
+ASGNF4
+line 1401
+;1401:		wishvel[2] = -60;		// sink towards bottom
+ADDRLP4 8+8
+CNSTF4 3262119936
+ASGNF4
+line 1402
+;1402:	} else {
+ADDRGP4 $578
+JUMPV
+LABELV $577
+line 1403
+;1403:		for (i=0 ; i<3 ; i++)
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $581
+line 1404
+;1404:			wishvel[i] = scale * pml.forward[i]*pm->cmd.forwardmove + scale * pml.right[i]*pm->cmd.rightmove;
+ADDRLP4 48
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRI4
+ADDRLP4 8
+ADDP4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 48
+INDIRI4
+ADDRGP4 pml
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 56
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 48
+INDIRI4
+ADDRGP4 pml+12
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 56
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDF4
+ASGNF4
+LABELV $582
+line 1403
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $581
+line 1406
+;1405:
+;1406:		wishvel[2] += scale * pm->cmd.upmove;
+ADDRLP4 8+8
+ADDRLP4 8+8
+INDIRF4
+ADDRLP4 4
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDF4
+ASGNF4
+line 1407
+;1407:	}
+LABELV $578
+line 1409
+;1408:
+;1409:	VectorCopy (wishvel, wishdir);
+ADDRLP4 24
+ADDRLP4 8
+INDIRB
+ASGNB 12
+line 1410
+;1410:	wishspeed = VectorNormalize(wishdir);
+ADDRLP4 24
+ARGP4
+ADDRLP4 48
+ADDRGP4 VectorNormalize
+CALLF4
+ASGNF4
+ADDRLP4 20
+ADDRLP4 48
+INDIRF4
+ASGNF4
+line 1412
+;1411:
+;1412:	if ( wishspeed > pm->ps->speed * pm_swimScale ) {
+ADDRLP4 20
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_swimScale
+INDIRF4
+MULF4
+LEF4 $587
+line 1413
+;1413:		wishspeed = pm->ps->speed * pm_swimScale;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_swimScale
+INDIRF4
+MULF4
+ASGNF4
+line 1414
+;1414:	}
+LABELV $587
+line 1416
+;1415:
+;1416:	PM_Accelerate (wishdir, wishspeed, pm_wateraccelerate);
+ADDRLP4 24
+ARGP4
+ADDRLP4 20
+INDIRF4
+ARGF4
+ADDRGP4 pm_wateraccelerate
+INDIRF4
+ARGF4
+ADDRGP4 PM_Accelerate
+CALLV
+pop
+line 1419
+;1417:
+;1418:	// make sure we can go up slopes easily under water
+;1419:	if ( pml.groundPlane && DotProduct( pm->ps->velocity, pml.groundTrace.plane.normal ) < 0 ) {
+ADDRGP4 pml+48
+INDIRI4
+CNSTI4 0
+EQI4 $589
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ADDRGP4 pml+52+24
+INDIRF4
+MULF4
+ADDRLP4 52
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDRGP4 pml+52+24+4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 52
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+ADDRGP4 pml+52+24+8
+INDIRF4
+MULF4
+ADDF4
+CNSTF4 0
+GEF4 $589
+line 1420
+;1420:		vel = VectorLength(pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRLP4 56
+ADDRGP4 VectorLength
+CALLF4
+ASGNF4
+ADDRLP4 36
+ADDRLP4 56
+INDIRF4
+ASGNF4
+line 1422
+;1421:		// slide along the ground plane
+;1422:		PM_ClipVelocity (pm->ps->velocity, pml.groundTrace.plane.normal, 
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+ARGP4
+ADDRGP4 pml+52+24
+ARGP4
+ADDRLP4 60
+INDIRP4
+ARGP4
+CNSTF4 1065361605
+ARGF4
+ADDRGP4 PM_ClipVelocity
+CALLV
+pop
+line 1425
+;1423:			pm->ps->velocity, OVERCLIP );
+;1424:
+;1425:		VectorNormalize(pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1426
+;1426:		VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 64
+INDIRP4
+ADDRLP4 64
+INDIRP4
+INDIRF4
+ADDRLP4 36
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 68
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 68
+INDIRP4
+ADDRLP4 68
+INDIRP4
+INDIRF4
+ADDRLP4 36
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 72
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 72
+INDIRP4
+ADDRLP4 72
+INDIRP4
+INDIRF4
+ADDRLP4 36
+INDIRF4
+MULF4
+ASGNF4
+line 1427
+;1427:	}
+LABELV $589
+line 1429
+;1428:
+;1429:	PM_SlideMove( qfalse );
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_SlideMove
+CALLI4
+pop
+line 1430
+;1430:}
+LABELV $574
+endproc PM_WaterMove 76 16
+proc PM_FlyMove 52 12
+line 1439
+;1431:
+;1432:/*
+;1433:===================
+;1434:PM_FlyMove
+;1435:
+;1436:Only with the flight powerup
+;1437:===================
+;1438:*/
+;1439:static void PM_FlyMove( void ) {
+line 1447
+;1440:	int		i;
+;1441:	vec3_t	wishvel;
+;1442:	float	wishspeed;
+;1443:	vec3_t	wishdir;
+;1444:	float	scale;
+;1445:
+;1446:	// normal slowdown
+;1447:	PM_Friction ();
+ADDRGP4 PM_Friction
+CALLV
+pop
+line 1449
+;1448:
+;1449:	scale = PM_CmdScale( &pm->cmd );
+ADDRGP4 pm
+INDIRP4
+CNSTI4 4
+ADDP4
+ARGP4
+ADDRLP4 36
+ADDRGP4 PM_CmdScale
+CALLF4
+ASGNF4
+ADDRLP4 4
+ADDRLP4 36
+INDIRF4
+ASGNF4
+line 1453
+;1450:	//
+;1451:	// user intentions
+;1452:	//
+;1453:	if ( !scale ) {
+ADDRLP4 4
+INDIRF4
+CNSTF4 0
+NEF4 $603
+line 1454
+;1454:		wishvel[0] = 0;
+ADDRLP4 8
+CNSTF4 0
+ASGNF4
+line 1455
+;1455:		wishvel[1] = 0;
+ADDRLP4 8+4
+CNSTF4 0
+ASGNF4
+line 1456
+;1456:		wishvel[2] = 0;
+ADDRLP4 8+8
+CNSTF4 0
+ASGNF4
+line 1457
+;1457:	} else {
+ADDRGP4 $604
+JUMPV
+LABELV $603
+line 1458
+;1458:		for (i=0 ; i<3 ; i++) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $607
+line 1459
+;1459:			wishvel[i] = scale * pml.forward[i]*pm->cmd.forwardmove + scale * pml.right[i]*pm->cmd.rightmove;
+ADDRLP4 40
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 40
+INDIRI4
+ADDRLP4 8
+ADDP4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 40
+INDIRI4
+ADDRGP4 pml
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 48
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDRLP4 4
+INDIRF4
+ADDRLP4 40
+INDIRI4
+ADDRGP4 pml+12
+ADDP4
+INDIRF4
+MULF4
+ADDRLP4 48
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDF4
+ASGNF4
+line 1460
+;1460:		}
+LABELV $608
+line 1458
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $607
+line 1462
+;1461:
+;1462:		wishvel[2] += scale * pm->cmd.upmove;
+ADDRLP4 8+8
+ADDRLP4 8+8
+INDIRF4
+ADDRLP4 4
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+MULF4
+ADDF4
+ASGNF4
+line 1463
+;1463:	}
+LABELV $604
+line 1465
+;1464:
+;1465:	VectorCopy (wishvel, wishdir);
+ADDRLP4 20
+ADDRLP4 8
+INDIRB
+ASGNB 12
+line 1466
+;1466:	wishspeed = VectorNormalize(wishdir);
+ADDRLP4 20
+ARGP4
+ADDRLP4 40
+ADDRGP4 VectorNormalize
+CALLF4
+ASGNF4
+ADDRLP4 32
+ADDRLP4 40
+INDIRF4
+ASGNF4
+line 1468
+;1467:
+;1468:	PM_Accelerate (wishdir, wishspeed, pm_flyaccelerate);
+ADDRLP4 20
+ARGP4
+ADDRLP4 32
+INDIRF4
+ARGF4
+ADDRGP4 pm_flyaccelerate
+INDIRF4
+ARGF4
+ADDRGP4 PM_Accelerate
+CALLV
+pop
+line 1470
+;1469:
+;1470:	PM_StepSlideMove( qfalse );
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_StepSlideMove
+CALLV
+pop
+line 1471
+;1471:}
+LABELV $602
+endproc PM_FlyMove 52 12
+proc PM_AirMove 84 16
+line 1480
+;1472:
+;1473:
+;1474:/*
+;1475:===================
+;1476:PM_AirMove
+;1477:
+;1478:===================
+;1479:*/
+;1480:static void PM_AirMove( void ) {
+line 1489
+;1481:	int			i;
+;1482:	vec3_t		wishvel;
+;1483:	float		fmove, smove;
+;1484:	vec3_t		wishdir;
+;1485:	float		wishspeed;
+;1486:	float		scale;
+;1487:	usercmd_t	cmd;
+;1488:
+;1489:	if (pm->ps->pm_type != PM_SPECTATOR)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 3
+EQI4 $614
+line 1490
+;1490:	{
+line 1492
+;1491:#if METROID_JUMP
+;1492:		PM_CheckJump();
+ADDRGP4 PM_CheckJump
+CALLI4
+pop
+line 1500
+;1493:#else
+;1494:		if (pm->ps->fd.forceJumpZStart &&
+;1495:			pm->ps->forceJumpFlip)
+;1496:		{
+;1497:			PM_CheckJump();
+;1498:		}
+;1499:#endif
+;1500:	}
+LABELV $614
+line 1501
+;1501:	PM_Friction();
+ADDRGP4 PM_Friction
+CALLV
+pop
+line 1503
+;1502:
+;1503:	fmove = pm->cmd.forwardmove;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1504
+;1504:	smove = pm->cmd.rightmove;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1506
+;1505:
+;1506:	cmd = pm->cmd;
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRB
+ASGNB 28
+line 1507
+;1507:	scale = PM_CmdScale( &cmd );
+ADDRLP4 44
+ARGP4
+ADDRLP4 72
+ADDRGP4 PM_CmdScale
+CALLF4
+ASGNF4
+ADDRLP4 40
+ADDRLP4 72
+INDIRF4
+ASGNF4
+line 1510
+;1508:
+;1509:	// set the movementDir so clients can rotate the legs for strafing
+;1510:	PM_SetMovementDir();
+ADDRGP4 PM_SetMovementDir
+CALLV
+pop
+line 1513
+;1511:
+;1512:	// project moves down to flat plane
+;1513:	pml.forward[2] = 0;
+ADDRGP4 pml+8
+CNSTF4 0
+ASGNF4
+line 1514
+;1514:	pml.right[2] = 0;
+ADDRGP4 pml+12+8
+CNSTF4 0
+ASGNF4
+line 1515
+;1515:	VectorNormalize (pml.forward);
+ADDRGP4 pml
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1516
+;1516:	VectorNormalize (pml.right);
+ADDRGP4 pml+12
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1518
+;1517:
+;1518:	if ( gPMDoSlowFall )
+ADDRGP4 gPMDoSlowFall
+INDIRI4
+CNSTI4 0
+EQI4 $620
+line 1519
+;1519:	{//no air-control
+line 1520
+;1520:		VectorClear( wishvel );
+ADDRLP4 76
+CNSTF4 0
+ASGNF4
+ADDRLP4 4+8
+ADDRLP4 76
+INDIRF4
+ASGNF4
+ADDRLP4 4+4
+ADDRLP4 76
+INDIRF4
+ASGNF4
+ADDRLP4 4
+ADDRLP4 76
+INDIRF4
+ASGNF4
+line 1521
+;1521:	}
+ADDRGP4 $621
+JUMPV
+LABELV $620
+line 1523
+;1522:	else
+;1523:	{
+line 1524
+;1524:		for ( i = 0 ; i < 2 ; i++ )
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $624
+line 1525
+;1525:		{
+line 1526
+;1526:			wishvel[i] = pml.forward[i]*fmove + pml.right[i]*smove;
+ADDRLP4 76
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 76
+INDIRI4
+ADDRLP4 4
+ADDP4
+ADDRLP4 76
+INDIRI4
+ADDRGP4 pml
+ADDP4
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDRLP4 76
+INDIRI4
+ADDRGP4 pml+12
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1527
+;1527:		}
+LABELV $625
+line 1524
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LTI4 $624
+line 1528
+;1528:		wishvel[2] = 0;
+ADDRLP4 4+8
+CNSTF4 0
+ASGNF4
+line 1529
+;1529:	}
+LABELV $621
+line 1531
+;1530:
+;1531:	VectorCopy (wishvel, wishdir);
+ADDRLP4 24
+ADDRLP4 4
+INDIRB
+ASGNB 12
+line 1532
+;1532:	wishspeed = VectorNormalize(wishdir);
+ADDRLP4 24
+ARGP4
+ADDRLP4 76
+ADDRGP4 VectorNormalize
+CALLF4
+ASGNF4
+ADDRLP4 36
+ADDRLP4 76
+INDIRF4
+ASGNF4
+line 1533
+;1533:	wishspeed *= scale;
+ADDRLP4 36
+ADDRLP4 36
+INDIRF4
+ADDRLP4 40
+INDIRF4
+MULF4
+ASGNF4
+line 1536
+;1534:
+;1535:	// not on ground, so little effect on velocity
+;1536:	PM_Accelerate (wishdir, wishspeed, pm_airaccelerate);
+ADDRLP4 24
+ARGP4
+ADDRLP4 36
+INDIRF4
+ARGF4
+ADDRGP4 pm_airaccelerate
+INDIRF4
+ARGF4
+ADDRGP4 PM_Accelerate
+CALLV
+pop
+line 1541
+;1537:
+;1538:	// we may have a ground plane that is very steep, even
+;1539:	// though we don't have a groundentity
+;1540:	// slide along the steep plane
+;1541:	if ( pml.groundPlane ) {
+ADDRGP4 pml+48
+INDIRI4
+CNSTI4 0
+EQI4 $630
+line 1542
+;1542:		PM_ClipVelocity (pm->ps->velocity, pml.groundTrace.plane.normal, 
+ADDRLP4 80
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 80
+INDIRP4
+ARGP4
+ADDRGP4 pml+52+24
+ARGP4
+ADDRLP4 80
+INDIRP4
+ARGP4
+CNSTF4 1065361605
+ARGF4
+ADDRGP4 PM_ClipVelocity
+CALLV
+pop
+line 1544
+;1543:			pm->ps->velocity, OVERCLIP );
+;1544:	}
+LABELV $630
+line 1546
+;1545:
+;1546:	PM_StepSlideMove ( qtrue );
+CNSTI4 1
+ARGI4
+ADDRGP4 PM_StepSlideMove
+CALLV
+pop
+line 1547
+;1547:}
+LABELV $613
+endproc PM_AirMove 84 16
+proc PM_WalkMove 148 16
+line 1555
+;1548:
+;1549:/*
+;1550:===================
+;1551:PM_WalkMove
+;1552:
+;1553:===================
+;1554:*/
+;1555:static void PM_WalkMove( void ) {
+line 1567
+;1556:	int			i;
+;1557:	vec3_t		wishvel;
+;1558:	float		fmove, smove;
+;1559:	vec3_t		wishdir;
+;1560:	float		wishspeed;
+;1561:	float		scale;
+;1562:	usercmd_t	cmd;
+;1563:	float		accelerate;
+;1564:	float		vel;
+;1565:	float		totalVel;
+;1566:
+;1567:	if (pm->ps->velocity[0] < 0)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+CNSTF4 0
+GEF4 $636
+line 1568
+;1568:	{
+line 1569
+;1569:		totalVel = -pm->ps->velocity[0];
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+NEGF4
+ASGNF4
+line 1570
+;1570:	}
+ADDRGP4 $637
+JUMPV
+LABELV $636
+line 1572
+;1571:	else
+;1572:	{
+line 1573
+;1573:		totalVel = pm->ps->velocity[0];
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ASGNF4
+line 1574
+;1574:	}
+LABELV $637
+line 1576
+;1575:
+;1576:	if (pm->ps->velocity[1] < 0)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+CNSTF4 0
+GEF4 $638
+line 1577
+;1577:	{
+line 1578
+;1578:		totalVel += -pm->ps->velocity[1];
+ADDRLP4 44
+ADDRLP4 44
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+NEGF4
+ADDF4
+ASGNF4
+line 1579
+;1579:	}
+ADDRGP4 $639
+JUMPV
+LABELV $638
+line 1581
+;1580:	else
+;1581:	{
+line 1582
+;1582:		totalVel += pm->ps->velocity[1];
+ADDRLP4 44
+ADDRLP4 44
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDF4
+ASGNF4
+line 1583
+;1583:	}
+LABELV $639
+line 1585
+;1584:
+;1585:	if (totalVel < 200)
+ADDRLP4 44
+INDIRF4
+CNSTF4 1128792064
+GEF4 $640
+line 1586
+;1586:	{
+line 1587
+;1587:		pm->ps->fd.forceSpeedSmash = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1124
+ADDP4
+CNSTF4 1065353216
+ASGNF4
+line 1588
+;1588:	}
+LABELV $640
+line 1590
+;1589:
+;1590:	if ( pm->waterlevel > 2 && DotProduct( pml.forward, pml.groundTrace.plane.normal ) > 0 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 2
+LEI4 $642
+ADDRGP4 pml
+INDIRF4
+ADDRGP4 pml+52+24
+INDIRF4
+MULF4
+ADDRGP4 pml+4
+INDIRF4
+ADDRGP4 pml+52+24+4
+INDIRF4
+MULF4
+ADDF4
+ADDRGP4 pml+8
+INDIRF4
+ADDRGP4 pml+52+24+8
+INDIRF4
+MULF4
+ADDF4
+CNSTF4 0
+LEF4 $642
+line 1592
+;1591:		// begin swimming
+;1592:		PM_WaterMove();
+ADDRGP4 PM_WaterMove
+CALLV
+pop
+line 1593
+;1593:		return;
+ADDRGP4 $635
+JUMPV
+LABELV $642
+line 1597
+;1594:	}
+;1595:
+;1596:
+;1597:	if (pm->ps->pm_type != PM_SPECTATOR)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 3
+EQI4 $654
+line 1598
+;1598:	{
+line 1599
+;1599:		if ( PM_CheckJump () ) {
+ADDRLP4 84
+ADDRGP4 PM_CheckJump
+CALLI4
+ASGNI4
+ADDRLP4 84
+INDIRI4
+CNSTI4 0
+EQI4 $656
+line 1601
+;1600:			// jumped away
+;1601:			if ( pm->waterlevel > 1 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $658
+line 1602
+;1602:				PM_WaterMove();
+ADDRGP4 PM_WaterMove
+CALLV
+pop
+line 1603
+;1603:			} else {
+ADDRGP4 $635
+JUMPV
+LABELV $658
+line 1604
+;1604:				PM_AirMove();
+ADDRGP4 PM_AirMove
+CALLV
+pop
+line 1605
+;1605:			}
+line 1606
+;1606:			return;
+ADDRGP4 $635
+JUMPV
+LABELV $656
+line 1608
+;1607:		}
+;1608:	}
+LABELV $654
+line 1610
+;1609:
+;1610:	PM_Friction ();
+ADDRGP4 PM_Friction
+CALLV
+pop
+line 1612
+;1611:
+;1612:	fmove = pm->cmd.forwardmove;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1613
+;1613:	smove = pm->cmd.rightmove;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1615
+;1614:
+;1615:	cmd = pm->cmd;
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRB
+ASGNB 28
+line 1616
+;1616:	scale = PM_CmdScale( &cmd );
+ADDRLP4 52
+ARGP4
+ADDRLP4 84
+ADDRGP4 PM_CmdScale
+CALLF4
+ASGNF4
+ADDRLP4 48
+ADDRLP4 84
+INDIRF4
+ASGNF4
+line 1619
+;1617:
+;1618:	// set the movementDir so clients can rotate the legs for strafing
+;1619:	PM_SetMovementDir();
+ADDRGP4 PM_SetMovementDir
+CALLV
+pop
+line 1622
+;1620:
+;1621:	// project moves down to flat plane
+;1622:	pml.forward[2] = 0;
+ADDRGP4 pml+8
+CNSTF4 0
+ASGNF4
+line 1623
+;1623:	pml.right[2] = 0;
+ADDRGP4 pml+12+8
+CNSTF4 0
+ASGNF4
+line 1626
+;1624:
+;1625:	// project the forward and right directions onto the ground plane
+;1626:	PM_ClipVelocity (pml.forward, pml.groundTrace.plane.normal, pml.forward, OVERCLIP );
+ADDRLP4 88
+ADDRGP4 pml
+ASGNP4
+ADDRLP4 88
+INDIRP4
+ARGP4
+ADDRGP4 pml+52+24
+ARGP4
+ADDRLP4 88
+INDIRP4
+ARGP4
+CNSTF4 1065361605
+ARGF4
+ADDRGP4 PM_ClipVelocity
+CALLV
+pop
+line 1627
+;1627:	PM_ClipVelocity (pml.right, pml.groundTrace.plane.normal, pml.right, OVERCLIP );
+ADDRGP4 pml+12
+ARGP4
+ADDRGP4 pml+52+24
+ARGP4
+ADDRGP4 pml+12
+ARGP4
+CNSTF4 1065361605
+ARGF4
+ADDRGP4 PM_ClipVelocity
+CALLV
+pop
+line 1629
+;1628:	//
+;1629:	VectorNormalize (pml.forward);
+ADDRGP4 pml
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1630
+;1630:	VectorNormalize (pml.right);
+ADDRGP4 pml+12
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1632
+;1631:
+;1632:	for ( i = 0 ; i < 3 ; i++ ) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $670
+line 1633
+;1633:		wishvel[i] = pml.forward[i]*fmove + pml.right[i]*smove;
+ADDRLP4 92
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 92
+INDIRI4
+ADDRLP4 4
+ADDP4
+ADDRLP4 92
+INDIRI4
+ADDRGP4 pml
+ADDP4
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDRLP4 92
+INDIRI4
+ADDRGP4 pml+12
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1634
+;1634:	}
+LABELV $671
+line 1632
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $670
+line 1638
+;1635:	// when going up or down slopes the wish velocity should Not be zero
+;1636://	wishvel[2] = 0;
+;1637:
+;1638:	VectorCopy (wishvel, wishdir);
+ADDRLP4 32
+ADDRLP4 4
+INDIRB
+ASGNB 12
+line 1639
+;1639:	wishspeed = VectorNormalize(wishdir);
+ADDRLP4 32
+ARGP4
+ADDRLP4 92
+ADDRGP4 VectorNormalize
+CALLF4
+ASGNF4
+ADDRLP4 24
+ADDRLP4 92
+INDIRF4
+ASGNF4
+line 1640
+;1640:	wishspeed *= scale;
+ADDRLP4 24
+ADDRLP4 24
+INDIRF4
+ADDRLP4 48
+INDIRF4
+MULF4
+ASGNF4
+line 1643
+;1641:
+;1642:	// clamp the speed lower if ducking
+;1643:	if ( pm->ps->pm_flags & PMF_DUCKED ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $675
+line 1644
+;1644:		if ( wishspeed > pm->ps->speed * pm_duckScale ) {
+ADDRLP4 24
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_duckScale
+INDIRF4
+MULF4
+LEF4 $676
+line 1645
+;1645:			wishspeed = pm->ps->speed * pm_duckScale;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_duckScale
+INDIRF4
+MULF4
+ASGNF4
+line 1646
+;1646:		}
+line 1647
+;1647:	}
+ADDRGP4 $676
+JUMPV
+LABELV $675
+line 1648
+;1648:	else if ( (pm->ps->pm_flags & PMF_ROLLING) && !BG_InRoll(pm->ps, pm->ps->legsAnim) &&
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 96
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $679
+ADDRLP4 96
+INDIRP4
+ARGP4
+ADDRLP4 96
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 100
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 100
+INDIRI4
+CNSTI4 0
+NEI4 $679
+ADDRLP4 104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 104
+INDIRP4
+ARGP4
+ADDRLP4 104
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 108
+ADDRGP4 PM_InRollComplete
+CALLI4
+ASGNI4
+ADDRLP4 108
+INDIRI4
+CNSTI4 0
+NEI4 $679
+line 1650
+;1649:		!PM_InRollComplete(pm->ps, pm->ps->legsAnim))
+;1650:	{
+line 1651
+;1651:		if ( wishspeed > pm->ps->speed * pm_duckScale ) {
+ADDRLP4 24
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_duckScale
+INDIRF4
+MULF4
+LEF4 $681
+line 1652
+;1652:			wishspeed = pm->ps->speed * pm_duckScale;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pm_duckScale
+INDIRF4
+MULF4
+ASGNF4
+line 1653
+;1653:		}
+LABELV $681
+line 1654
+;1654:	}
+LABELV $679
+LABELV $676
+line 1657
+;1655:
+;1656:	// clamp the speed lower if wading or walking on the bottom
+;1657:	if ( pm->waterlevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $683
+line 1660
+;1658:		float	waterScale;
+;1659:
+;1660:		waterScale = pm->waterlevel / 3.0;
+ADDRLP4 112
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CVIF4 4
+CNSTF4 1077936128
+DIVF4
+ASGNF4
+line 1661
+;1661:		waterScale = 1.0 - ( 1.0 - pm_swimScale ) * waterScale;
+ADDRLP4 116
+CNSTF4 1065353216
+ASGNF4
+ADDRLP4 112
+ADDRLP4 116
+INDIRF4
+ADDRLP4 116
+INDIRF4
+ADDRGP4 pm_swimScale
+INDIRF4
+SUBF4
+ADDRLP4 112
+INDIRF4
+MULF4
+SUBF4
+ASGNF4
+line 1662
+;1662:		if ( wishspeed > pm->ps->speed * waterScale ) {
+ADDRLP4 24
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 112
+INDIRF4
+MULF4
+LEF4 $685
+line 1663
+;1663:			wishspeed = pm->ps->speed * waterScale;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 112
+INDIRF4
+MULF4
+ASGNF4
+line 1664
+;1664:		}
+LABELV $685
+line 1665
+;1665:	}
+LABELV $683
+line 1669
+;1666:
+;1667:	// when a player gets hit, they temporarily lose
+;1668:	// full control, which allows them to be moved a bit
+;1669:	if ( ( pml.groundTrace.surfaceFlags & SURF_SLICK ) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK ) {
+ADDRLP4 112
+CNSTI4 0
+ASGNI4
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 16384
+BANDI4
+ADDRLP4 112
+INDIRI4
+NEI4 $691
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 64
+BANDI4
+ADDRLP4 112
+INDIRI4
+EQI4 $687
+LABELV $691
+line 1670
+;1670:		accelerate = pm_airaccelerate;
+ADDRLP4 80
+ADDRGP4 pm_airaccelerate
+INDIRF4
+ASGNF4
+line 1671
+;1671:	} else {
+ADDRGP4 $688
+JUMPV
+LABELV $687
+line 1672
+;1672:		accelerate = pm_accelerate;
+ADDRLP4 80
+ADDRGP4 pm_accelerate
+INDIRF4
+ASGNF4
+line 1673
+;1673:	}
+LABELV $688
+line 1675
+;1674:
+;1675:	PM_Accelerate (wishdir, wishspeed, accelerate);
+ADDRLP4 32
+ARGP4
+ADDRLP4 24
+INDIRF4
+ARGF4
+ADDRLP4 80
+INDIRF4
+ARGF4
+ADDRGP4 PM_Accelerate
+CALLV
+pop
+line 1680
+;1676:
+;1677:	//Com_Printf("velocity = %1.1f %1.1f %1.1f\n", pm->ps->velocity[0], pm->ps->velocity[1], pm->ps->velocity[2]);
+;1678:	//Com_Printf("velocity1 = %1.1f\n", VectorLength(pm->ps->velocity));
+;1679:
+;1680:	if ( ( pml.groundTrace.surfaceFlags & SURF_SLICK ) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK ) {
+ADDRLP4 116
+CNSTI4 0
+ASGNI4
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 16384
+BANDI4
+ADDRLP4 116
+INDIRI4
+NEI4 $696
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 64
+BANDI4
+ADDRLP4 116
+INDIRI4
+EQI4 $692
+LABELV $696
+line 1681
+;1681:		pm->ps->velocity[2] -= pm->ps->gravity * pml.frametime;
+ADDRLP4 120
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 124
+ADDRLP4 120
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 124
+INDIRP4
+ADDRLP4 124
+INDIRP4
+INDIRF4
+ADDRLP4 120
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+SUBF4
+ASGNF4
+line 1682
+;1682:	} else {
+LABELV $692
+line 1685
+;1683:		// don't reset the z velocity for slopes
+;1684://		pm->ps->velocity[2] = 0;
+;1685:	}
+LABELV $693
+line 1687
+;1686:
+;1687:	vel = VectorLength(pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRLP4 120
+ADDRGP4 VectorLength
+CALLF4
+ASGNF4
+ADDRLP4 28
+ADDRLP4 120
+INDIRF4
+ASGNF4
+line 1690
+;1688:
+;1689:	// slide along the ground plane
+;1690:	PM_ClipVelocity (pm->ps->velocity, pml.groundTrace.plane.normal, 
+ADDRLP4 124
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 124
+INDIRP4
+ARGP4
+ADDRGP4 pml+52+24
+ARGP4
+ADDRLP4 124
+INDIRP4
+ARGP4
+CNSTF4 1065361605
+ARGF4
+ADDRGP4 PM_ClipVelocity
+CALLV
+pop
+line 1694
+;1691:		pm->ps->velocity, OVERCLIP );
+;1692:
+;1693:	// don't decrease velocity when going up or down a slope
+;1694:	VectorNormalize(pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1695
+;1695:	VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
+ADDRLP4 128
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 128
+INDIRP4
+ADDRLP4 128
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 132
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 132
+INDIRP4
+ADDRLP4 132
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 136
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 136
+INDIRP4
+ADDRLP4 136
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+line 1698
+;1696:
+;1697:	// don't do anything if standing still
+;1698:	if (!pm->ps->velocity[0] && !pm->ps->velocity[1]) {
+ADDRLP4 140
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 144
+CNSTF4 0
+ASGNF4
+ADDRLP4 140
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ADDRLP4 144
+INDIRF4
+NEF4 $700
+ADDRLP4 140
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDRLP4 144
+INDIRF4
+NEF4 $700
+line 1699
+;1699:		pm->ps->fd.forceSpeedSmash = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1124
+ADDP4
+CNSTF4 1065353216
+ASGNF4
+line 1700
+;1700:		return;
+ADDRGP4 $635
+JUMPV
+LABELV $700
+line 1703
+;1701:	}
+;1702:
+;1703:	PM_StepSlideMove( qfalse );
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_StepSlideMove
+CALLV
+pop
+line 1707
+;1704:
+;1705:	//Com_Printf("velocity2 = %1.1f\n", VectorLength(pm->ps->velocity));
+;1706:
+;1707:}
+LABELV $635
+endproc PM_WalkMove 148 16
+proc PM_DeadMove 20 4
+line 1715
+;1708:
+;1709:
+;1710:/*
+;1711:==============
+;1712:PM_DeadMove
+;1713:==============
+;1714:*/
+;1715:static void PM_DeadMove( void ) {
+line 1718
+;1716:	float	forward;
+;1717:
+;1718:	if ( !pml.walking ) {
+ADDRGP4 pml+44
+INDIRI4
+CNSTI4 0
+NEI4 $703
+line 1719
+;1719:		return;
+ADDRGP4 $702
+JUMPV
+LABELV $703
+line 1724
+;1720:	}
+;1721:
+;1722:	// extra friction
+;1723:
+;1724:	forward = VectorLength (pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRLP4 4
+ADDRGP4 VectorLength
+CALLF4
+ASGNF4
+ADDRLP4 0
+ADDRLP4 4
+INDIRF4
+ASGNF4
+line 1725
+;1725:	forward -= 20;
+ADDRLP4 0
+ADDRLP4 0
+INDIRF4
+CNSTF4 1101004800
+SUBF4
+ASGNF4
+line 1726
+;1726:	if ( forward <= 0 ) {
+ADDRLP4 0
+INDIRF4
+CNSTF4 0
+GTF4 $706
+line 1727
+;1727:		VectorClear (pm->ps->velocity);
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTF4 0
+ASGNF4
+ADDRLP4 8
+INDIRP4
+CNSTI4 40
+ADDP4
+ADDRLP4 12
+INDIRF4
+ASGNF4
+ADDRLP4 8
+INDIRP4
+CNSTI4 36
+ADDP4
+ADDRLP4 12
+INDIRF4
+ASGNF4
+ADDRLP4 8
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRLP4 12
+INDIRF4
+ASGNF4
+line 1728
+;1728:	} else {
+ADDRGP4 $707
+JUMPV
+LABELV $706
+line 1729
+;1729:		VectorNormalize (pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRGP4 VectorNormalize
+CALLF4
+pop
+line 1730
+;1730:		VectorScale (pm->ps->velocity, forward, pm->ps->velocity);
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+ADDRLP4 8
+INDIRP4
+INDIRF4
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 12
+INDIRP4
+INDIRF4
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 16
+INDIRP4
+INDIRF4
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+line 1731
+;1731:	}
+LABELV $707
+line 1732
+;1732:}
+LABELV $702
+endproc PM_DeadMove 20 4
+proc PM_NoclipMove 104 12
+line 1740
+;1733:
+;1734:
+;1735:/*
+;1736:===============
+;1737:PM_NoclipMove
+;1738:===============
+;1739:*/
+;1740:static void PM_NoclipMove( void ) {
+line 1749
+;1741:	float	speed, drop, friction, control, newspeed;
+;1742:	int			i;
+;1743:	vec3_t		wishvel;
+;1744:	float		fmove, smove;
+;1745:	vec3_t		wishdir;
+;1746:	float		wishspeed;
+;1747:	float		scale;
+;1748:
+;1749:	pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 36
+ASGNI4
+line 1753
+;1750:
+;1751:	// friction
+;1752:
+;1753:	speed = VectorLength (pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRLP4 64
+ADDRGP4 VectorLength
+CALLF4
+ASGNF4
+ADDRLP4 24
+ADDRLP4 64
+INDIRF4
+ASGNF4
+line 1754
+;1754:	if (speed < 1)
+ADDRLP4 24
+INDIRF4
+CNSTF4 1065353216
+GEF4 $709
+line 1755
+;1755:	{
+line 1756
+;1756:		VectorCopy (vec3_origin, pm->ps->velocity);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ADDRGP4 vec3_origin
+INDIRB
+ASGNB 12
+line 1757
+;1757:	}
+ADDRGP4 $710
+JUMPV
+LABELV $709
+line 1759
+;1758:	else
+;1759:	{
+line 1760
+;1760:		drop = 0;
+ADDRLP4 52
+CNSTF4 0
+ASGNF4
+line 1762
+;1761:
+;1762:		friction = pm_friction*1.5;	// extra friction
+ADDRLP4 56
+CNSTF4 1069547520
+ADDRGP4 pm_friction
+INDIRF4
+MULF4
+ASGNF4
+line 1763
+;1763:		control = speed < pm_stopspeed ? pm_stopspeed : speed;
+ADDRLP4 24
+INDIRF4
+ADDRGP4 pm_stopspeed
+INDIRF4
+GEF4 $712
+ADDRLP4 68
+ADDRGP4 pm_stopspeed
+INDIRF4
+ASGNF4
+ADDRGP4 $713
+JUMPV
+LABELV $712
+ADDRLP4 68
+ADDRLP4 24
+INDIRF4
+ASGNF4
+LABELV $713
+ADDRLP4 60
+ADDRLP4 68
+INDIRF4
+ASGNF4
+line 1764
+;1764:		drop += control*friction*pml.frametime;
+ADDRLP4 52
+ADDRLP4 52
+INDIRF4
+ADDRLP4 60
+INDIRF4
+ADDRLP4 56
+INDIRF4
+MULF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1767
+;1765:
+;1766:		// scale the velocity
+;1767:		newspeed = speed - drop;
+ADDRLP4 28
+ADDRLP4 24
+INDIRF4
+ADDRLP4 52
+INDIRF4
+SUBF4
+ASGNF4
+line 1768
+;1768:		if (newspeed < 0)
+ADDRLP4 28
+INDIRF4
+CNSTF4 0
+GEF4 $715
+line 1769
+;1769:			newspeed = 0;
+ADDRLP4 28
+CNSTF4 0
+ASGNF4
+LABELV $715
+line 1770
+;1770:		newspeed /= speed;
+ADDRLP4 28
+ADDRLP4 28
+INDIRF4
+ADDRLP4 24
+INDIRF4
+DIVF4
+ASGNF4
+line 1772
+;1771:
+;1772:		VectorScale (pm->ps->velocity, newspeed, pm->ps->velocity);
+ADDRLP4 72
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 72
+INDIRP4
+ADDRLP4 72
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 76
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 36
+ADDP4
+ASGNP4
+ADDRLP4 76
+INDIRP4
+ADDRLP4 76
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+ADDRLP4 80
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+ASGNP4
+ADDRLP4 80
+INDIRP4
+ADDRLP4 80
+INDIRP4
+INDIRF4
+ADDRLP4 28
+INDIRF4
+MULF4
+ASGNF4
+line 1773
+;1773:	}
+LABELV $710
+line 1776
+;1774:
+;1775:	// accelerate
+;1776:	scale = PM_CmdScale( &pm->cmd );
+ADDRGP4 pm
+INDIRP4
+CNSTI4 4
+ADDP4
+ARGP4
+ADDRLP4 68
+ADDRGP4 PM_CmdScale
+CALLF4
+ASGNF4
+ADDRLP4 48
+ADDRLP4 68
+INDIRF4
+ASGNF4
+line 1777
+;1777:	if (pm->cmd.buttons & BUTTON_ATTACK) {	//turbo boost
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $717
+line 1778
+;1778:		scale *= 10;
+ADDRLP4 48
+CNSTF4 1092616192
+ADDRLP4 48
+INDIRF4
+MULF4
+ASGNF4
+line 1779
+;1779:	}
+LABELV $717
+line 1780
+;1780:	if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {	//turbo boost
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $719
+line 1781
+;1781:		scale *= 10;
+ADDRLP4 48
+CNSTF4 1092616192
+ADDRLP4 48
+INDIRF4
+MULF4
+ASGNF4
+line 1782
+;1782:	}
+LABELV $719
+line 1784
+;1783:
+;1784:	fmove = pm->cmd.forwardmove;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1785
+;1785:	smove = pm->cmd.rightmove;
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ASGNF4
+line 1787
+;1786:	
+;1787:	for (i=0 ; i<3 ; i++)
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $721
+line 1788
+;1788:		wishvel[i] = pml.forward[i]*fmove + pml.right[i]*smove;
+ADDRLP4 72
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 72
+INDIRI4
+ADDRLP4 4
+ADDP4
+ADDRLP4 72
+INDIRI4
+ADDRGP4 pml
+ADDP4
+INDIRF4
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDRLP4 72
+INDIRI4
+ADDRGP4 pml+12
+ADDP4
+INDIRF4
+ADDRLP4 20
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+LABELV $722
+line 1787
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $721
+line 1789
+;1789:	wishvel[2] += pm->cmd.upmove;
+ADDRLP4 4+8
+ADDRLP4 4+8
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CVIF4 4
+ADDF4
+ASGNF4
+line 1791
+;1790:
+;1791:	VectorCopy (wishvel, wishdir);
+ADDRLP4 32
+ADDRLP4 4
+INDIRB
+ASGNB 12
+line 1792
+;1792:	wishspeed = VectorNormalize(wishdir);
+ADDRLP4 32
+ARGP4
+ADDRLP4 76
+ADDRGP4 VectorNormalize
+CALLF4
+ASGNF4
+ADDRLP4 44
+ADDRLP4 76
+INDIRF4
+ASGNF4
+line 1793
+;1793:	wishspeed *= scale;
+ADDRLP4 44
+ADDRLP4 44
+INDIRF4
+ADDRLP4 48
+INDIRF4
+MULF4
+ASGNF4
+line 1795
+;1794:
+;1795:	PM_Accelerate( wishdir, wishspeed, pm_accelerate );
+ADDRLP4 32
+ARGP4
+ADDRLP4 44
+INDIRF4
+ARGF4
+ADDRGP4 pm_accelerate
+INDIRF4
+ARGF4
+ADDRGP4 PM_Accelerate
+CALLV
+pop
+line 1798
+;1796:
+;1797:	// move
+;1798:	VectorMA (pm->ps->origin, pml.frametime, pm->ps->velocity, pm->ps->origin);
+ADDRLP4 80
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 84
+ADDRLP4 80
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 84
+INDIRP4
+ADDRLP4 84
+INDIRP4
+INDIRF4
+ADDRLP4 80
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 88
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 92
+ADDRLP4 88
+INDIRP4
+CNSTI4 24
+ADDP4
+ASGNP4
+ADDRLP4 92
+INDIRP4
+ADDRLP4 92
+INDIRP4
+INDIRF4
+ADDRLP4 88
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 100
+ADDRLP4 96
+INDIRP4
+CNSTI4 28
+ADDP4
+ASGNP4
+ADDRLP4 100
+INDIRP4
+ADDRLP4 100
+INDIRP4
+INDIRF4
+ADDRLP4 96
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+ADDRGP4 pml+36
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1799
+;1799:}
+LABELV $708
+endproc PM_NoclipMove 104 12
+proc PM_FootstepForSurface 0 0
+line 1810
+;1800:
+;1801://============================================================================
+;1802:
+;1803:/*
+;1804:================
+;1805:PM_FootstepForSurface
+;1806:
+;1807:Returns an event number apropriate for the groundsurface
+;1808:================
+;1809:*/
+;1810:static int PM_FootstepForSurface( void ) {
+line 1811
+;1811:	if ( pml.groundTrace.surfaceFlags & SURF_NOSTEPS ) {
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 4194304
+BANDI4
+CNSTI4 0
+EQI4 $731
+line 1812
+;1812:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $730
+JUMPV
+LABELV $731
+line 1814
+;1813:	}
+;1814:	if ( pml.groundTrace.surfaceFlags & SURF_METALSTEPS ) {
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 32768
+BANDI4
+CNSTI4 0
+EQI4 $735
+line 1815
+;1815:		return EV_FOOTSTEP_METAL;
+CNSTI4 3
+RETI4
+ADDRGP4 $730
+JUMPV
+LABELV $735
+line 1817
+;1816:	}
+;1817:	return EV_FOOTSTEP;
+CNSTI4 2
+RETI4
+LABELV $730
+endproc PM_FootstepForSurface 0 0
+proc PM_TryRoll 1216 28
+line 1821
+;1818:}
+;1819:
+;1820:static int PM_TryRoll( void )
+;1821:{
+line 1823
+;1822:	trace_t	trace;
+;1823:	int		anim = -1;
+ADDRLP4 36
+CNSTI4 -1
+ASGNI4
+line 1826
+;1824:	vec3_t fwd, right, traceto, mins, maxs, fwdAngles;
+;1825:
+;1826:	if ( BG_SaberInAttack( pm->ps->saberMove ) || BG_SaberInSpecialAttack( pm->ps->torsoAnim ) 
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1156
+ADDRGP4 BG_SaberInAttack
+CALLI4
+ASGNI4
+ADDRLP4 1156
+INDIRI4
+CNSTI4 0
+NEI4 $744
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1160
+ADDRGP4 BG_SaberInSpecialAttack
+CALLI4
+ASGNI4
+ADDRLP4 1160
+INDIRI4
+CNSTI4 0
+NEI4 $744
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1164
+ADDRGP4 BG_SpinningSaberAnim
+CALLI4
+ASGNI4
+ADDRLP4 1168
+CNSTI4 0
+ASGNI4
+ADDRLP4 1164
+INDIRI4
+ADDRLP4 1168
+INDIRI4
+NEI4 $744
+ADDRLP4 1172
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1172
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ADDRLP4 1168
+INDIRI4
+NEI4 $740
+ADDRLP4 1172
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1176
+ADDRGP4 PM_SaberInStart
+CALLI4
+ASGNI4
+ADDRLP4 1176
+INDIRI4
+CNSTI4 0
+EQI4 $740
+LABELV $744
+line 1829
+;1827:		|| BG_SpinningSaberAnim( pm->ps->legsAnim ) 
+;1828:		|| (!pm->ps->clientNum&&PM_SaberInStart( pm->ps->saberMove )) )
+;1829:	{//attacking or spinning (or, if player, starting an attack)
+line 1830
+;1830:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $739
+JUMPV
+LABELV $740
+line 1833
+;1831:	}
+;1832:
+;1833:	if (pm->ps->weapon != WP_SABER || BG_HasYsalamiri(pm->gametype, pm->ps) ||
+ADDRLP4 1180
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1184
+ADDRLP4 1180
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1184
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $748
+ADDRLP4 1180
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1184
+INDIRP4
+ARGP4
+ADDRLP4 1188
+ADDRGP4 BG_HasYsalamiri
+CALLI4
+ASGNI4
+ADDRLP4 1188
+INDIRI4
+CNSTI4 0
+NEI4 $748
+ADDRLP4 1192
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1192
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1192
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 1192
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRLP4 1196
+ADDRGP4 BG_CanUseFPNow
+CALLI4
+ASGNI4
+ADDRLP4 1196
+INDIRI4
+CNSTI4 0
+NEI4 $745
+LABELV $748
+line 1835
+;1834:		!BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_LEVITATION))
+;1835:	{
+line 1836
+;1836:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $739
+JUMPV
+LABELV $745
+line 1842
+;1837:	}
+;1838:
+;1839:	//VectorSet(mins, pm->mins[0],pm->mins[1],pm->mins[2]+STEPSIZE);
+;1840:	//VectorSet(maxs, pm->maxs[0],pm->maxs[1],pm->gent->client->crouchheight);
+;1841:
+;1842:	VectorSet(mins, pm->mins[0],pm->mins[1],pm->mins[2]+STEPSIZE);
+ADDRLP4 1200
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 12
+ADDRLP4 1200
+INDIRP4
+CNSTI4 188
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 12+4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 192
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 12+8
+ADDRGP4 pm
+INDIRP4
+CNSTI4 196
+ADDP4
+INDIRF4
+CNSTF4 1099956224
+ADDF4
+ASGNF4
+line 1843
+;1843:	VectorSet(maxs, pm->maxs[0],pm->maxs[1],CROUCH_MAXS_2);
+ADDRLP4 1204
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 24
+ADDRLP4 1204
+INDIRP4
+CNSTI4 200
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 24+4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 204
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 24+8
+CNSTF4 1098907648
+ASGNF4
+line 1845
+;1844:
+;1845:	VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0);
+ADDRLP4 0
+CNSTF4 0
+ASGNF4
+ADDRLP4 0+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 0+8
+CNSTF4 0
+ASGNF4
+line 1847
+;1846:
+;1847:	AngleVectors( fwdAngles, fwd, right, NULL );
+ADDRLP4 0
+ARGP4
+ADDRLP4 52
+ARGP4
+ADDRLP4 64
+ARGP4
+CNSTP4 0
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 1849
+;1848:	//FIXME: trace ahead for clearance to roll
+;1849:	if ( pm->cmd.forwardmove )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+EQI4 $755
+line 1850
+;1850:	{
+line 1851
+;1851:		if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) 
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+EQI4 $757
+line 1852
+;1852:		{
+line 1853
+;1853:			anim = BOTH_ROLL_B;
+ADDRLP4 36
+CNSTI4 782
+ASGNI4
+line 1854
+;1854:			VectorMA( pm->ps->origin, -64, fwd, traceto );
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+CNSTF4 3263168512
+ASGNF4
+ADDRLP4 40
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 52
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+4
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 52+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3263168512
+ADDRLP4 52+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1855
+;1855:		}
+ADDRGP4 $756
+JUMPV
+LABELV $757
+line 1857
+;1856:		else
+;1857:		{
+line 1858
+;1858:			anim = BOTH_ROLL_F;
+ADDRLP4 36
+CNSTI4 781
+ASGNI4
+line 1859
+;1859:			VectorMA( pm->ps->origin, 64, fwd, traceto );
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+CNSTF4 1115684864
+ASGNF4
+ADDRLP4 40
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 52
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+4
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 52+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 52+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1860
+;1860:		}
+line 1861
+;1861:	}
+ADDRGP4 $756
+JUMPV
+LABELV $755
+line 1862
+;1862:	else if ( pm->cmd.rightmove > 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $767
+line 1863
+;1863:	{
+line 1864
+;1864:		anim = BOTH_ROLL_R;
+ADDRLP4 36
+CNSTI4 784
+ASGNI4
+line 1865
+;1865:		VectorMA( pm->ps->origin, 64, right, traceto );
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+CNSTF4 1115684864
+ASGNF4
+ADDRLP4 40
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 64
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+4
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 64+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 64+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1866
+;1866:	}
+ADDRGP4 $768
+JUMPV
+LABELV $767
+line 1867
+;1867:	else if ( pm->cmd.rightmove < 0 )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $773
+line 1868
+;1868:	{
+line 1869
+;1869:		anim = BOTH_ROLL_L;
+ADDRLP4 36
+CNSTI4 783
+ASGNI4
+line 1870
+;1870:		VectorMA( pm->ps->origin, -64, right, traceto );
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+CNSTF4 3263168512
+ASGNF4
+ADDRLP4 40
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 64
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+4
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1212
+INDIRF4
+ADDRLP4 64+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 40+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3263168512
+ADDRLP4 64+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1871
+;1871:	}
+LABELV $773
+line 1873
+;1872:	else
+;1873:	{//???
+line 1874
+;1874:	}
+LABELV $774
+LABELV $768
+LABELV $756
+line 1875
+;1875:	if ( anim != -1 )
+ADDRLP4 36
+INDIRI4
+CNSTI4 -1
+EQI4 $779
+line 1876
+;1876:	{
+line 1877
+;1877:		pm->trace( &trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID );
+ADDRLP4 76
+ARGP4
+ADDRLP4 1208
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+ADDRLP4 1208
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1212
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 12
+ARGP4
+ADDRLP4 24
+ARGP4
+ADDRLP4 40
+ARGP4
+ADDRLP4 1212
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRLP4 1208
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 1878
+;1878:		if ( trace.fraction >= 1.0f )
+ADDRLP4 76+8
+INDIRF4
+CNSTF4 1065353216
+LTF4 $781
+line 1879
+;1879:		{
+line 1882
+;1880:			//PM_AddEvent( EV_ROLL );
+;1881:			//Done later..
+;1882:			pm->ps->saberMove = LS_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+CNSTI4 0
+ASGNI4
+line 1883
+;1883:			return anim;
+ADDRLP4 36
+INDIRI4
+RETI4
+ADDRGP4 $739
+JUMPV
+LABELV $781
+line 1885
+;1884:		}
+;1885:	}
+LABELV $779
+line 1886
+;1886:	return 0;
+CNSTI4 0
+RETI4
+LABELV $739
+endproc PM_TryRoll 1216 28
+proc PM_CrashLand 112 16
+line 1896
+;1887:}
+;1888:
+;1889:/*
+;1890:=================
+;1891:PM_CrashLand
+;1892:
+;1893:Check for hard landings that generate sound events
+;1894:=================
+;1895:*/
+;1896:static void PM_CrashLand( void ) {
+line 1902
+;1897:	float		delta;
+;1898:	float		dist;
+;1899:	float		vel, acc;
+;1900:	float		t;
+;1901:	float		a, b, c, den;
+;1902:	qboolean	didRoll = qfalse;
+ADDRLP4 36
+CNSTI4 0
+ASGNI4
+line 1905
+;1903:
+;1904:	// calculate the exact velocity on landing
+;1905:	dist = pm->ps->origin[2] - pml.previous_origin[2];
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+ADDRGP4 pml+1136+8
+INDIRF4
+SUBF4
+ASGNF4
+line 1906
+;1906:	vel = pml.previous_velocity[2];
+ADDRLP4 8
+ADDRGP4 pml+1148+8
+INDIRF4
+ASGNF4
+line 1907
+;1907:	acc = -pm->ps->gravity;
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 56
+ADDP4
+INDIRI4
+NEGI4
+CVIF4 4
+ASGNF4
+line 1909
+;1908:
+;1909:	a = acc / 2;
+ADDRLP4 16
+ADDRLP4 12
+INDIRF4
+CNSTF4 1073741824
+DIVF4
+ASGNF4
+line 1910
+;1910:	b = vel;
+ADDRLP4 4
+ADDRLP4 8
+INDIRF4
+ASGNF4
+line 1911
+;1911:	c = -dist;
+ADDRLP4 32
+ADDRLP4 24
+INDIRF4
+NEGF4
+ASGNF4
+line 1913
+;1912:
+;1913:	den =  b * b - 4 * a * c;
+ADDRLP4 20
+ADDRLP4 4
+INDIRF4
+ADDRLP4 4
+INDIRF4
+MULF4
+CNSTF4 1082130432
+ADDRLP4 16
+INDIRF4
+MULF4
+ADDRLP4 32
+INDIRF4
+MULF4
+SUBF4
+ASGNF4
+line 1914
+;1914:	if ( den < 0 ) {
+ADDRLP4 20
+INDIRF4
+CNSTF4 0
+GEF4 $789
+line 1915
+;1915:		pm->ps->inAirAnim = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+CNSTI4 0
+ASGNI4
+line 1916
+;1916:		return;
+ADDRGP4 $784
+JUMPV
+LABELV $789
+line 1918
+;1917:	}
+;1918:	t = (-b - sqrt( den ) ) / ( 2 * a );
+ADDRLP4 20
+INDIRF4
+ARGF4
+ADDRLP4 44
+ADDRGP4 sqrt
+CALLF4
+ASGNF4
+ADDRLP4 28
+ADDRLP4 4
+INDIRF4
+NEGF4
+ADDRLP4 44
+INDIRF4
+SUBF4
+CNSTF4 1073741824
+ADDRLP4 16
+INDIRF4
+MULF4
+DIVF4
+ASGNF4
+line 1920
+;1919:
+;1920:	delta = vel + t * acc;
+ADDRLP4 0
+ADDRLP4 8
+INDIRF4
+ADDRLP4 28
+INDIRF4
+ADDRLP4 12
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 1921
+;1921:	delta = delta*delta * 0.0001;
+ADDRLP4 0
+CNSTF4 953267991
+ADDRLP4 0
+INDIRF4
+ADDRLP4 0
+INDIRF4
+MULF4
+MULF4
+ASGNF4
+line 1924
+;1922:
+;1923:	// ducking while falling doubles damage
+;1924:	if ( pm->ps->pm_flags & PMF_DUCKED ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $791
+line 1925
+;1925:		delta *= 2;
+ADDRLP4 0
+CNSTF4 1073741824
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+line 1926
+;1926:	}
+LABELV $791
+line 1929
+;1927:
+;1928:	// decide which landing animation to use
+;1929:	if (!BG_InRoll(pm->ps, pm->ps->legsAnim) && pm->ps->inAirAnim)
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+ARGP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 56
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 60
+CNSTI4 0
+ASGNI4
+ADDRLP4 56
+INDIRI4
+ADDRLP4 60
+INDIRI4
+NEI4 $793
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+INDIRI4
+ADDRLP4 60
+INDIRI4
+EQI4 $793
+line 1930
+;1930:	{ //only play a land animation if we transitioned into an in-air animation while off the ground
+line 1931
+;1931:		if (!BG_SaberInSpecial(pm->ps->saberMove))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 64
+ADDRGP4 BG_SaberInSpecial
+CALLI4
+ASGNI4
+ADDRLP4 64
+INDIRI4
+CNSTI4 0
+NEI4 $795
+line 1932
+;1932:		{
+line 1933
+;1933:			if ( pm->ps->pm_flags & PMF_BACKWARDS_JUMP ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 8
+BANDI4
+CNSTI4 0
+EQI4 $797
+line 1934
+;1934:				PM_ForceLegsAnim( BOTH_LANDBACK1 );
+CNSTI4 758
+ARGI4
+ADDRGP4 PM_ForceLegsAnim
+CALLV
+pop
+line 1935
+;1935:			} else {
+ADDRGP4 $798
+JUMPV
+LABELV $797
+line 1936
+;1936:				PM_ForceLegsAnim( BOTH_LAND1 );
+CNSTI4 754
+ARGI4
+ADDRGP4 PM_ForceLegsAnim
+CALLV
+pop
+line 1937
+;1937:			}
+LABELV $798
+line 1938
+;1938:		}
+LABELV $795
+line 1939
+;1939:	}
+LABELV $793
+line 1947
+;1940:
+;1941:	/*
+;1942:	if (pm->ps->forceHandExtend == HANDEXTEND_NONE)
+;1943:	{
+;1944:		pm->ps->forceHandExtend = HANDEXTEND_WEAPONREADY;
+;1945:	}
+;1946:	*/
+;1947:	if (pm->ps->weapon != WP_SABER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+EQI4 $799
+line 1948
+;1948:	{ //saber handles its own anims
+line 1949
+;1949:		if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1)
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 64
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $801
+ADDRLP4 64
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $801
+line 1950
+;1950:		{
+line 1951
+;1951:			PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
+CNSTI4 965
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 1952
+;1952:		}
+ADDRGP4 $802
+JUMPV
+LABELV $801
+line 1954
+;1953:		else
+;1954:		{
+line 1955
+;1955:			if (pm->ps->weapon == WP_EMPLACED_GUN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $803
+line 1956
+;1956:			{
+line 1957
+;1957:				PM_StartTorsoAnim( BOTH_GUNSIT1 );
+CNSTI4 710
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 1958
+;1958:			}
+ADDRGP4 $804
+JUMPV
+LABELV $803
+line 1960
+;1959:			else
+;1960:			{
+line 1961
+;1961:				PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 1962
+;1962:			}
+LABELV $804
+line 1963
+;1963:		}
+LABELV $802
+line 1964
+;1964:	}
+LABELV $799
+line 1967
+;1965:	//just a stupid hack to push us back into our "idle" stance
+;1966:
+;1967:	if (!BG_InSpecialJump(pm->ps->legsAnim) ||
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 64
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 64
+INDIRI4
+CNSTI4 0
+EQI4 $809
+ADDRLP4 68
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 68
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 1
+LTI4 $809
+ADDRLP4 72
+ADDRLP4 68
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 72
+INDIRI4
+CNSTI4 823
+EQI4 $809
+ADDRLP4 72
+INDIRI4
+CNSTI4 820
+NEI4 $805
+LABELV $809
+line 1971
+;1968:		pm->ps->legsTimer < 1 ||
+;1969:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_LEFT ||
+;1970:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_WALL_RUN_RIGHT)
+;1971:	{
+line 1972
+;1972:		if (!BG_InRoll(pm->ps, pm->ps->legsAnim) && pm->ps->inAirAnim)
+ADDRLP4 76
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 76
+INDIRP4
+ARGP4
+ADDRLP4 76
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 80
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 84
+CNSTI4 0
+ASGNI4
+ADDRLP4 80
+INDIRI4
+ADDRLP4 84
+INDIRI4
+NEI4 $810
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+INDIRI4
+ADDRLP4 84
+INDIRI4
+EQI4 $810
+line 1973
+;1973:		{
+line 1974
+;1974:			if (!BG_SaberInSpecial(pm->ps->saberMove) || pm->ps->weapon != WP_SABER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 88
+ADDRGP4 BG_SaberInSpecial
+CALLI4
+ASGNI4
+ADDRLP4 88
+INDIRI4
+CNSTI4 0
+EQI4 $814
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+EQI4 $812
+LABELV $814
+line 1975
+;1975:			{
+line 1976
+;1976:				pm->ps->legsTimer = TIMER_LAND;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 130
+ASGNI4
+line 1977
+;1977:			}
+LABELV $812
+line 1978
+;1978:		}
+LABELV $810
+line 1979
+;1979:	}
+LABELV $805
+line 1981
+;1980:
+;1981:	pm->ps->inAirAnim = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+CNSTI4 0
+ASGNI4
+line 1984
+;1982:
+;1983:	// never take falling damage if completely underwater
+;1984:	if ( pm->waterlevel == 3 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $815
+line 1985
+;1985:		return;
+ADDRGP4 $784
+JUMPV
+LABELV $815
+line 1989
+;1986:	}
+;1987:
+;1988:	// reduce falling damage if there is standing water
+;1989:	if ( pm->waterlevel == 2 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $817
+line 1990
+;1990:		delta *= 0.25;
+ADDRLP4 0
+CNSTF4 1048576000
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+line 1991
+;1991:	}
+LABELV $817
+line 1992
+;1992:	if ( pm->waterlevel == 1 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $819
+line 1993
+;1993:		delta *= 0.5;
+ADDRLP4 0
+CNSTF4 1056964608
+ADDRLP4 0
+INDIRF4
+MULF4
+ASGNF4
+line 1994
+;1994:	}
+LABELV $819
+line 1996
+;1995:
+;1996:	if ( delta < 1 ) {
+ADDRLP4 0
+INDIRF4
+CNSTF4 1065353216
+GEF4 $821
+line 1997
+;1997:		return;
+ADDRGP4 $784
+JUMPV
+LABELV $821
+line 2000
+;1998:	}
+;1999:
+;2000:	if ( pm->ps->pm_flags & PMF_DUCKED ) 
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $823
+line 2001
+;2001:	{
+line 2002
+;2002:		if( delta >= 2 && !PM_InOnGroundAnim( pm->ps->legsAnim ) && !PM_InKnockDown( pm->ps ) && !BG_InRoll(pm->ps, pm->ps->legsAnim) )
+ADDRLP4 0
+INDIRF4
+CNSTF4 1073741824
+LTF4 $825
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 76
+ADDRGP4 PM_InOnGroundAnim
+CALLI4
+ASGNI4
+ADDRLP4 76
+INDIRI4
+CNSTI4 0
+NEI4 $825
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 80
+ADDRGP4 PM_InKnockDown
+CALLI4
+ASGNI4
+ADDRLP4 80
+INDIRI4
+CNSTI4 0
+NEI4 $825
+ADDRLP4 84
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 84
+INDIRP4
+ARGP4
+ADDRLP4 84
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 88
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 88
+INDIRI4
+CNSTI4 0
+NEI4 $825
+line 2003
+;2003:		{//roll!
+line 2004
+;2004:			int anim = PM_TryRoll();
+ADDRLP4 96
+ADDRGP4 PM_TryRoll
+CALLI4
+ASGNI4
+ADDRLP4 92
+ADDRLP4 96
+INDIRI4
+ASGNI4
+line 2006
+;2005:
+;2006:			if (PM_InRollComplete(pm->ps, pm->ps->legsAnim))
+ADDRLP4 100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 100
+INDIRP4
+ARGP4
+ADDRLP4 100
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 104
+ADDRGP4 PM_InRollComplete
+CALLI4
+ASGNI4
+ADDRLP4 104
+INDIRI4
+CNSTI4 0
+EQI4 $827
+line 2007
+;2007:			{
+line 2008
+;2008:				anim = 0;
+ADDRLP4 92
+CNSTI4 0
+ASGNI4
+line 2009
+;2009:				pm->ps->legsTimer = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2010
+;2010:				pm->ps->legsAnim = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2011
+;2011:				PM_SetAnim(SETANIM_BOTH,BOTH_LAND1,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150);
+ADDRLP4 108
+CNSTI4 3
+ASGNI4
+ADDRLP4 108
+INDIRI4
+ARGI4
+CNSTI4 754
+ARGI4
+ADDRLP4 108
+INDIRI4
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2012
+;2012:				pm->ps->legsTimer = TIMER_LAND;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 130
+ASGNI4
+line 2013
+;2013:			}
+LABELV $827
+line 2015
+;2014:
+;2015:			if ( anim )
+ADDRLP4 92
+INDIRI4
+CNSTI4 0
+EQI4 $829
+line 2016
+;2016:			{//absorb some impact
+line 2017
+;2017:				pm->ps->legsTimer = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2019
+;2018:				//delta /= 2;
+;2019:				delta /= 3; // /= 2 just cancels out the above delta *= 2 when landing while crouched, the roll itself should absorb a little damage
+ADDRLP4 0
+ADDRLP4 0
+INDIRF4
+CNSTF4 1077936128
+DIVF4
+ASGNF4
+line 2020
+;2020:				pm->ps->legsAnim = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2021
+;2021:				PM_SetAnim(SETANIM_BOTH,anim,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150);
+ADDRLP4 108
+CNSTI4 3
+ASGNI4
+ADDRLP4 108
+INDIRI4
+ARGI4
+ADDRLP4 92
+INDIRI4
+ARGI4
+ADDRLP4 108
+INDIRI4
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2022
+;2022:				didRoll = qtrue;
+ADDRLP4 36
+CNSTI4 1
+ASGNI4
+line 2023
+;2023:			}
+LABELV $829
+line 2024
+;2024:		}
+LABELV $825
+line 2025
+;2025:	}
+LABELV $823
+line 2031
+;2026:
+;2027:	// create a local entity event to play the sound
+;2028:
+;2029:	// SURF_NODAMAGE is used for bounce pads where you don't ever
+;2030:	// want to take damage or play a crunch sound
+;2031:	if ( !(pml.groundTrace.surfaceFlags & SURF_NODAMAGE) )  {
+ADDRGP4 pml+52+44
+INDIRI4
+CNSTI4 262144
+BANDI4
+CNSTI4 0
+NEI4 $831
+line 2032
+;2032:		if (delta > 7)
+ADDRLP4 0
+INDIRF4
+CNSTF4 1088421888
+LEF4 $835
+line 2033
+;2033:		{
+line 2034
+;2034:			int delta_send = (int)delta;
+ADDRLP4 76
+ADDRLP4 0
+INDIRF4
+CVFI4 4
+ASGNI4
+line 2036
+;2035:
+;2036:			if (delta_send > 600)
+ADDRLP4 76
+INDIRI4
+CNSTI4 600
+LEI4 $837
+line 2037
+;2037:			{ //will never need to know any value above this
+line 2038
+;2038:				delta_send = 600;
+ADDRLP4 76
+CNSTI4 600
+ASGNI4
+line 2039
+;2039:			}
+LABELV $837
+line 2041
+;2040:
+;2041:			if (pm->ps->fd.forceJumpZStart)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1080
+ADDP4
+INDIRF4
+CNSTF4 0
+EQF4 $839
+line 2042
+;2042:			{
+line 2043
+;2043:				if ((int)pm->ps->origin[2] >= (int)pm->ps->fd.forceJumpZStart)
+ADDRLP4 80
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 80
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CVFI4 4
+ADDRLP4 80
+INDIRP4
+CNSTI4 1080
+ADDP4
+INDIRF4
+CVFI4 4
+LTI4 $841
+line 2044
+;2044:				{ //was force jumping, landed on higher or same level as when force jump was started
+line 2045
+;2045:					if (delta_send > 8)
+ADDRLP4 76
+INDIRI4
+CNSTI4 8
+LEI4 $842
+line 2046
+;2046:					{
+line 2047
+;2047:						delta_send = 8;
+ADDRLP4 76
+CNSTI4 8
+ASGNI4
+line 2048
+;2048:					}
+line 2049
+;2049:				}
+ADDRGP4 $842
+JUMPV
+LABELV $841
+line 2051
+;2050:				else
+;2051:				{
+line 2052
+;2052:					if (delta_send > 8)
+ADDRLP4 76
+INDIRI4
+CNSTI4 8
+LEI4 $845
+line 2053
+;2053:					{
+line 2054
+;2054:						int dif = ((int)pm->ps->fd.forceJumpZStart - (int)pm->ps->origin[2]);
+ADDRLP4 92
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 88
+ADDRLP4 92
+INDIRP4
+CNSTI4 1080
+ADDP4
+INDIRF4
+CVFI4 4
+ADDRLP4 92
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CVFI4 4
+SUBI4
+ASGNI4
+line 2055
+;2055:						int dmgLess = (forceJumpHeight[pm->ps->fd.forcePowerLevel[FP_LEVITATION]] - dif);
+ADDRLP4 84
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 936
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 forceJumpHeight
+ADDP4
+INDIRF4
+ADDRLP4 88
+INDIRI4
+CVIF4 4
+SUBF4
+CVFI4 4
+ASGNI4
+line 2057
+;2056:
+;2057:						if (dmgLess < 0)
+ADDRLP4 84
+INDIRI4
+CNSTI4 0
+GEI4 $847
+line 2058
+;2058:						{
+line 2059
+;2059:							dmgLess = 0;
+ADDRLP4 84
+CNSTI4 0
+ASGNI4
+line 2060
+;2060:						}
+LABELV $847
+line 2062
+;2061:
+;2062:						delta_send -= (dmgLess*0.3);
+ADDRLP4 76
+ADDRLP4 76
+INDIRI4
+CVIF4 4
+CNSTF4 1050253722
+ADDRLP4 84
+INDIRI4
+CVIF4 4
+MULF4
+SUBF4
+CVFI4 4
+ASGNI4
+line 2064
+;2063:
+;2064:						if (delta_send < 8)
+ADDRLP4 76
+INDIRI4
+CNSTI4 8
+GEI4 $849
+line 2065
+;2065:						{
+line 2066
+;2066:							delta_send = 8;
+ADDRLP4 76
+CNSTI4 8
+ASGNI4
+line 2067
+;2067:						}
+LABELV $849
+line 2070
+;2068:
+;2069:						//Com_Printf("Damage sub: %i\n", (int)((dmgLess*0.1)));
+;2070:					}
+LABELV $845
+line 2071
+;2071:				}
+LABELV $842
+line 2072
+;2072:			}
+LABELV $839
+line 2074
+;2073:
+;2074:			if (didRoll)
+ADDRLP4 36
+INDIRI4
+CNSTI4 0
+EQI4 $851
+line 2075
+;2075:			{
+line 2076
+;2076:				PM_AddEventWithParm( EV_ROLL, delta_send );
+CNSTI4 15
+ARGI4
+ADDRLP4 76
+INDIRI4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 2077
+;2077:			}
+ADDRGP4 $836
+JUMPV
+LABELV $851
+line 2079
+;2078:			else
+;2079:			{
+line 2080
+;2080:				PM_AddEventWithParm( EV_FALL, delta_send );
+CNSTI4 11
+ARGI4
+ADDRLP4 76
+INDIRI4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 2081
+;2081:			}
+line 2082
+;2082:		}
+ADDRGP4 $836
+JUMPV
+LABELV $835
+line 2084
+;2083:		else
+;2084:		{
+line 2085
+;2085:			if (didRoll)
+ADDRLP4 36
+INDIRI4
+CNSTI4 0
+EQI4 $853
+line 2086
+;2086:			{
+line 2087
+;2087:				PM_AddEventWithParm( EV_ROLL, 0 );
+CNSTI4 15
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 2088
+;2088:			}
+ADDRGP4 $854
+JUMPV
+LABELV $853
+line 2090
+;2089:			else
+;2090:			{
+line 2091
+;2091:				PM_AddEvent( PM_FootstepForSurface() );
+ADDRLP4 76
+ADDRGP4 PM_FootstepForSurface
+CALLI4
+ASGNI4
+ADDRLP4 76
+INDIRI4
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2092
+;2092:			}
+LABELV $854
+line 2093
+;2093:		}
+LABELV $836
+line 2094
+;2094:	}
+LABELV $831
+line 2097
+;2095:
+;2096:	// make sure velocity resets so we don't bounce back up again in case we miss the clear elsewhere
+;2097:	pm->ps->velocity[2] = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 40
+ADDP4
+CNSTF4 0
+ASGNF4
+line 2100
+;2098:
+;2099:	// start footstep cycle over
+;2100:	pm->ps->bobCycle = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 8
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2101
+;2101:}
+LABELV $784
+endproc PM_CrashLand 112 16
+proc PM_CorrectAllSolid 36 28
+line 2124
+;2102:
+;2103:/*
+;2104:=============
+;2105:PM_CheckStuck
+;2106:=============
+;2107:*/
+;2108:/*
+;2109:void PM_CheckStuck(void) {
+;2110:	trace_t trace;
+;2111:
+;2112:	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask);
+;2113:	if (trace.allsolid) {
+;2114:		//int shit = qtrue;
+;2115:	}
+;2116:}
+;2117:*/
+;2118:
+;2119:/*
+;2120:=============
+;2121:PM_CorrectAllSolid
+;2122:=============
+;2123:*/
+;2124:static int PM_CorrectAllSolid( trace_t *trace ) {
+line 2128
+;2125:	int			i, j, k;
+;2126:	vec3_t		point;
+;2127:
+;2128:	if ( pm->debugLevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $856
+line 2129
+;2129:		Com_Printf("%i:allsolid\n", c_pmove);
+ADDRGP4 $858
+ARGP4
+ADDRGP4 c_pmove
+INDIRI4
+ARGI4
+ADDRGP4 Com_Printf
+CALLV
+pop
+line 2130
+;2130:	}
+LABELV $856
+line 2133
+;2131:
+;2132:	// jitter around
+;2133:	for (i = -1; i <= 1; i++) {
+ADDRLP4 20
+CNSTI4 -1
+ASGNI4
+LABELV $859
+line 2134
+;2134:		for (j = -1; j <= 1; j++) {
+ADDRLP4 16
+CNSTI4 -1
+ASGNI4
+LABELV $863
+line 2135
+;2135:			for (k = -1; k <= 1; k++) {
+ADDRLP4 12
+CNSTI4 -1
+ASGNI4
+LABELV $867
+line 2136
+;2136:				VectorCopy(pm->ps->origin, point);
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRB
+ASGNB 12
+line 2137
+;2137:				point[0] += (float) i;
+ADDRLP4 0
+ADDRLP4 0
+INDIRF4
+ADDRLP4 20
+INDIRI4
+CVIF4 4
+ADDF4
+ASGNF4
+line 2138
+;2138:				point[1] += (float) j;
+ADDRLP4 0+4
+ADDRLP4 0+4
+INDIRF4
+ADDRLP4 16
+INDIRI4
+CVIF4 4
+ADDF4
+ASGNF4
+line 2139
+;2139:				point[2] += (float) k;
+ADDRLP4 0+8
+ADDRLP4 0+8
+INDIRF4
+ADDRLP4 12
+INDIRI4
+CVIF4 4
+ADDF4
+ASGNF4
+line 2140
+;2140:				pm->trace (trace, point, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+ADDRFP4 0
+INDIRP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 24
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 24
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 24
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2141
+;2141:				if ( !trace->allsolid ) {
+ADDRFP4 0
+INDIRP4
+INDIRI4
+CNSTI4 0
+NEI4 $873
+line 2142
+;2142:					point[0] = pm->ps->origin[0];
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ASGNF4
+line 2143
+;2143:					point[1] = pm->ps->origin[1];
+ADDRLP4 0+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ASGNF4
+line 2144
+;2144:					point[2] = pm->ps->origin[2] - 0.25;
+ADDRLP4 0+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1048576000
+SUBF4
+ASGNF4
+line 2146
+;2145:
+;2146:					pm->trace (trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+ADDRFP4 0
+INDIRP4
+ARGP4
+ADDRLP4 28
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 32
+ADDRLP4 28
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 32
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 28
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 28
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2147
+;2147:					pml.groundTrace = *trace;
+ADDRGP4 pml+52
+ADDRFP4 0
+INDIRP4
+INDIRB
+ASGNB 1080
+line 2148
+;2148:					return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $855
+JUMPV
+LABELV $873
+line 2150
+;2149:				}
+;2150:			}
+LABELV $868
+line 2135
+ADDRLP4 12
+ADDRLP4 12
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 12
+INDIRI4
+CNSTI4 1
+LEI4 $867
+line 2151
+;2151:		}
+LABELV $864
+line 2134
+ADDRLP4 16
+ADDRLP4 16
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 16
+INDIRI4
+CNSTI4 1
+LEI4 $863
+line 2152
+;2152:	}
+LABELV $860
+line 2133
+ADDRLP4 20
+ADDRLP4 20
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+CNSTI4 1
+LEI4 $859
+line 2154
+;2153:
+;2154:	pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 2155
+;2155:	pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 2156
+;2156:	pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2158
+;2157:
+;2158:	return qfalse;
+CNSTI4 0
+RETI4
+LABELV $855
+endproc PM_CorrectAllSolid 36 28
+proc PM_GroundTraceMissed 1108 28
+line 2168
+;2159:}
+;2160:
+;2161:/*
+;2162:=============
+;2163:PM_GroundTraceMissed
+;2164:
+;2165:The ground trace didn't hit a surface, so we are in freefall
+;2166:=============
+;2167:*/
+;2168:static void PM_GroundTraceMissed( void ) {
+line 2172
+;2169:	trace_t		trace;
+;2170:	vec3_t		point;
+;2171:
+;2172:	if ( pm->ps->groundEntityNum != ENTITYNUM_NONE ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+EQI4 $881
+line 2174
+;2173:		// we just transitioned into freefall
+;2174:		if ( pm->debugLevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $883
+line 2175
+;2175:			Com_Printf("%i:lift\n", c_pmove);
+ADDRGP4 $885
+ARGP4
+ADDRGP4 c_pmove
+INDIRI4
+ARGI4
+ADDRGP4 Com_Printf
+CALLV
+pop
+line 2176
+;2176:		}
+LABELV $883
+line 2180
+;2177:
+;2178:		// if they aren't in a jumping animation and the ground is a ways away, force into it
+;2179:		// if we didn't do the trace, the player would be backflipping down staircases
+;2180:		VectorCopy( pm->ps->origin, point );
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRB
+ASGNB 12
+line 2181
+;2181:		point[2] -= 64;
+ADDRLP4 0+8
+ADDRLP4 0+8
+INDIRF4
+CNSTF4 1115684864
+SUBF4
+ASGNF4
+line 2183
+;2182:
+;2183:		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+ADDRLP4 12
+ARGP4
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+ADDRLP4 1092
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2184
+;2184:		if ( trace.fraction == 1.0 || pm->ps->pm_type == PM_FLOAT ) {
+ADDRLP4 12+8
+INDIRF4
+CNSTF4 1065353216
+EQF4 $890
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $882
+LABELV $890
+line 2185
+;2185:			if ( pm->ps->velocity[2] <= 0 && !(pm->ps->pm_flags&PMF_JUMP_HELD))
+ADDRLP4 1100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1100
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+CNSTF4 0
+GTF4 $891
+ADDRLP4 1100
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+NEI4 $891
+line 2186
+;2186:			{//FIXME: if velocity[2] < 0 and didn't jump, use some falling anim
+line 2187
+;2187:				PM_SetAnim(SETANIM_LEGS,BOTH_INAIR1,SETANIM_FLAG_OVERRIDE, 100);	// Only blend over 100ms
+CNSTI4 2
+ARGI4
+CNSTI4 753
+ARGI4
+CNSTI4 1
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2188
+;2188:				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 1104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1104
+INDIRP4
+ADDRLP4 1104
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 2189
+;2189:			}
+ADDRGP4 $892
+JUMPV
+LABELV $891
+line 2190
+;2190:			else if ( pm->cmd.forwardmove >= 0 ) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LTI4 $893
+line 2191
+;2191:			{
+line 2192
+;2192:				PM_SetAnim(SETANIM_LEGS,BOTH_JUMP1,SETANIM_FLAG_OVERRIDE, 100);	// Only blend over 100ms
+CNSTI4 2
+ARGI4
+CNSTI4 752
+ARGI4
+CNSTI4 1
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2193
+;2193:				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 1104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1104
+INDIRP4
+ADDRLP4 1104
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 2194
+;2194:			} 
+ADDRGP4 $894
+JUMPV
+LABELV $893
+line 2196
+;2195:			else 
+;2196:			{
+line 2197
+;2197:				PM_SetAnim(SETANIM_LEGS,BOTH_JUMPBACK1,SETANIM_FLAG_OVERRIDE, 100);	// Only blend over 100ms
+CNSTI4 2
+ARGI4
+CNSTI4 756
+ARGI4
+CNSTI4 1
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2198
+;2198:				pm->ps->pm_flags |= PMF_BACKWARDS_JUMP;
+ADDRLP4 1104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1104
+INDIRP4
+ADDRLP4 1104
+INDIRP4
+INDIRI4
+CNSTI4 8
+BORI4
+ASGNI4
+line 2199
+;2199:			}
+LABELV $894
+LABELV $892
+line 2201
+;2200:
+;2201:			pm->ps->inAirAnim = qtrue;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+CNSTI4 1
+ASGNI4
+line 2202
+;2202:		}
+line 2203
+;2203:	}
+ADDRGP4 $882
+JUMPV
+LABELV $881
+line 2204
+;2204:	else if (!pm->ps->inAirAnim)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $895
+line 2205
+;2205:	{
+line 2208
+;2206:		// if they aren't in a jumping animation and the ground is a ways away, force into it
+;2207:		// if we didn't do the trace, the player would be backflipping down staircases
+;2208:		VectorCopy( pm->ps->origin, point );
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRB
+ASGNB 12
+line 2209
+;2209:		point[2] -= 64;
+ADDRLP4 0+8
+ADDRLP4 0+8
+INDIRF4
+CNSTF4 1115684864
+SUBF4
+ASGNF4
+line 2211
+;2210:
+;2211:		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+ADDRLP4 12
+ARGP4
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+ADDRLP4 1092
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2212
+;2212:		if ( trace.fraction == 1.0 || pm->ps->pm_type == PM_FLOAT )
+ADDRLP4 12+8
+INDIRF4
+CNSTF4 1065353216
+EQF4 $901
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $898
+LABELV $901
+line 2213
+;2213:		{
+line 2214
+;2214:			pm->ps->inAirAnim = qtrue;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+CNSTI4 1
+ASGNI4
+line 2215
+;2215:		}
+LABELV $898
+line 2216
+;2216:	}
+LABELV $895
+LABELV $882
+line 2218
+;2217:
+;2218:	if (PM_InRollComplete(pm->ps, pm->ps->legsAnim))
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1092
+INDIRP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1096
+ADDRGP4 PM_InRollComplete
+CALLI4
+ASGNI4
+ADDRLP4 1096
+INDIRI4
+CNSTI4 0
+EQI4 $902
+line 2219
+;2219:	{ //HACK -_- (filthy client won't catch an animation restart because it only checks frame against incoming frame, so if you roll when you land after rolling
+line 2221
+;2220:	  //off of something it won't replay the roll anim unless we switch it off in the air)
+;2221:		PM_SetAnim(SETANIM_BOTH,BOTH_INAIR1,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150);
+ADDRLP4 1100
+CNSTI4 3
+ASGNI4
+ADDRLP4 1100
+INDIRI4
+ARGI4
+CNSTI4 753
+ARGI4
+ADDRLP4 1100
+INDIRI4
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2222
+;2222:		pm->ps->inAirAnim = qtrue;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1348
+ADDP4
+CNSTI4 1
+ASGNI4
+line 2223
+;2223:	}
+LABELV $902
+line 2225
+;2224:
+;2225:	pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 2226
+;2226:	pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 2227
+;2227:	pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2228
+;2228:}
+LABELV $880
+endproc PM_GroundTraceMissed 1108 28
+proc PM_GroundTrace 1112 28
+line 2236
+;2229:
+;2230:
+;2231:/*
+;2232:=============
+;2233:PM_GroundTrace
+;2234:=============
+;2235:*/
+;2236:static void PM_GroundTrace( void ) {
+line 2240
+;2237:	vec3_t		point;
+;2238:	trace_t		trace;
+;2239:
+;2240:	point[0] = pm->ps->origin[0];
+ADDRLP4 1080
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ASGNF4
+line 2241
+;2241:	point[1] = pm->ps->origin[1];
+ADDRLP4 1080+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ASGNF4
+line 2242
+;2242:	point[2] = pm->ps->origin[2] - 0.25;
+ADDRLP4 1080+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1048576000
+SUBF4
+ASGNF4
+line 2244
+;2243:
+;2244:	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+ADDRLP4 0
+ARGP4
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+ADDRLP4 1092
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 1080
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2245
+;2245:	pml.groundTrace = trace;
+ADDRGP4 pml+52
+ADDRLP4 0
+INDIRB
+ASGNB 1080
+line 2248
+;2246:
+;2247:	// do something corrective if the trace starts in a solid...
+;2248:	if ( trace.allsolid ) {
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+EQI4 $910
+line 2249
+;2249:		if ( !PM_CorrectAllSolid(&trace) )
+ADDRLP4 0
+ARGP4
+ADDRLP4 1100
+ADDRGP4 PM_CorrectAllSolid
+CALLI4
+ASGNI4
+ADDRLP4 1100
+INDIRI4
+CNSTI4 0
+NEI4 $912
+line 2250
+;2250:			return;
+ADDRGP4 $906
+JUMPV
+LABELV $912
+line 2251
+;2251:	}
+LABELV $910
+line 2253
+;2252:
+;2253:	if (pm->ps->pm_type == PM_FLOAT)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $914
+line 2254
+;2254:	{
+line 2255
+;2255:		PM_GroundTraceMissed();
+ADDRGP4 PM_GroundTraceMissed
+CALLV
+pop
+line 2256
+;2256:		pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 2257
+;2257:		pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2258
+;2258:		return;
+ADDRGP4 $906
+JUMPV
+LABELV $914
+line 2262
+;2259:	}
+;2260:
+;2261:	// if the trace didn't hit anything, we are in free fall
+;2262:	if ( trace.fraction == 1.0 ) {
+ADDRLP4 0+8
+INDIRF4
+CNSTF4 1065353216
+NEF4 $918
+line 2263
+;2263:		PM_GroundTraceMissed();
+ADDRGP4 PM_GroundTraceMissed
+CALLV
+pop
+line 2264
+;2264:		pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 2265
+;2265:		pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2266
+;2266:		return;
+ADDRGP4 $906
+JUMPV
+LABELV $918
+line 2270
+;2267:	}
+;2268:
+;2269:	// check if getting thrown off the ground
+;2270:	if ( pm->ps->velocity[2] > 0 && DotProduct( pm->ps->velocity, trace.plane.normal ) > 10 ) {
+ADDRLP4 1100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1104
+ADDRLP4 1100
+INDIRP4
+CNSTI4 40
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 1104
+INDIRF4
+CNSTF4 0
+LEF4 $923
+ADDRLP4 1100
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ADDRLP4 0+24
+INDIRF4
+MULF4
+ADDRLP4 1100
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ADDRLP4 0+24+4
+INDIRF4
+MULF4
+ADDF4
+ADDRLP4 1104
+INDIRF4
+ADDRLP4 0+24+8
+INDIRF4
+MULF4
+ADDF4
+CNSTF4 1092616192
+LEF4 $923
+line 2271
+;2271:		if ( pm->debugLevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $930
+line 2272
+;2272:			Com_Printf("%i:kickoff\n", c_pmove);
+ADDRGP4 $932
+ARGP4
+ADDRGP4 c_pmove
+INDIRI4
+ARGI4
+ADDRGP4 Com_Printf
+CALLV
+pop
+line 2273
+;2273:		}
+LABELV $930
+line 2275
+;2274:		// go into jump animation
+;2275:		if ( pm->cmd.forwardmove >= 0 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LTI4 $933
+line 2276
+;2276:			PM_ForceLegsAnim( BOTH_JUMP1 );
+CNSTI4 752
+ARGI4
+ADDRGP4 PM_ForceLegsAnim
+CALLV
+pop
+line 2277
+;2277:			pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 -9
+BANDI4
+ASGNI4
+line 2278
+;2278:		} else {
+ADDRGP4 $934
+JUMPV
+LABELV $933
+line 2279
+;2279:			PM_ForceLegsAnim( BOTH_JUMPBACK1 );
+CNSTI4 756
+ARGI4
+ADDRGP4 PM_ForceLegsAnim
+CALLV
+pop
+line 2280
+;2280:			pm->ps->pm_flags |= PMF_BACKWARDS_JUMP;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 8
+BORI4
+ASGNI4
+line 2281
+;2281:		}
+LABELV $934
+line 2283
+;2282:
+;2283:		pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 2284
+;2284:		pml.groundPlane = qfalse;
+ADDRGP4 pml+48
+CNSTI4 0
+ASGNI4
+line 2285
+;2285:		pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2286
+;2286:		return;
+ADDRGP4 $906
+JUMPV
+LABELV $923
+line 2290
+;2287:	}
+;2288:	
+;2289:	// slopes that are too steep will not be considered onground
+;2290:	if ( trace.plane.normal[2] < MIN_WALK_NORMAL ) {
+ADDRLP4 0+24+8
+INDIRF4
+CNSTF4 1060320051
+GEF4 $937
+line 2291
+;2291:		if ( pm->debugLevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $941
+line 2292
+;2292:			Com_Printf("%i:steep\n", c_pmove);
+ADDRGP4 $943
+ARGP4
+ADDRGP4 c_pmove
+INDIRI4
+ARGI4
+ADDRGP4 Com_Printf
+CALLV
+pop
+line 2293
+;2293:		}
+LABELV $941
+line 2296
+;2294:		// FIXME: if they can't slide down the slope, let them
+;2295:		// walk (sharp crevices)
+;2296:		pm->ps->groundEntityNum = ENTITYNUM_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+CNSTI4 1023
+ASGNI4
+line 2297
+;2297:		pml.groundPlane = qtrue;
+ADDRGP4 pml+48
+CNSTI4 1
+ASGNI4
+line 2298
+;2298:		pml.walking = qfalse;
+ADDRGP4 pml+44
+CNSTI4 0
+ASGNI4
+line 2299
+;2299:		return;
+ADDRGP4 $906
+JUMPV
+LABELV $937
+line 2302
+;2300:	}
+;2301:
+;2302:	pml.groundPlane = qtrue;
+ADDRGP4 pml+48
+CNSTI4 1
+ASGNI4
+line 2303
+;2303:	pml.walking = qtrue;
+ADDRGP4 pml+44
+CNSTI4 1
+ASGNI4
+line 2306
+;2304:
+;2305:	// hitting solid ground will end a waterjump
+;2306:	if (pm->ps->pm_flags & PMF_TIME_WATERJUMP)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 256
+BANDI4
+CNSTI4 0
+EQI4 $948
+line 2307
+;2307:	{
+line 2308
+;2308:		pm->ps->pm_flags &= ~(PMF_TIME_WATERJUMP | PMF_TIME_LAND);
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 -289
+BANDI4
+ASGNI4
+line 2309
+;2309:		pm->ps->pm_time = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2310
+;2310:	}
+LABELV $948
+line 2312
+;2311:
+;2312:	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $950
+line 2314
+;2313:		// just hit the ground
+;2314:		if ( pm->debugLevel ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $952
+line 2315
+;2315:			Com_Printf("%i:Land\n", c_pmove);
+ADDRGP4 $954
+ARGP4
+ADDRGP4 c_pmove
+INDIRI4
+ARGI4
+ADDRGP4 Com_Printf
+CALLV
+pop
+line 2316
+;2316:		}
+LABELV $952
+line 2318
+;2317:		
+;2318:		PM_CrashLand();
+ADDRGP4 PM_CrashLand
+CALLV
+pop
+line 2321
+;2319:
+;2320:		// don't do landing time if we were just going down a slope
+;2321:		if ( pml.previous_velocity[2] < -200 ) {
+ADDRGP4 pml+1148+8
+INDIRF4
+CNSTF4 3276275712
+GEF4 $955
+line 2323
+;2322:			// don't allow another jump for a little while
+;2323:			pm->ps->pm_flags |= PMF_TIME_LAND;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 32
+BORI4
+ASGNI4
+line 2324
+;2324:			pm->ps->pm_time = 250;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+CNSTI4 250
+ASGNI4
+line 2325
+;2325:		}
+LABELV $955
+line 2326
+;2326:	}
+LABELV $950
+line 2328
+;2327:
+;2328:	pm->ps->groundEntityNum = trace.entityNum;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+ADDRLP4 0+52
+INDIRI4
+ASGNI4
+line 2329
+;2329:	pm->ps->lastOnGround = pm->cmd.serverTime;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+INDIRP4
+CNSTI4 500
+ADDP4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+line 2334
+;2330:
+;2331:	// don't reset the z velocity for slopes
+;2332://	pm->ps->velocity[2] = 0;
+;2333:
+;2334:	PM_AddTouchEnt( trace.entityNum );
+ADDRLP4 0+52
+INDIRI4
+ARGI4
+ADDRGP4 PM_AddTouchEnt
+CALLV
+pop
+line 2335
+;2335:}
+LABELV $906
+endproc PM_GroundTrace 1112 28
+proc PM_SetWaterLevel 48 8
+line 2343
+;2336:
+;2337:
+;2338:/*
+;2339:=============
+;2340:PM_SetWaterLevel	FIXME: avoid this twice?  certainly if not moving
+;2341:=============
+;2342:*/
+;2343:static void PM_SetWaterLevel( void ) {
+line 2352
+;2344:	vec3_t		point;
+;2345:	int			cont;
+;2346:	int			sample1;
+;2347:	int			sample2;
+;2348:
+;2349:	//
+;2350:	// get waterlevel, accounting for ducking
+;2351:	//
+;2352:	pm->waterlevel = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2353
+;2353:	pm->watertype = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 212
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2355
+;2354:
+;2355:	point[0] = pm->ps->origin[0];
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ASGNF4
+line 2356
+;2356:	point[1] = pm->ps->origin[1];
+ADDRLP4 0+4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ASGNF4
+line 2357
+;2357:	point[2] = pm->ps->origin[2] + MINS_Z + 1;	
+ADDRLP4 0+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3250585600
+ADDF4
+CNSTF4 1065353216
+ADDF4
+ASGNF4
+line 2358
+;2358:	cont = pm->pointcontents( point, pm->ps->clientNum );
+ADDRLP4 0
+ARGP4
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 28
+ADDRLP4 24
+INDIRP4
+CNSTI4 244
+ADDP4
+INDIRP4
+CALLI4
+ASGNI4
+ADDRLP4 12
+ADDRLP4 28
+INDIRI4
+ASGNI4
+line 2360
+;2359:
+;2360:	if ( cont & MASK_WATER ) {
+ADDRLP4 12
+INDIRI4
+CNSTI4 131078
+BANDI4
+CNSTI4 0
+EQI4 $964
+line 2361
+;2361:		sample2 = pm->ps->viewheight - MINS_Z;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+INDIRI4
+CNSTI4 -24
+SUBI4
+ASGNI4
+line 2362
+;2362:		sample1 = sample2 / 2;
+ADDRLP4 20
+ADDRLP4 16
+INDIRI4
+CNSTI4 2
+DIVI4
+ASGNI4
+line 2364
+;2363:
+;2364:		pm->watertype = cont;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 212
+ADDP4
+ADDRLP4 12
+INDIRI4
+ASGNI4
+line 2365
+;2365:		pm->waterlevel = 1;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+CNSTI4 1
+ASGNI4
+line 2366
+;2366:		point[2] = pm->ps->origin[2] + MINS_Z + sample1;
+ADDRLP4 0+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3250585600
+ADDF4
+ADDRLP4 20
+INDIRI4
+CVIF4 4
+ADDF4
+ASGNF4
+line 2367
+;2367:		cont = pm->pointcontents (point, pm->ps->clientNum );
+ADDRLP4 0
+ARGP4
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 36
+ADDRLP4 32
+INDIRP4
+CNSTI4 244
+ADDP4
+INDIRP4
+CALLI4
+ASGNI4
+ADDRLP4 12
+ADDRLP4 36
+INDIRI4
+ASGNI4
+line 2368
+;2368:		if ( cont & MASK_WATER ) {
+ADDRLP4 12
+INDIRI4
+CNSTI4 131078
+BANDI4
+CNSTI4 0
+EQI4 $967
+line 2369
+;2369:			pm->waterlevel = 2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+CNSTI4 2
+ASGNI4
+line 2370
+;2370:			point[2] = pm->ps->origin[2] + MINS_Z + sample2;
+ADDRLP4 0+8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 3250585600
+ADDF4
+ADDRLP4 16
+INDIRI4
+CVIF4 4
+ADDF4
+ASGNF4
+line 2371
+;2371:			cont = pm->pointcontents (point, pm->ps->clientNum );
+ADDRLP4 0
+ARGP4
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 40
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 44
+ADDRLP4 40
+INDIRP4
+CNSTI4 244
+ADDP4
+INDIRP4
+CALLI4
+ASGNI4
+ADDRLP4 12
+ADDRLP4 44
+INDIRI4
+ASGNI4
+line 2372
+;2372:			if ( cont & MASK_WATER ){
+ADDRLP4 12
+INDIRI4
+CNSTI4 131078
+BANDI4
+CNSTI4 0
+EQI4 $970
+line 2373
+;2373:				pm->waterlevel = 3;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+CNSTI4 3
+ASGNI4
+line 2374
+;2374:			}
+LABELV $970
+line 2375
+;2375:		}
+LABELV $967
+line 2376
+;2376:	}
+LABELV $964
+line 2378
+;2377:
+;2378:}
+LABELV $961
+endproc PM_SetWaterLevel 48 8
+proc PM_CheckDuck 1112 28
+line 2388
+;2379:
+;2380:/*
+;2381:==============
+;2382:PM_CheckDuck
+;2383:
+;2384:Sets mins, maxs, and pm->ps->viewheight
+;2385:==============
+;2386:*/
+;2387:static void PM_CheckDuck (void)
+;2388:{
+line 2391
+;2389:	trace_t	trace;
+;2390:
+;2391:	pm->mins[0] = -15;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 188
+ADDP4
+CNSTF4 3245342720
+ASGNF4
+line 2392
+;2392:	pm->mins[1] = -15;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 192
+ADDP4
+CNSTF4 3245342720
+ASGNF4
+line 2394
+;2393:
+;2394:	pm->maxs[0] = 15;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 200
+ADDP4
+CNSTF4 1097859072
+ASGNF4
+line 2395
+;2395:	pm->maxs[1] = 15;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 204
+ADDP4
+CNSTF4 1097859072
+ASGNF4
+line 2397
+;2396:
+;2397:	pm->mins[2] = MINS_Z;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 196
+ADDP4
+CNSTF4 3250585600
+ASGNF4
+line 2399
+;2398:
+;2399:	if (pm->ps->pm_type == PM_DEAD)
+ADDRLP4 1080
+CNSTI4 4
+ASGNI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ADDRLP4 1080
+INDIRI4
+ADDP4
+INDIRI4
+ADDRLP4 1080
+INDIRI4
+NEI4 $973
+line 2400
+;2400:	{
+line 2401
+;2401:		pm->maxs[2] = -8;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 3238002688
+ASGNF4
+line 2402
+;2402:		pm->ps->viewheight = DEAD_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 -16
+ASGNI4
+line 2403
+;2403:		return;
+ADDRGP4 $972
+JUMPV
+LABELV $973
+line 2406
+;2404:	}
+;2405:
+;2406:	if (pm->ps->usingATST)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $975
+line 2407
+;2407:	{
+line 2408
+;2408:		if (pm->cmd.upmove < 0)
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $977
+line 2409
+;2409:		{
+line 2410
+;2410:			pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 2411
+;2411:		}
+LABELV $977
+line 2412
+;2412:	}
+LABELV $975
+line 2414
+;2413:
+;2414:	if (BG_InRoll(pm->ps, pm->ps->legsAnim))
+ADDRLP4 1084
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1084
+INDIRP4
+ARGP4
+ADDRLP4 1084
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1088
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 1088
+INDIRI4
+CNSTI4 0
+EQI4 $979
+line 2415
+;2415:	{
+line 2416
+;2416:		pm->maxs[2] = CROUCH_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1098907648
+ASGNF4
+line 2417
+;2417:		pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 36
+ASGNI4
+line 2418
+;2418:		pm->ps->pm_flags &= ~PMF_DUCKED;
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1092
+INDIRP4
+ADDRLP4 1092
+INDIRP4
+INDIRI4
+CNSTI4 -2
+BANDI4
+ASGNI4
+line 2419
+;2419:		pm->ps->pm_flags |= PMF_ROLLING;
+ADDRLP4 1096
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1096
+INDIRP4
+ADDRLP4 1096
+INDIRP4
+INDIRI4
+CNSTI4 4
+BORI4
+ASGNI4
+line 2420
+;2420:		return;
+ADDRGP4 $972
+JUMPV
+LABELV $979
+line 2422
+;2421:	}
+;2422:	else if (pm->ps->pm_flags & PMF_ROLLING)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $981
+line 2423
+;2423:	{
+line 2425
+;2424:		// try to stand up
+;2425:		pm->maxs[2] = DEFAULT_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1109393408
+ASGNF4
+line 2426
+;2426:		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
+ADDRLP4 0
+ARGP4
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1096
+ADDRLP4 1092
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1100
+ADDRLP4 1096
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 1100
+INDIRP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 1100
+INDIRP4
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2427
+;2427:		if (!trace.allsolid)
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+NEI4 $982
+line 2428
+;2428:			pm->ps->pm_flags &= ~PMF_ROLLING;
+ADDRLP4 1104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1104
+INDIRP4
+ADDRLP4 1104
+INDIRP4
+INDIRI4
+CNSTI4 -5
+BANDI4
+ASGNI4
+line 2429
+;2429:	}
+ADDRGP4 $982
+JUMPV
+LABELV $981
+line 2430
+;2430:	else if (pm->cmd.upmove < 0 ||
+ADDRLP4 1092
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1092
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LTI4 $987
+ADDRLP4 1092
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 8
+NEI4 $985
+LABELV $987
+line 2432
+;2431:		pm->ps->forceHandExtend == HANDEXTEND_KNOCKDOWN)
+;2432:	{	// duck
+line 2433
+;2433:		pm->ps->pm_flags |= PMF_DUCKED;
+ADDRLP4 1096
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1096
+INDIRP4
+ADDRLP4 1096
+INDIRP4
+INDIRI4
+CNSTI4 1
+BORI4
+ASGNI4
+line 2434
+;2434:	}
+ADDRGP4 $986
+JUMPV
+LABELV $985
+line 2436
+;2435:	else
+;2436:	{	// stand up if possible 
+line 2437
+;2437:		if (pm->ps->pm_flags & PMF_DUCKED)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $988
+line 2438
+;2438:		{
+line 2440
+;2439:			// try to stand up
+;2440:			pm->maxs[2] = DEFAULT_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1109393408
+ASGNF4
+line 2441
+;2441:			pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
+ADDRLP4 0
+ARGP4
+ADDRLP4 1096
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1100
+ADDRLP4 1096
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1104
+ADDRLP4 1100
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 1104
+INDIRP4
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 188
+ADDP4
+ARGP4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 200
+ADDP4
+ARGP4
+ADDRLP4 1104
+INDIRP4
+ARGP4
+ADDRLP4 1100
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1096
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2442
+;2442:			if (!trace.allsolid)
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+NEI4 $990
+line 2443
+;2443:				pm->ps->pm_flags &= ~PMF_DUCKED;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 -2
+BANDI4
+ASGNI4
+LABELV $990
+line 2444
+;2444:		}
+LABELV $988
+line 2445
+;2445:	}
+LABELV $986
+LABELV $982
+line 2447
+;2446:
+;2447:	if (pm->ps->pm_flags & PMF_DUCKED)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $992
+line 2448
+;2448:	{
+line 2449
+;2449:		pm->maxs[2] = CROUCH_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1098907648
+ASGNF4
+line 2450
+;2450:		pm->ps->viewheight = CROUCH_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 12
+ASGNI4
+line 2451
+;2451:	}
+ADDRGP4 $993
+JUMPV
+LABELV $992
+line 2452
+;2452:	else if (pm->ps->pm_flags & PMF_ROLLING)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $994
+line 2453
+;2453:	{
+line 2454
+;2454:		pm->maxs[2] = CROUCH_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1098907648
+ASGNF4
+line 2455
+;2455:		pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 36
+ASGNI4
+line 2456
+;2456:	}
+ADDRGP4 $995
+JUMPV
+LABELV $994
+line 2458
+;2457:	else
+;2458:	{
+line 2459
+;2459:		pm->maxs[2] = DEFAULT_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1109393408
+ASGNF4
+line 2460
+;2460:		pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 36
+ASGNI4
+line 2461
+;2461:	}
+LABELV $995
+LABELV $993
+line 2463
+;2462:
+;2463:	if (pm->ps->usingATST)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $996
+line 2464
+;2464:	{
+line 2465
+;2465:		pm->mins[0] = ATST_MINS0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 188
+ADDP4
+CNSTF4 3256877056
+ASGNF4
+line 2466
+;2466:		pm->mins[1] = ATST_MINS1;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 192
+ADDP4
+CNSTF4 3256877056
+ASGNF4
+line 2467
+;2467:		pm->mins[2] = ATST_MINS2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 196
+ADDP4
+CNSTF4 3250585600
+ASGNF4
+line 2469
+;2468:
+;2469:		pm->maxs[0] = ATST_MAXS0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 200
+ADDP4
+CNSTF4 1109393408
+ASGNF4
+line 2470
+;2470:		pm->maxs[1] = ATST_MAXS1;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 204
+ADDP4
+CNSTF4 1109393408
+ASGNF4
+line 2471
+;2471:		pm->maxs[2] = ATST_MAXS2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1131937792
+ASGNF4
+line 2472
+;2472:	}
+LABELV $996
+line 2473
+;2473:}
+LABELV $972
+endproc PM_CheckDuck 1112 28
+export PM_Use
+proc PM_Use 4 0
+line 2491
+;2474:
+;2475:
+;2476:
+;2477://===================================================================
+;2478:
+;2479:
+;2480:
+;2481:/*
+;2482:==============
+;2483:PM_Use
+;2484:
+;2485:Generates a use event
+;2486:==============
+;2487:*/
+;2488:#define USE_DELAY 2000
+;2489:
+;2490:void PM_Use( void ) 
+;2491:{
+line 2492
+;2492:	if ( pm->ps->useTime > 0 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 80
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $999
+line 2493
+;2493:		pm->ps->useTime -= 100;//pm->cmd.msec;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 80
+ADDP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRI4
+CNSTI4 100
+SUBI4
+ASGNI4
+LABELV $999
+line 2495
+;2494:
+;2495:	if ( pm->ps->useTime > 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 80
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1001
+line 2496
+;2496:		return;
+ADDRGP4 $998
+JUMPV
+LABELV $1001
+line 2499
+;2497:	}
+;2498:
+;2499:	if ( ! (pm->cmd.buttons & BUTTON_USE ) )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 32
+BANDI4
+CNSTI4 0
+NEI4 $1003
+line 2500
+;2500:	{
+line 2501
+;2501:		pm->useEvent = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 184
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2502
+;2502:		pm->ps->useTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 80
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2503
+;2503:		return;
+ADDRGP4 $998
+JUMPV
+LABELV $1003
+line 2506
+;2504:	}
+;2505:
+;2506:	pm->useEvent = EV_USE;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 184
+ADDP4
+CNSTI4 39
+ASGNI4
+line 2507
+;2507:	pm->ps->useTime = USE_DELAY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 80
+ADDP4
+CNSTI4 2000
+ASGNI4
+line 2508
+;2508:}
+LABELV $998
+endproc PM_Use 4 0
+export PM_RunningAnim
+proc PM_RunningAnim 16 0
+line 2511
+;2509:
+;2510:qboolean PM_RunningAnim( int anim )
+;2511:{
+line 2512
+;2512:	switch ( (anim&~ANIM_TOGGLEBIT) )
+ADDRLP4 0
+ADDRFP4 0
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 8
+CNSTI4 731
+ASGNI4
+ADDRLP4 0
+INDIRI4
+ADDRLP4 8
+INDIRI4
+EQI4 $1009
+ADDRLP4 0
+INDIRI4
+CNSTI4 734
+EQI4 $1009
+ADDRLP4 0
+INDIRI4
+ADDRLP4 8
+INDIRI4
+LTI4 $1006
+LABELV $1010
+ADDRLP4 0
+INDIRI4
+CNSTI4 746
+EQI4 $1009
+ADDRLP4 0
+INDIRI4
+CNSTI4 750
+EQI4 $1009
+ADDRLP4 0
+INDIRI4
+CNSTI4 751
+EQI4 $1009
+ADDRGP4 $1006
+JUMPV
+line 2513
+;2513:	{
+LABELV $1009
+line 2519
+;2514:	case BOTH_RUN1:			
+;2515:	case BOTH_RUN2:			
+;2516:	case BOTH_RUNBACK1:			
+;2517:	case BOTH_RUNBACK2:			
+;2518:	case BOTH_RUNAWAY1:			
+;2519:		return qtrue;
+CNSTI4 1
+RETI4
+ADDRGP4 $1005
+JUMPV
+line 2520
+;2520:		break;
+LABELV $1006
+line 2522
+;2521:	}
+;2522:	return qfalse;
+CNSTI4 0
+RETI4
+LABELV $1005
+endproc PM_RunningAnim 16 0
+proc PM_Footsteps 68 16
+line 2530
+;2523:}
+;2524:
+;2525:/*
+;2526:===============
+;2527:PM_Footsteps
+;2528:===============
+;2529:*/
+;2530:static void PM_Footsteps( void ) {
+line 2539
+;2531:	float		bobmove;
+;2532:	int			old;
+;2533:	qboolean	footstep;
+;2534:
+;2535:	//
+;2536:	// calculate speed and cycle to be used for
+;2537:	// all cyclic walking effects
+;2538:	//
+;2539:	pm->xyspeed = sqrt( pm->ps->velocity[0] * pm->ps->velocity[0]
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 16
+ADDRLP4 12
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+ADDRLP4 16
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 24
+ADDRLP4 16
+INDIRP4
+CNSTI4 36
+ADDP4
+INDIRF4
+ASGNF4
+ADDRLP4 20
+INDIRF4
+ADDRLP4 20
+INDIRF4
+MULF4
+ADDRLP4 24
+INDIRF4
+ADDRLP4 24
+INDIRF4
+MULF4
+ADDF4
+ARGF4
+ADDRLP4 28
+ADDRGP4 sqrt
+CALLF4
+ASGNF4
+ADDRLP4 12
+INDIRP4
+CNSTI4 228
+ADDP4
+ADDRLP4 28
+INDIRF4
+ASGNF4
+line 2542
+;2540:		+  pm->ps->velocity[1] * pm->ps->velocity[1] );
+;2541:
+;2542:	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+NEI4 $1012
+line 2545
+;2543:
+;2544:		// airborne leaves position in cycle intact, but doesn't advance
+;2545:		if ( pm->waterlevel > 1 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $1011
+line 2546
+;2546:			PM_ContinueLegsAnim( BOTH_SWIM1 );
+CNSTI4 747
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2547
+;2547:		}
+line 2548
+;2548:		return;
+ADDRGP4 $1011
+JUMPV
+LABELV $1012
+line 2552
+;2549:	}
+;2550:
+;2551:	// if not trying to move
+;2552:	if ( !pm->cmd.forwardmove && !pm->cmd.rightmove ) {
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 36
+CNSTI4 0
+ASGNI4
+ADDRLP4 32
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 36
+INDIRI4
+NEI4 $1016
+ADDRLP4 32
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 36
+INDIRI4
+NEI4 $1016
+line 2553
+;2553:		if (  pm->xyspeed < 5 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 228
+ADDP4
+INDIRF4
+CNSTF4 1084227584
+GEF4 $1011
+line 2554
+;2554:			pm->ps->bobCycle = 0;	// start at beginning of cycle again
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 8
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2555
+;2555:			if ( (pm->ps->pm_flags & PMF_DUCKED) || (pm->ps->pm_flags & PMF_ROLLING) ) {
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 44
+CNSTI4 0
+ASGNI4
+ADDRLP4 40
+INDIRI4
+CNSTI4 1
+BANDI4
+ADDRLP4 44
+INDIRI4
+NEI4 $1022
+ADDRLP4 40
+INDIRI4
+CNSTI4 4
+BANDI4
+ADDRLP4 44
+INDIRI4
+EQI4 $1020
+LABELV $1022
+line 2556
+;2556:				PM_ContinueLegsAnim( BOTH_CROUCH1IDLE );
+CNSTI4 697
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2557
+;2557:			} else {
+ADDRGP4 $1011
+JUMPV
+LABELV $1020
+line 2558
+;2558:				if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1)
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1023
+ADDRLP4 48
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1023
+line 2559
+;2559:				{
+line 2560
+;2560:					PM_ContinueLegsAnim( TORSO_WEAPONREADY4 );
+CNSTI4 965
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2561
+;2561:				}
+ADDRGP4 $1011
+JUMPV
+LABELV $1023
+line 2563
+;2562:				else
+;2563:				{
+line 2564
+;2564:					if (pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1025
+ADDRLP4 52
+INDIRP4
+CNSTI4 1300
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1025
+line 2565
+;2565:					{
+line 2566
+;2566:						PM_ContinueLegsAnim( BOTH_STAND1 );
+CNSTI4 550
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2567
+;2567:					}
+ADDRGP4 $1011
+JUMPV
+LABELV $1025
+line 2569
+;2568:					else
+;2569:					{
+line 2570
+;2570:						PM_ContinueLegsAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2571
+;2571:					}
+line 2572
+;2572:				}
+line 2573
+;2573:			}
+line 2574
+;2574:		}
+line 2575
+;2575:		return;
+ADDRGP4 $1011
+JUMPV
+LABELV $1016
+line 2579
+;2576:	}
+;2577:	
+;2578:
+;2579:	footstep = qfalse;
+ADDRLP4 8
+CNSTI4 0
+ASGNI4
+line 2581
+;2580:
+;2581:	if ( pm->ps->pm_flags & PMF_DUCKED ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $1027
+line 2582
+;2582:		int rolled = 0;
+ADDRLP4 40
+CNSTI4 0
+ASGNI4
+line 2584
+;2583:
+;2584:		bobmove = 0.5;	// ducked characters bob much faster
+ADDRLP4 4
+CNSTF4 1056964608
+ASGNF4
+line 2586
+;2585:
+;2586:		if ( PM_RunningAnim( pm->ps->legsAnim ) && !BG_InRoll(pm->ps, pm->ps->legsAnim) )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 44
+ADDRGP4 PM_RunningAnim
+CALLI4
+ASGNI4
+ADDRLP4 44
+INDIRI4
+CNSTI4 0
+EQI4 $1029
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ARGP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 52
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 52
+INDIRI4
+CNSTI4 0
+NEI4 $1029
+line 2587
+;2587:		{//roll!
+line 2588
+;2588:			rolled = PM_TryRoll();
+ADDRLP4 56
+ADDRGP4 PM_TryRoll
+CALLI4
+ASGNI4
+ADDRLP4 40
+ADDRLP4 56
+INDIRI4
+ASGNI4
+line 2589
+;2589:		}
+LABELV $1029
+line 2590
+;2590:		if ( !rolled )
+ADDRLP4 40
+INDIRI4
+CNSTI4 0
+NEI4 $1031
+line 2591
+;2591:		{
+line 2592
+;2592:			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+EQI4 $1033
+line 2593
+;2593:				PM_ContinueLegsAnim( BOTH_CROUCH1WALKBACK );
+CNSTI4 699
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2594
+;2594:			}
+ADDRGP4 $1028
+JUMPV
+LABELV $1033
+line 2595
+;2595:			else {
+line 2596
+;2596:				PM_ContinueLegsAnim( BOTH_CROUCH1WALK );
+CNSTI4 698
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2597
+;2597:			}
+line 2598
+;2598:		}
+ADDRGP4 $1028
+JUMPV
+LABELV $1031
+line 2600
+;2599:		else
+;2600:		{
+line 2601
+;2601:			pm->ps->legsTimer = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2602
+;2602:			pm->ps->legsAnim = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2603
+;2603:			PM_SetAnim(SETANIM_BOTH,rolled,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150);
+ADDRLP4 56
+CNSTI4 3
+ASGNI4
+ADDRLP4 56
+INDIRI4
+ARGI4
+ADDRLP4 40
+INDIRI4
+ARGI4
+ADDRLP4 56
+INDIRI4
+ARGI4
+CNSTI4 150
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 2604
+;2604:			PM_AddEventWithParm( EV_ROLL, 0 );
+CNSTI4 15
+ARGI4
+CNSTI4 0
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 2605
+;2605:			pm->maxs[2] = CROUCH_MAXS_2;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 208
+ADDP4
+CNSTF4 1098907648
+ASGNF4
+line 2606
+;2606:			pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+CNSTI4 36
+ASGNI4
+line 2607
+;2607:			pm->ps->pm_flags &= ~PMF_DUCKED;
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+ADDRLP4 60
+INDIRP4
+INDIRI4
+CNSTI4 -2
+BANDI4
+ASGNI4
+line 2608
+;2608:			pm->ps->pm_flags |= PMF_ROLLING;
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 64
+INDIRP4
+ADDRLP4 64
+INDIRP4
+INDIRI4
+CNSTI4 4
+BORI4
+ASGNI4
+line 2609
+;2609:		}
+line 2621
+;2610:		// ducked characters never play footsteps
+;2611:	/*
+;2612:	} else 	if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
+;2613:		if ( !( pm->cmd.buttons & BUTTON_WALKING ) ) {
+;2614:			bobmove = 0.4;	// faster speeds bob faster
+;2615:			footstep = qtrue;
+;2616:		} else {
+;2617:			bobmove = 0.3;
+;2618:		}
+;2619:		PM_ContinueLegsAnim( LEGS_BACK );
+;2620:	*/
+;2621:	}
+ADDRGP4 $1028
+JUMPV
+LABELV $1027
+line 2622
+;2622:	else if ((pm->ps->pm_flags & PMF_ROLLING) && !BG_InRoll(pm->ps, pm->ps->legsAnim) &&
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 40
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $1035
+ADDRLP4 40
+INDIRP4
+ARGP4
+ADDRLP4 40
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 44
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 44
+INDIRI4
+CNSTI4 0
+NEI4 $1035
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ARGP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 52
+ADDRGP4 PM_InRollComplete
+CALLI4
+ASGNI4
+ADDRLP4 52
+INDIRI4
+CNSTI4 0
+NEI4 $1035
+line 2624
+;2623:		!PM_InRollComplete(pm->ps, pm->ps->legsAnim))
+;2624:	{
+line 2625
+;2625:		bobmove = 0.5;	// ducked characters bob much faster
+ADDRLP4 4
+CNSTF4 1056964608
+ASGNF4
+line 2627
+;2626:
+;2627:		if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+EQI4 $1037
+line 2628
+;2628:		{
+line 2629
+;2629:			PM_ContinueLegsAnim( BOTH_CROUCH1WALKBACK );
+CNSTI4 699
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2630
+;2630:		}
+ADDRGP4 $1036
+JUMPV
+LABELV $1037
+line 2632
+;2631:		else
+;2632:		{
+line 2633
+;2633:			PM_ContinueLegsAnim( BOTH_CROUCH1WALK );
+CNSTI4 698
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2634
+;2634:		}
+line 2635
+;2635:	}
+ADDRGP4 $1036
+JUMPV
+LABELV $1035
+line 2637
+;2636:	else
+;2637:	{
+line 2638
+;2638:		if ( !( pm->cmd.buttons & BUTTON_WALKING ) ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+NEI4 $1039
+line 2639
+;2639:			bobmove = 0.4f;	// faster speeds bob faster
+ADDRLP4 4
+CNSTF4 1053609165
+ASGNF4
+line 2640
+;2640:			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+EQI4 $1041
+line 2641
+;2641:				PM_ContinueLegsAnim( BOTH_RUNBACK1 );
+CNSTI4 750
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2642
+;2642:			}
+ADDRGP4 $1042
+JUMPV
+LABELV $1041
+line 2643
+;2643:			else {
+line 2644
+;2644:				PM_ContinueLegsAnim( BOTH_RUN1 );
+CNSTI4 731
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2645
+;2645:			}
+LABELV $1042
+line 2646
+;2646:			footstep = qtrue;
+ADDRLP4 8
+CNSTI4 1
+ASGNI4
+line 2647
+;2647:		} else {
+ADDRGP4 $1040
+JUMPV
+LABELV $1039
+line 2648
+;2648:			bobmove = 0.2f;	// walking bobs slow
+ADDRLP4 4
+CNSTF4 1045220557
+ASGNF4
+line 2649
+;2649:			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 16
+BANDI4
+CNSTI4 0
+EQI4 $1043
+line 2650
+;2650:				PM_ContinueLegsAnim( BOTH_WALKBACK1 );
+CNSTI4 748
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2651
+;2651:			}
+ADDRGP4 $1044
+JUMPV
+LABELV $1043
+line 2652
+;2652:			else {
+line 2653
+;2653:				PM_ContinueLegsAnim( BOTH_WALK1 );
+CNSTI4 723
+ARGI4
+ADDRGP4 PM_ContinueLegsAnim
+CALLV
+pop
+line 2654
+;2654:			}
+LABELV $1044
+line 2655
+;2655:		}
+LABELV $1040
+line 2656
+;2656:	}
+LABELV $1036
+LABELV $1028
+line 2659
+;2657:
+;2658:	// check for footstep / splash sounds
+;2659:	old = pm->ps->bobCycle;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 8
+ADDP4
+INDIRI4
+ASGNI4
+line 2660
+;2660:	pm->ps->bobCycle = (int)( old + bobmove * pml.msec ) & 255;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 8
+ADDP4
+ADDRLP4 0
+INDIRI4
+CVIF4 4
+ADDRLP4 4
+INDIRF4
+ADDRGP4 pml+40
+INDIRI4
+CVIF4 4
+MULF4
+ADDF4
+CVFI4 4
+CNSTI4 255
+BANDI4
+ASGNI4
+line 2663
+;2661:
+;2662:	// if we just crossed a cycle boundary, play an apropriate footstep event
+;2663:	if ( ( ( old + 64 ) ^ ( pm->ps->bobCycle + 64 ) ) & 128 )
+ADDRLP4 56
+CNSTI4 64
+ASGNI4
+ADDRLP4 0
+INDIRI4
+ADDRLP4 56
+INDIRI4
+ADDI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 8
+ADDP4
+INDIRI4
+ADDRLP4 56
+INDIRI4
+ADDI4
+BXORI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1046
+line 2664
+;2664:	{
+line 2673
+;2665:		/*
+;2666:		if ( pm->waterlevel == 0 ) {
+;2667:			// on ground will only play sounds if running
+;2668:			if ( footstep && !pm->noFootsteps ) {
+;2669:				PM_AddEvent( PM_FootstepForSurface() );
+;2670:			}
+;2671:		} else
+;2672:		*/
+;2673:		pm->ps->footstepTime = pm->cmd.serverTime + 300;
+ADDRLP4 60
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+INDIRP4
+CNSTI4 1260
+ADDP4
+ADDRLP4 60
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 300
+ADDI4
+ASGNI4
+line 2674
+;2674:		if ( pm->waterlevel == 1 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1048
+line 2676
+;2675:			// splashing
+;2676:			PM_AddEvent( EV_FOOTSPLASH );
+CNSTI4 4
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2677
+;2677:		} else if ( pm->waterlevel == 2 ) {
+ADDRGP4 $1049
+JUMPV
+LABELV $1048
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1050
+line 2679
+;2678:			// wading / swimming at surface
+;2679:			PM_AddEvent( EV_SWIM );
+CNSTI4 6
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2680
+;2680:		} else if ( pm->waterlevel == 3 ) {
+ADDRGP4 $1051
+JUMPV
+LABELV $1050
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $1052
+line 2682
+;2681:			// no sound when completely underwater
+;2682:		}
+LABELV $1052
+LABELV $1051
+LABELV $1049
+line 2683
+;2683:	}
+LABELV $1046
+line 2684
+;2684:}
+LABELV $1011
+endproc PM_Footsteps 68 16
+proc PM_WaterEvents 16 4
+line 2693
+;2685:
+;2686:/*
+;2687:==============
+;2688:PM_WaterEvents
+;2689:
+;2690:Generate sound events for entering and leaving water
+;2691:==============
+;2692:*/
+;2693:static void PM_WaterEvents( void ) {		// FIXME?
+line 2697
+;2694:	//
+;2695:	// if just entered a water volume, play a sound
+;2696:	//
+;2697:	if (!pml.previous_waterlevel && pm->waterlevel) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+ADDRGP4 pml+1160
+INDIRI4
+ADDRLP4 0
+INDIRI4
+NEI4 $1055
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 0
+INDIRI4
+EQI4 $1055
+line 2698
+;2698:		PM_AddEvent( EV_WATER_TOUCH );
+CNSTI4 16
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2699
+;2699:	}
+LABELV $1055
+line 2704
+;2700:
+;2701:	//
+;2702:	// if just completely exited a water volume, play a sound
+;2703:	//
+;2704:	if (pml.previous_waterlevel && !pm->waterlevel) {
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+ADDRGP4 pml+1160
+INDIRI4
+ADDRLP4 4
+INDIRI4
+EQI4 $1058
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+NEI4 $1058
+line 2705
+;2705:		PM_AddEvent( EV_WATER_LEAVE );
+CNSTI4 17
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2706
+;2706:	}
+LABELV $1058
+line 2711
+;2707:
+;2708:	//
+;2709:	// check for head just going under water
+;2710:	//
+;2711:	if (pml.previous_waterlevel != 3 && pm->waterlevel == 3) {
+ADDRLP4 8
+CNSTI4 3
+ASGNI4
+ADDRGP4 pml+1160
+INDIRI4
+ADDRLP4 8
+INDIRI4
+EQI4 $1061
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 8
+INDIRI4
+NEI4 $1061
+line 2712
+;2712:		PM_AddEvent( EV_WATER_UNDER );
+CNSTI4 18
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2713
+;2713:	}
+LABELV $1061
+line 2718
+;2714:
+;2715:	//
+;2716:	// check for head just coming out of water
+;2717:	//
+;2718:	if (pml.previous_waterlevel == 3 && pm->waterlevel != 3) {
+ADDRLP4 12
+CNSTI4 3
+ASGNI4
+ADDRGP4 pml+1160
+INDIRI4
+ADDRLP4 12
+INDIRI4
+NEI4 $1064
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 12
+INDIRI4
+EQI4 $1064
+line 2719
+;2719:		PM_AddEvent( EV_WATER_CLEAR );
+CNSTI4 19
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2720
+;2720:	}
+LABELV $1064
+line 2721
+;2721:}
+LABELV $1054
+endproc PM_WaterEvents 16 4
+export PM_BeginWeaponChange
+proc PM_BeginWeaponChange 8 4
+line 2729
+;2722:
+;2723:
+;2724:/*
+;2725:===============
+;2726:PM_BeginWeaponChange
+;2727:===============
+;2728:*/
+;2729:void PM_BeginWeaponChange( int weapon ) {
+line 2730
+;2730:	if ( weapon <= WP_NONE || weapon >= WP_NUM_WEAPONS ) {
+ADDRLP4 0
+ADDRFP4 0
+INDIRI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+LEI4 $1070
+ADDRLP4 0
+INDIRI4
+CNSTI4 16
+LTI4 $1068
+LABELV $1070
+line 2731
+;2731:		return;
+ADDRGP4 $1067
+JUMPV
+LABELV $1068
+line 2734
+;2732:	}
+;2733:
+;2734:	if ( !( pm->ps->stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 232
+ADDP4
+INDIRI4
+CNSTI4 1
+ADDRFP4 0
+INDIRI4
+LSHI4
+BANDI4
+CNSTI4 0
+NEI4 $1071
+line 2735
+;2735:		return;
+ADDRGP4 $1067
+JUMPV
+LABELV $1071
+line 2738
+;2736:	}
+;2737:	
+;2738:	if ( pm->ps->weaponstate == WEAPON_DROPPING ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1073
+line 2739
+;2739:		return;
+ADDRGP4 $1067
+JUMPV
+LABELV $1073
+line 2743
+;2740:	}
+;2741:
+;2742:	// turn of any kind of zooming when weapon switching.
+;2743:	if (pm->ps->zoomMode)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1075
+line 2744
+;2744:	{
+line 2745
+;2745:		pm->ps->zoomMode = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2746
+;2746:		pm->ps->zoomTime = pm->ps->commandTime;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+CNSTI4 1324
+ADDP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+ASGNI4
+line 2747
+;2747:	}
+LABELV $1075
+line 2749
+;2748:
+;2749:	PM_AddEvent( EV_CHANGE_WEAPON );
+CNSTI4 23
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 2750
+;2750:	pm->ps->weaponstate = WEAPON_DROPPING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 2
+ASGNI4
+line 2751
+;2751:	pm->ps->weaponTime += 200;
+ADDRLP4 4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 200
+ADDI4
+ASGNI4
+line 2752
+;2752:	PM_StartTorsoAnim( TORSO_DROPWEAP1 );
+CNSTI4 954
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 2753
+;2753:}
+LABELV $1067
+endproc PM_BeginWeaponChange 8 4
+export PM_FinishWeaponChange
+proc PM_FinishWeaponChange 12 4
+line 2761
+;2754:
+;2755:
+;2756:/*
+;2757:===============
+;2758:PM_FinishWeaponChange
+;2759:===============
+;2760:*/
+;2761:void PM_FinishWeaponChange( void ) {
+line 2764
+;2762:	int		weapon;
+;2763:
+;2764:	weapon = pm->cmd.weapon;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRU1
+CVUI4 1
+ASGNI4
+line 2765
+;2765:	if ( weapon < WP_NONE || weapon >= WP_NUM_WEAPONS ) {
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+LTI4 $1080
+ADDRLP4 0
+INDIRI4
+CNSTI4 16
+LTI4 $1078
+LABELV $1080
+line 2766
+;2766:		weapon = WP_NONE;
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+line 2767
+;2767:	}
+LABELV $1078
+line 2769
+;2768:
+;2769:	if ( !( pm->ps->stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 232
+ADDP4
+INDIRI4
+CNSTI4 1
+ADDRLP4 0
+INDIRI4
+LSHI4
+BANDI4
+CNSTI4 0
+NEI4 $1081
+line 2770
+;2770:		weapon = WP_NONE;
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+line 2771
+;2771:	}
+LABELV $1081
+line 2773
+;2772:
+;2773:	if (weapon == WP_SABER)
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+NEI4 $1083
+line 2774
+;2774:	{
+line 2775
+;2775:		PM_SetSaberMove(LS_DRAW);
+CNSTI4 2
+ARGI4
+ADDRGP4 PM_SetSaberMove
+CALLV
+pop
+line 2776
+;2776:	}
+ADDRGP4 $1084
+JUMPV
+LABELV $1083
+line 2778
+;2777:	else
+;2778:	{
+line 2779
+;2779:		PM_StartTorsoAnim( TORSO_RAISEWEAP1);
+CNSTI4 958
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 2780
+;2780:	}
+LABELV $1084
+line 2781
+;2781:	pm->ps->weapon = weapon;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+ADDRLP4 0
+INDIRI4
+ASGNI4
+line 2782
+;2782:	pm->ps->weaponstate = WEAPON_RAISING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 1
+ASGNI4
+line 2783
+;2783:	pm->ps->weaponTime += 250;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+ADDRLP4 8
+INDIRP4
+INDIRI4
+CNSTI4 250
+ADDI4
+ASGNI4
+line 2784
+;2784:}
+LABELV $1077
+endproc PM_FinishWeaponChange 12 4
+proc PM_DoChargedWeapons 1208 28
+line 2791
+;2785:
+;2786:
+;2787:
+;2788://---------------------------------------
+;2789:static qboolean PM_DoChargedWeapons( void )
+;2790://---------------------------------------
+;2791:{
+line 2794
+;2792:	vec3_t		ang;
+;2793:	trace_t		tr;
+;2794:	qboolean	charging = qfalse,
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+line 2795
+;2795:				altFire = qfalse;
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+line 2798
+;2796:
+;2797:	// If you want your weapon to be a charging weapon, just set this bit up
+;2798:	switch( pm->ps->weapon )
+ADDRLP4 1100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 1100
+INDIRI4
+CNSTI4 3
+LTI4 $1086
+ADDRLP4 1100
+INDIRI4
+CNSTI4 11
+GTI4 $1086
+ADDRLP4 1100
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 $1160-12
+ADDP4
+INDIRP4
+JUMPV
+lit
+align 4
+LABELV $1160
+address $1089
+address $1086
+address $1155
+address $1092
+address $1086
+address $1152
+address $1086
+address $1095
+address $1147
+code
+line 2799
+;2799:	{
+LABELV $1089
+line 2804
+;2800:	//------------------
+;2801:	case WP_BRYAR_PISTOL:
+;2802:
+;2803:		// alt-fire charges the weapon
+;2804:		if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1087
+line 2805
+;2805:		{
+line 2806
+;2806:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2807
+;2807:			altFire = qtrue;
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+line 2808
+;2808:		}
+line 2809
+;2809:		break;
+ADDRGP4 $1087
+JUMPV
+LABELV $1092
+line 2815
+;2810:	
+;2811:	//------------------
+;2812:	case WP_BOWCASTER:
+;2813:
+;2814:		// primary fire charges the weapon
+;2815:		if ( pm->cmd.buttons & BUTTON_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $1087
+line 2816
+;2816:		{
+line 2817
+;2817:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2818
+;2818:		}
+line 2819
+;2819:		break;
+ADDRGP4 $1087
+JUMPV
+LABELV $1095
+line 2826
+;2820:	
+;2821:	//------------------
+;2822:	case WP_ROCKET_LAUNCHER:
+;2823:
+;2824:		// Not really a charge weapon, but we still want to delay fire until the button comes up so that we can
+;2825:		//	implement our alt-fire locking stuff
+;2826:		if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK) && pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot )
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1087
+ADDRLP4 1112
+ADDRLP4 1108
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+CNSTI4 56
+ADDRLP4 1112
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 1116
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 1112
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 1116
+INDIRI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+LTI4 $1087
+line 2827
+;2827:		{
+line 2830
+;2828:			vec3_t muzzleOffPoint, muzzlePoint, forward, right, up;
+;2829:
+;2830:			AngleVectors( pm->ps->viewangles, forward, right, up );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRLP4 1144
+ARGP4
+ADDRLP4 1156
+ARGP4
+ADDRLP4 1168
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 2832
+;2831:
+;2832:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2833
+;2833:			altFire = qtrue;
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+line 2835
+;2834:
+;2835:			AngleVectors(pm->ps->viewangles, ang, NULL, NULL);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRLP4 8
+ARGP4
+ADDRLP4 1180
+CNSTP4 0
+ASGNP4
+ADDRLP4 1180
+INDIRP4
+ARGP4
+ADDRLP4 1180
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 2837
+;2836:
+;2837:			VectorCopy( pm->ps->origin, muzzlePoint );
+ADDRLP4 1120
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRB
+ASGNB 12
+line 2838
+;2838:			VectorCopy(WP_MuzzlePoint[WP_ROCKET_LAUNCHER], muzzleOffPoint);
+ADDRLP4 1132
+ADDRGP4 WP_MuzzlePoint+120
+INDIRB
+ASGNB 12
+line 2840
+;2839:
+;2840:			VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+ADDRLP4 1184
+ADDRLP4 1132
+INDIRF4
+ASGNF4
+ADDRLP4 1120
+ADDRLP4 1120
+INDIRF4
+ADDRLP4 1144
+INDIRF4
+ADDRLP4 1184
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1120+4
+ADDRLP4 1120+4
+INDIRF4
+ADDRLP4 1144+4
+INDIRF4
+ADDRLP4 1184
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1120+8
+ADDRLP4 1120+8
+INDIRF4
+ADDRLP4 1144+8
+INDIRF4
+ADDRLP4 1132
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 2841
+;2841:			VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+ADDRLP4 1120
+ADDRLP4 1120
+INDIRF4
+ADDRLP4 1156
+INDIRF4
+ADDRLP4 1132+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1120+4
+ADDRLP4 1120+4
+INDIRF4
+ADDRLP4 1156+4
+INDIRF4
+ADDRLP4 1132+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1120+8
+ADDRLP4 1120+8
+INDIRF4
+ADDRLP4 1156+8
+INDIRF4
+ADDRLP4 1132+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 2842
+;2842:			muzzlePoint[2] += pm->ps->viewheight + muzzleOffPoint[2];
+ADDRLP4 1120+8
+ADDRLP4 1120+8
+INDIRF4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 168
+ADDP4
+INDIRI4
+CVIF4 4
+ADDRLP4 1132+8
+INDIRF4
+ADDF4
+ADDF4
+ASGNF4
+line 2844
+;2843:
+;2844:			ang[0] = muzzlePoint[0] + ang[0]*2048;
+ADDRLP4 8
+ADDRLP4 1120
+INDIRF4
+CNSTF4 1157627904
+ADDRLP4 8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 2845
+;2845:			ang[1] = muzzlePoint[1] + ang[1]*2048;
+ADDRLP4 8+4
+ADDRLP4 1120+4
+INDIRF4
+CNSTF4 1157627904
+ADDRLP4 8+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 2846
+;2846:			ang[2] = muzzlePoint[2] + ang[2]*2048;
+ADDRLP4 8+8
+ADDRLP4 1120+8
+INDIRF4
+CNSTF4 1157627904
+ADDRLP4 8+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 2848
+;2847:
+;2848:			pm->trace(&tr, muzzlePoint, NULL, NULL, ang, pm->ps->clientNum, MASK_PLAYERSOLID);
+ADDRLP4 20
+ARGP4
+ADDRLP4 1120
+ARGP4
+ADDRLP4 1188
+CNSTP4 0
+ASGNP4
+ADDRLP4 1188
+INDIRP4
+ARGP4
+ADDRLP4 1188
+INDIRP4
+ARGP4
+ADDRLP4 8
+ARGP4
+ADDRLP4 1192
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1192
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 273
+ARGI4
+ADDRLP4 1192
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 2850
+;2849:
+;2850:			if (tr.fraction != 1 && tr.entityNum < MAX_CLIENTS && tr.entityNum != pm->ps->clientNum)
+ADDRLP4 20+8
+INDIRF4
+CNSTF4 1065353216
+EQF4 $1123
+ADDRLP4 20+52
+INDIRI4
+CNSTI4 32
+GEI4 $1123
+ADDRLP4 20+52
+INDIRI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+EQI4 $1123
+line 2851
+;2851:			{
+line 2852
+;2852:				if (pm->ps->rocketLockIndex == MAX_CLIENTS)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+INDIRI4
+CNSTI4 32
+NEI4 $1128
+line 2853
+;2853:				{
+line 2854
+;2854:					pm->ps->rocketLockIndex = tr.entityNum;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+ADDRLP4 20+52
+INDIRI4
+ASGNI4
+line 2855
+;2855:					pm->ps->rocketLockTime = pm->cmd.serverTime;
+ADDRLP4 1196
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1196
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+ADDRLP4 1196
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CVIF4 4
+ASGNF4
+line 2856
+;2856:				}
+ADDRGP4 $1129
+JUMPV
+LABELV $1128
+line 2857
+;2857:				else if (pm->ps->rocketLockIndex != tr.entityNum && pm->ps->rocketTargetTime < pm->cmd.serverTime)
+ADDRLP4 1196
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1200
+ADDRLP4 1196
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 580
+ADDP4
+INDIRI4
+ADDRLP4 20+52
+INDIRI4
+EQI4 $1131
+ADDRLP4 1200
+INDIRP4
+CNSTI4 592
+ADDP4
+INDIRF4
+ADDRLP4 1196
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CVIF4 4
+GEF4 $1131
+line 2858
+;2858:				{
+line 2859
+;2859:					pm->ps->rocketLockIndex = tr.entityNum;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+ADDRLP4 20+52
+INDIRI4
+ASGNI4
+line 2860
+;2860:					pm->ps->rocketLockTime = pm->cmd.serverTime;
+ADDRLP4 1204
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CVIF4 4
+ASGNF4
+line 2861
+;2861:				}
+ADDRGP4 $1132
+JUMPV
+LABELV $1131
+line 2862
+;2862:				else if (pm->ps->rocketLockIndex == tr.entityNum)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+INDIRI4
+ADDRLP4 20+52
+INDIRI4
+NEI4 $1135
+line 2863
+;2863:				{
+line 2864
+;2864:					if (pm->ps->rocketLockTime == -1)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+INDIRF4
+CNSTF4 3212836864
+NEF4 $1138
+line 2865
+;2865:					{
+line 2866
+;2866:						pm->ps->rocketLockTime = pm->ps->rocketLastValidTime;
+ADDRLP4 1204
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 588
+ADDP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 584
+ADDP4
+INDIRF4
+ASGNF4
+line 2867
+;2867:					}
+LABELV $1138
+line 2868
+;2868:				}
+LABELV $1135
+LABELV $1132
+LABELV $1129
+line 2870
+;2869:
+;2870:				if (pm->ps->rocketLockIndex == tr.entityNum)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+INDIRI4
+ADDRLP4 20+52
+INDIRI4
+NEI4 $1087
+line 2871
+;2871:				{
+line 2872
+;2872:					pm->ps->rocketTargetTime = pm->cmd.serverTime + 500;
+ADDRLP4 1204
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+INDIRP4
+CNSTI4 592
+ADDP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 500
+ADDI4
+CVIF4 4
+ASGNF4
+line 2873
+;2873:				}
+line 2874
+;2874:			}
+ADDRGP4 $1087
+JUMPV
+LABELV $1123
+line 2875
+;2875:			else if (pm->ps->rocketTargetTime < pm->cmd.serverTime)
+ADDRLP4 1196
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1196
+INDIRP4
+INDIRP4
+CNSTI4 592
+ADDP4
+INDIRF4
+ADDRLP4 1196
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CVIF4 4
+GEF4 $1143
+line 2876
+;2876:			{
+line 2877
+;2877:				pm->ps->rocketLockIndex = MAX_CLIENTS;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+CNSTI4 32
+ASGNI4
+line 2878
+;2878:				pm->ps->rocketLockTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+CNSTF4 0
+ASGNF4
+line 2879
+;2879:			}
+ADDRGP4 $1087
+JUMPV
+LABELV $1143
+line 2881
+;2880:			else
+;2881:			{
+line 2882
+;2882:				if (pm->ps->rocketLockTime != -1)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+INDIRF4
+CNSTF4 3212836864
+EQF4 $1145
+line 2883
+;2883:				{
+line 2884
+;2884:					pm->ps->rocketLastValidTime = pm->ps->rocketLockTime;
+ADDRLP4 1200
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 584
+ADDP4
+ADDRLP4 1200
+INDIRP4
+CNSTI4 588
+ADDP4
+INDIRF4
+ASGNF4
+line 2885
+;2885:				}
+LABELV $1145
+line 2886
+;2886:				pm->ps->rocketLockTime = -1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+CNSTF4 3212836864
+ASGNF4
+line 2887
+;2887:			}
+line 2888
+;2888:		}
+line 2889
+;2889:		break;
+ADDRGP4 $1087
+JUMPV
+LABELV $1147
+line 2894
+;2890:
+;2891:	//------------------
+;2892:	case WP_THERMAL:
+;2893:
+;2894:		if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1148
+line 2895
+;2895:		{
+line 2896
+;2896:			altFire = qtrue; // override default of not being an alt-fire
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+line 2897
+;2897:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2898
+;2898:		}
+ADDRGP4 $1087
+JUMPV
+LABELV $1148
+line 2899
+;2899:		else if ( pm->cmd.buttons & BUTTON_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $1087
+line 2900
+;2900:		{
+line 2901
+;2901:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2902
+;2902:		}
+line 2903
+;2903:		break;
+ADDRGP4 $1087
+JUMPV
+LABELV $1152
+line 2906
+;2904:
+;2905:	case WP_DEMP2:
+;2906:		if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1087
+line 2907
+;2907:		{
+line 2908
+;2908:			altFire = qtrue; // override default of not being an alt-fire
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+line 2909
+;2909:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2910
+;2910:		}
+line 2911
+;2911:		break;
+ADDRGP4 $1087
+JUMPV
+LABELV $1155
+line 2914
+;2912:
+;2913:	case WP_DISRUPTOR:
+;2914:		if ((pm->cmd.buttons & BUTTON_ATTACK) &&
+ADDRLP4 1120
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1124
+CNSTI4 1
+ASGNI4
+ADDRLP4 1128
+CNSTI4 0
+ASGNI4
+ADDRLP4 1120
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+ADDRLP4 1124
+INDIRI4
+BANDI4
+ADDRLP4 1128
+INDIRI4
+EQI4 $1156
+ADDRLP4 1132
+ADDRLP4 1120
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1132
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+ADDRLP4 1124
+INDIRI4
+NEI4 $1156
+ADDRLP4 1132
+INDIRP4
+CNSTI4 1328
+ADDP4
+INDIRI4
+ADDRLP4 1128
+INDIRI4
+EQI4 $1156
+line 2917
+;2915:			pm->ps->zoomMode == 1 &&
+;2916:			pm->ps->zoomLocked)
+;2917:		{
+line 2918
+;2918:			charging = qtrue;
+ADDRLP4 0
+CNSTI4 1
+ASGNI4
+line 2919
+;2919:			altFire = qtrue;
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+line 2920
+;2920:		}
+LABELV $1156
+line 2922
+;2921:
+;2922:		if (pm->ps->zoomMode != 1 &&
+ADDRLP4 1136
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1136
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+EQI4 $1158
+ADDRLP4 1136
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1158
+line 2924
+;2923:			pm->ps->weaponstate == WEAPON_CHARGING_ALT)
+;2924:		{
+line 2925
+;2925:			pm->ps->weaponstate = WEAPON_READY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 0
+ASGNI4
+line 2926
+;2926:			charging = qfalse;
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+line 2927
+;2927:			altFire = qfalse;
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+line 2928
+;2928:		}
+LABELV $1158
+line 2930
+;2929:
+;2930:	} // end switch
+LABELV $1086
+LABELV $1087
+line 2935
+;2931:
+;2932:
+;2933:	// set up the appropriate weapon state based on the button that's down.  
+;2934:	//	Note that we ALWAYS return if charging is set ( meaning the buttons are still down )
+;2935:	if ( charging )
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+EQI4 $1162
+line 2936
+;2936:	{
+line 2937
+;2937:		if ( altFire )
+ADDRLP4 4
+INDIRI4
+CNSTI4 0
+EQI4 $1164
+line 2938
+;2938:		{
+line 2939
+;2939:			if ( pm->ps->weaponstate != WEAPON_CHARGING_ALT )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 5
+EQI4 $1166
+line 2940
+;2940:			{
+line 2942
+;2941:				// charge isn't started, so do it now
+;2942:				pm->ps->weaponstate = WEAPON_CHARGING_ALT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 5
+ASGNI4
+line 2943
+;2943:				pm->ps->weaponChargeTime = pm->cmd.serverTime;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+INDIRP4
+CNSTI4 48
+ADDP4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+line 2944
+;2944:				pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].altChargeSubTime;
+ADDRLP4 1112
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+ADDRLP4 1112
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+INDIRP4
+CNSTI4 52
+ADDP4
+ADDRLP4 1112
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 56
+ADDRLP4 1116
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+36
+ADDP4
+INDIRI4
+ADDI4
+ASGNI4
+line 2949
+;2945:
+;2946:#ifdef _DEBUG
+;2947:				Com_Printf("Starting charge\n");
+;2948:#endif
+;2949:				assert(pm->ps->weapon > WP_NONE);
+line 2950
+;2950:				BG_AddPredictableEventToPlayerstate(EV_WEAPON_CHARGE_ALT, pm->ps->weapon, pm->ps);
+CNSTI4 96
+ARGI4
+ADDRLP4 1120
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1120
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1120
+INDIRP4
+ARGP4
+ADDRGP4 BG_AddPredictableEventToPlayerstate
+CALLV
+pop
+line 2951
+;2951:			}
+LABELV $1166
+line 2953
+;2952:
+;2953:			if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].altChargeSub+weaponData[pm->ps->weapon].altEnergyPerShot))
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1112
+CNSTI4 56
+ADDRLP4 1108
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData+44
+ADDP4
+INDIRI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+ADDI4
+GEI4 $1169
+line 2954
+;2954:			{
+line 2955
+;2955:				pm->ps->weaponstate = WEAPON_CHARGING_ALT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 5
+ASGNI4
+line 2957
+;2956:
+;2957:				goto rest;
+ADDRGP4 $1173
+JUMPV
+LABELV $1169
+line 2959
+;2958:			}
+;2959:			else if ((pm->cmd.serverTime - pm->ps->weaponChargeTime) < weaponData[pm->ps->weapon].altMaxCharge)
+ADDRLP4 1116
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1120
+ADDRLP4 1116
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ADDRLP4 1120
+INDIRP4
+CNSTI4 48
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 56
+ADDRLP4 1120
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+52
+ADDP4
+INDIRI4
+GEI4 $1165
+line 2960
+;2960:			{
+line 2961
+;2961:				if (pm->ps->weaponChargeSubtractTime < pm->cmd.serverTime)
+ADDRLP4 1124
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1124
+INDIRP4
+INDIRP4
+CNSTI4 52
+ADDP4
+INDIRI4
+ADDRLP4 1124
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1165
+line 2962
+;2962:				{
+line 2963
+;2963:					pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= weaponData[pm->ps->weapon].altChargeSub;
+ADDRLP4 1128
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1132
+CNSTI4 56
+ADDRLP4 1128
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 1136
+ADDRLP4 1132
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 1128
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+ASGNP4
+ADDRLP4 1136
+INDIRP4
+ADDRLP4 1136
+INDIRP4
+INDIRI4
+ADDRLP4 1132
+INDIRI4
+ADDRGP4 weaponData+44
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 2964
+;2964:					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].altChargeSubTime;
+ADDRLP4 1140
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1144
+ADDRLP4 1140
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1144
+INDIRP4
+CNSTI4 52
+ADDP4
+ADDRLP4 1140
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 56
+ADDRLP4 1144
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+36
+ADDP4
+INDIRI4
+ADDI4
+ASGNI4
+line 2965
+;2965:				}
+line 2966
+;2966:			}
+line 2967
+;2967:		}
+ADDRGP4 $1165
+JUMPV
+LABELV $1164
+line 2969
+;2968:		else
+;2969:		{
+line 2970
+;2970:			if ( pm->ps->weaponstate != WEAPON_CHARGING )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 4
+EQI4 $1181
+line 2971
+;2971:			{
+line 2973
+;2972:				// charge isn't started, so do it now
+;2973:				pm->ps->weaponstate = WEAPON_CHARGING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 4
+ASGNI4
+line 2974
+;2974:				pm->ps->weaponChargeTime = pm->cmd.serverTime;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+INDIRP4
+CNSTI4 48
+ADDP4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+line 2975
+;2975:				pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].chargeSubTime;
+ADDRLP4 1112
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+ADDRLP4 1112
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+INDIRP4
+CNSTI4 52
+ADDP4
+ADDRLP4 1112
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 56
+ADDRLP4 1116
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+32
+ADDP4
+INDIRI4
+ADDI4
+ASGNI4
+line 2980
+;2976:
+;2977:#ifdef _DEBUG
+;2978:				Com_Printf("Starting charge\n");
+;2979:#endif
+;2980:				BG_AddPredictableEventToPlayerstate(EV_WEAPON_CHARGE, pm->ps->weapon, pm->ps);
+CNSTI4 95
+ARGI4
+ADDRLP4 1120
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1120
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 1120
+INDIRP4
+ARGP4
+ADDRGP4 BG_AddPredictableEventToPlayerstate
+CALLV
+pop
+line 2981
+;2981:			}
+LABELV $1181
+line 2983
+;2982:
+;2983:			if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].chargeSub+weaponData[pm->ps->weapon].energyPerShot))
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1112
+CNSTI4 56
+ADDRLP4 1108
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 1108
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData+40
+ADDP4
+INDIRI4
+ADDRLP4 1112
+INDIRI4
+ADDRGP4 weaponData+8
+ADDP4
+INDIRI4
+ADDI4
+GEI4 $1184
+line 2984
+;2984:			{
+line 2985
+;2985:				pm->ps->weaponstate = WEAPON_CHARGING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 4
+ASGNI4
+line 2987
+;2986:
+;2987:				goto rest;
+ADDRGP4 $1173
+JUMPV
+LABELV $1184
+line 2989
+;2988:			}
+;2989:			else if ((pm->cmd.serverTime - pm->ps->weaponChargeTime) < weaponData[pm->ps->weapon].maxCharge)
+ADDRLP4 1116
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1120
+ADDRLP4 1116
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1116
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ADDRLP4 1120
+INDIRP4
+CNSTI4 48
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 56
+ADDRLP4 1120
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+48
+ADDP4
+INDIRI4
+GEI4 $1188
+line 2990
+;2990:			{
+line 2991
+;2991:				if (pm->ps->weaponChargeSubtractTime < pm->cmd.serverTime)
+ADDRLP4 1124
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1124
+INDIRP4
+INDIRP4
+CNSTI4 52
+ADDP4
+INDIRI4
+ADDRLP4 1124
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1191
+line 2992
+;2992:				{
+line 2993
+;2993:					pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= weaponData[pm->ps->weapon].chargeSub;
+ADDRLP4 1128
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1132
+CNSTI4 56
+ADDRLP4 1128
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 1136
+ADDRLP4 1132
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 1128
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+ASGNP4
+ADDRLP4 1136
+INDIRP4
+ADDRLP4 1136
+INDIRP4
+INDIRI4
+ADDRLP4 1132
+INDIRI4
+ADDRGP4 weaponData+40
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 2994
+;2994:					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].chargeSubTime;
+ADDRLP4 1140
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 1144
+ADDRLP4 1140
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 1144
+INDIRP4
+CNSTI4 52
+ADDP4
+ADDRLP4 1140
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 56
+ADDRLP4 1144
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+32
+ADDP4
+INDIRI4
+ADDI4
+ASGNI4
+line 2995
+;2995:				}
+LABELV $1191
+line 2996
+;2996:			}
+LABELV $1188
+line 2997
+;2997:		}
+LABELV $1165
+line 2999
+;2998:
+;2999:		return qtrue; // short-circuit rest of weapon code
+CNSTI4 1
+RETI4
+ADDRGP4 $1085
+JUMPV
+LABELV $1162
+LABELV $1173
+line 3004
+;3000:	}
+;3001:rest:
+;3002:	// Only charging weapons should be able to set these states...so....
+;3003:	//	let's see which fire mode we need to set up now that the buttons are up
+;3004:	if ( pm->ps->weaponstate == WEAPON_CHARGING )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 4
+NEI4 $1195
+line 3005
+;3005:	{
+line 3012
+;3006:		// weapon has a charge, so let us do an attack
+;3007:#ifdef _DEBUG
+;3008:		Com_Printf("Firing.  Charge time=%d\n", pm->cmd.serverTime - pm->ps->weaponChargeTime);
+;3009:#endif
+;3010:
+;3011:		// dumb, but since we shoot a charged weapon on button-up, we need to repress this button for now
+;3012:		pm->cmd.buttons |= BUTTON_ATTACK;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 1
+BORI4
+ASGNI4
+line 3013
+;3013:		pm->ps->eFlags |= EF_FIRING;
+ADDRLP4 1112
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 1112
+INDIRP4
+ADDRLP4 1112
+INDIRP4
+INDIRI4
+CNSTI4 256
+BORI4
+ASGNI4
+line 3014
+;3014:	}
+ADDRGP4 $1196
+JUMPV
+LABELV $1195
+line 3015
+;3015:	else if ( pm->ps->weaponstate == WEAPON_CHARGING_ALT )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1197
+line 3016
+;3016:	{
+line 3023
+;3017:		// weapon has a charge, so let us do an alt-attack
+;3018:#ifdef _DEBUG
+;3019:		Com_Printf("Firing.  Charge time=%d\n", pm->cmd.serverTime - pm->ps->weaponChargeTime);
+;3020:#endif
+;3021:
+;3022:		// dumb, but since we shoot a charged weapon on button-up, we need to repress this button for now
+;3023:		pm->cmd.buttons |= BUTTON_ALT_ATTACK;
+ADDRLP4 1108
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 1108
+INDIRP4
+ADDRLP4 1108
+INDIRP4
+INDIRI4
+CNSTI4 128
+BORI4
+ASGNI4
+line 3024
+;3024:		pm->ps->eFlags |= (EF_FIRING|EF_ALT_FIRING);
+ADDRLP4 1112
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 1112
+INDIRP4
+ADDRLP4 1112
+INDIRP4
+INDIRI4
+CNSTI4 768
+BORI4
+ASGNI4
+line 3025
+;3025:	}
+LABELV $1197
+LABELV $1196
+line 3027
+;3026:
+;3027:	return qfalse; // continue with the rest of the weapon code
+CNSTI4 0
+RETI4
+LABELV $1085
+endproc PM_DoChargedWeapons 1208 28
+export PM_ItemUsable
+proc PM_ItemUsable 1236 28
+line 3035
+;3028:}
+;3029:
+;3030:
+;3031:#define BOWCASTER_CHARGE_UNIT	200.0f	// bowcaster charging gives us one more unit every 200ms--if you change this, you'll have to do the same in g_weapon
+;3032:#define BRYAR_CHARGE_UNIT		200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in g_weapon
+;3033:
+;3034:int PM_ItemUsable(playerState_t *ps, int forcedUse)
+;3035:{
+line 3042
+;3036:	vec3_t fwd, fwdorg, dest, pos;
+;3037:	vec3_t yawonly;
+;3038:	vec3_t mins, maxs;
+;3039:	vec3_t trtest;
+;3040:	trace_t tr;
+;3041:
+;3042:	if (ps->usingATST)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1200
+line 3043
+;3043:	{
+line 3044
+;3044:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1200
+line 3047
+;3045:	}
+;3046:
+;3047:	if (ps->pm_flags & PMF_USE_ITEM_HELD)
+ADDRFP4 0
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1024
+BANDI4
+CNSTI4 0
+EQI4 $1202
+line 3048
+;3048:	{ //force to let go first
+line 3049
+;3049:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1202
+line 3052
+;3050:	}
+;3051:
+;3052:	if (!forcedUse)
+ADDRFP4 4
+INDIRI4
+CNSTI4 0
+NEI4 $1204
+line 3053
+;3053:	{
+line 3054
+;3054:		forcedUse = bg_itemlist[ps->stats[STAT_HOLDABLE_ITEM]].giTag;
+ADDRFP4 4
+CNSTI4 52
+ADDRFP4 0
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+ASGNI4
+line 3055
+;3055:	}
+LABELV $1204
+line 3057
+;3056:
+;3057:	switch (forcedUse)
+ADDRLP4 1176
+ADDRFP4 4
+INDIRI4
+ASGNI4
+ADDRLP4 1176
+INDIRI4
+CNSTI4 1
+LTI4 $1207
+ADDRLP4 1176
+INDIRI4
+CNSTI4 6
+GTI4 $1207
+ADDRLP4 1176
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 $1267-4
+ADDP4
+INDIRP4
+JUMPV
+lit
+align 4
+LABELV $1267
+address $1215
+address $1245
+address $1209
+address $1207
+address $1207
+address $1218
+code
+line 3058
+;3058:	{
+LABELV $1209
+line 3060
+;3059:	case HI_MEDPAC:
+;3060:		if (ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH])
+ADDRLP4 1180
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1180
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 1180
+INDIRP4
+CNSTI4 248
+ADDP4
+INDIRI4
+LTI4 $1210
+line 3061
+;3061:		{
+line 3062
+;3062:			return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1210
+line 3064
+;3063:		}
+;3064:		if (ps->stats[STAT_HEALTH] <= 0 ||
+ADDRLP4 1184
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1188
+CNSTI4 0
+ASGNI4
+ADDRLP4 1184
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 1188
+INDIRI4
+LEI4 $1214
+ADDRLP4 1184
+INDIRP4
+CNSTI4 108
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+ADDRLP4 1188
+INDIRI4
+EQI4 $1212
+LABELV $1214
+line 3066
+;3065:			(ps->eFlags & EF_DEAD))
+;3066:		{
+line 3067
+;3067:			return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1212
+line 3070
+;3068:		}
+;3069:
+;3070:		return 1;
+CNSTI4 1
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1215
+line 3072
+;3071:	case HI_SEEKER:
+;3072:		if (ps->eFlags & EF_SEEKERDRONE)
+ADDRFP4 0
+INDIRP4
+CNSTI4 108
+ADDP4
+INDIRI4
+CNSTI4 1048576
+BANDI4
+CNSTI4 0
+EQI4 $1216
+line 3073
+;3073:		{
+line 3074
+;3074:			PM_AddEventWithParm(EV_ITEMUSEFAIL, SEEKER_ALREADYDEPLOYED);
+CNSTI4 56
+ARGI4
+CNSTI4 4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3075
+;3075:			return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1216
+line 3078
+;3076:		}
+;3077:
+;3078:		return 1;
+CNSTI4 1
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1218
+line 3080
+;3079:	case HI_SENTRY_GUN:
+;3080:		if (ps->fd.sentryDeployed)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1212
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1219
+line 3081
+;3081:		{
+line 3082
+;3082:			PM_AddEventWithParm(EV_ITEMUSEFAIL, SENTRY_ALREADYPLACED);
+CNSTI4 56
+ARGI4
+CNSTI4 2
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3083
+;3083:			return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1219
+line 3086
+;3084:		}
+;3085:
+;3086:		yawonly[ROLL] = 0;
+ADDRLP4 1140+8
+CNSTF4 0
+ASGNF4
+line 3087
+;3087:		yawonly[PITCH] = 0;
+ADDRLP4 1140
+CNSTF4 0
+ASGNF4
+line 3088
+;3088:		yawonly[YAW] = ps->viewangles[YAW];
+ADDRLP4 1140+4
+ADDRFP4 0
+INDIRP4
+CNSTI4 160
+ADDP4
+INDIRF4
+ASGNF4
+line 3090
+;3089:
+;3090:		VectorSet( mins, -8, -8, 0 );
+ADDRLP4 1192
+CNSTF4 3238002688
+ASGNF4
+ADDRLP4 1092
+ADDRLP4 1192
+INDIRF4
+ASGNF4
+ADDRLP4 1092+4
+ADDRLP4 1192
+INDIRF4
+ASGNF4
+ADDRLP4 1092+8
+CNSTF4 0
+ASGNF4
+line 3091
+;3091:		VectorSet( maxs, 8, 8, 24 );
+ADDRLP4 1196
+CNSTF4 1090519040
+ASGNF4
+ADDRLP4 1104
+ADDRLP4 1196
+INDIRF4
+ASGNF4
+ADDRLP4 1104+4
+ADDRLP4 1196
+INDIRF4
+ASGNF4
+ADDRLP4 1104+8
+CNSTF4 1103101952
+ASGNF4
+line 3093
+;3092:
+;3093:		AngleVectors(yawonly, fwd, NULL, NULL);
+ADDRLP4 1140
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 1200
+CNSTP4 0
+ASGNP4
+ADDRLP4 1200
+INDIRP4
+ARGP4
+ADDRLP4 1200
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 3095
+;3094:
+;3095:		fwdorg[0] = ps->origin[0] + fwd[0]*64;
+ADDRLP4 1116
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 0
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3096
+;3096:		fwdorg[1] = ps->origin[1] + fwd[1]*64;
+ADDRLP4 1116+4
+ADDRFP4 0
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 0+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3097
+;3097:		fwdorg[2] = ps->origin[2] + fwd[2]*64;
+ADDRLP4 1116+8
+ADDRFP4 0
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 0+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3099
+;3098:
+;3099:		trtest[0] = fwdorg[0] + fwd[0]*16;
+ADDRLP4 1152
+ADDRLP4 1116
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 0
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3100
+;3100:		trtest[1] = fwdorg[1] + fwd[1]*16;
+ADDRLP4 1152+4
+ADDRLP4 1116+4
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 0+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3101
+;3101:		trtest[2] = fwdorg[2] + fwd[2]*16;
+ADDRLP4 1152+8
+ADDRLP4 1116+8
+INDIRF4
+CNSTF4 1098907648
+ADDRLP4 0+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3103
+;3102:
+;3103:		pm->trace(&tr, ps->origin, mins, maxs, trtest, ps->clientNum, MASK_PLAYERSOLID);
+ADDRLP4 12
+ARGP4
+ADDRLP4 1204
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1092
+ARGP4
+ADDRLP4 1104
+ARGP4
+ADDRLP4 1152
+ARGP4
+ADDRLP4 1204
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 273
+ARGI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 3105
+;3104:
+;3105:		if ((tr.fraction != 1 && tr.entityNum != ps->clientNum) || tr.startsolid || tr.allsolid)
+ADDRLP4 12+8
+INDIRF4
+CNSTF4 1065353216
+EQF4 $1243
+ADDRLP4 12+52
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+NEI4 $1244
+LABELV $1243
+ADDRLP4 1208
+CNSTI4 0
+ASGNI4
+ADDRLP4 12+4
+INDIRI4
+ADDRLP4 1208
+INDIRI4
+NEI4 $1244
+ADDRLP4 12
+INDIRI4
+ADDRLP4 1208
+INDIRI4
+EQI4 $1237
+LABELV $1244
+line 3106
+;3106:		{
+line 3107
+;3107:			PM_AddEventWithParm(EV_ITEMUSEFAIL, SENTRY_NOROOM);
+CNSTI4 56
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3108
+;3108:			return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1237
+line 3111
+;3109:		}
+;3110:
+;3111:		return 1;
+CNSTI4 1
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1245
+line 3113
+;3112:	case HI_SHIELD:
+;3113:		mins[0] = -8;
+ADDRLP4 1092
+CNSTF4 3238002688
+ASGNF4
+line 3114
+;3114:		mins[1] = -8;
+ADDRLP4 1092+4
+CNSTF4 3238002688
+ASGNF4
+line 3115
+;3115:		mins[2] = 0;
+ADDRLP4 1092+8
+CNSTF4 0
+ASGNF4
+line 3117
+;3116:
+;3117:		maxs[0] = 8;
+ADDRLP4 1104
+CNSTF4 1090519040
+ASGNF4
+line 3118
+;3118:		maxs[1] = 8;
+ADDRLP4 1104+4
+CNSTF4 1090519040
+ASGNF4
+line 3119
+;3119:		maxs[2] = 8;
+ADDRLP4 1104+8
+CNSTF4 1090519040
+ASGNF4
+line 3121
+;3120:
+;3121:		AngleVectors (ps->viewangles, fwd, NULL, NULL);
+ADDRFP4 0
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRLP4 0
+ARGP4
+ADDRLP4 1212
+CNSTP4 0
+ASGNP4
+ADDRLP4 1212
+INDIRP4
+ARGP4
+ADDRLP4 1212
+INDIRP4
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 3122
+;3122:		fwd[2] = 0;
+ADDRLP4 0+8
+CNSTF4 0
+ASGNF4
+line 3123
+;3123:		VectorMA(ps->origin, 64, fwd, dest);
+ADDRLP4 1216
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1220
+CNSTF4 1115684864
+ASGNF4
+ADDRLP4 1128
+ADDRLP4 1216
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 0
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1128+4
+ADDRLP4 1216
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRF4
+ADDRLP4 1220
+INDIRF4
+ADDRLP4 0+4
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+ADDRLP4 1128+8
+ADDRFP4 0
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRF4
+CNSTF4 1115684864
+ADDRLP4 0+8
+INDIRF4
+MULF4
+ADDF4
+ASGNF4
+line 3124
+;3124:		pm->trace(&tr, ps->origin, mins, maxs, dest, ps->clientNum, MASK_SHOT );
+ADDRLP4 12
+ARGP4
+ADDRLP4 1224
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 1224
+INDIRP4
+CNSTI4 20
+ADDP4
+ARGP4
+ADDRLP4 1092
+ARGP4
+ADDRLP4 1104
+ARGP4
+ADDRLP4 1128
+ARGP4
+ADDRLP4 1224
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 769
+ARGI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 3125
+;3125:		if (tr.fraction > 0.9 && !tr.startsolid && !tr.allsolid)
+ADDRLP4 12+8
+INDIRF4
+CNSTF4 1063675494
+LEF4 $1255
+ADDRLP4 1228
+CNSTI4 0
+ASGNI4
+ADDRLP4 12+4
+INDIRI4
+ADDRLP4 1228
+INDIRI4
+NEI4 $1255
+ADDRLP4 12
+INDIRI4
+ADDRLP4 1228
+INDIRI4
+NEI4 $1255
+line 3126
+;3126:		{
+line 3127
+;3127:			VectorCopy(tr.endpos, pos);
+ADDRLP4 1164
+ADDRLP4 12+12
+INDIRB
+ASGNB 12
+line 3128
+;3128:			VectorSet( dest, pos[0], pos[1], pos[2] - 4096 );
+ADDRLP4 1128
+ADDRLP4 1164
+INDIRF4
+ASGNF4
+ADDRLP4 1128+4
+ADDRLP4 1164+4
+INDIRF4
+ASGNF4
+ADDRLP4 1128+8
+ADDRLP4 1164+8
+INDIRF4
+CNSTF4 1166016512
+SUBF4
+ASGNF4
+line 3129
+;3129:			pm->trace( &tr, pos, mins, maxs, dest, ps->clientNum, MASK_SOLID );
+ADDRLP4 12
+ARGP4
+ADDRLP4 1164
+ARGP4
+ADDRLP4 1092
+ARGP4
+ADDRLP4 1104
+ARGP4
+ADDRLP4 1128
+ARGP4
+ADDRFP4 0
+INDIRP4
+CNSTI4 144
+ADDP4
+INDIRI4
+ARGI4
+CNSTI4 1
+ARGI4
+ADDRGP4 pm
+INDIRP4
+CNSTI4 240
+ADDP4
+INDIRP4
+CALLV
+pop
+line 3130
+;3130:			if ( !tr.startsolid && !tr.allsolid )
+ADDRLP4 1232
+CNSTI4 0
+ASGNI4
+ADDRLP4 12+4
+INDIRI4
+ADDRLP4 1232
+INDIRI4
+NEI4 $1264
+ADDRLP4 12
+INDIRI4
+ADDRLP4 1232
+INDIRI4
+NEI4 $1264
+line 3131
+;3131:			{
+line 3132
+;3132:				return 1;
+CNSTI4 1
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1264
+line 3134
+;3133:			}
+;3134:		}
+LABELV $1255
+line 3135
+;3135:		PM_AddEventWithParm(EV_ITEMUSEFAIL, SHIELD_NOROOM);
+CNSTI4 56
+ARGI4
+CNSTI4 3
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3136
+;3136:		return 0;
+CNSTI4 0
+RETI4
+ADDRGP4 $1199
+JUMPV
+LABELV $1207
+line 3138
+;3137:	default:
+;3138:		return 1;
+CNSTI4 1
+RETI4
+LABELV $1199
+endproc PM_ItemUsable 1236 28
+proc PM_Weapon 156 16
+line 3149
+;3139:	}
+;3140:}
+;3141:
+;3142:/*
+;3143:==============
+;3144:PM_Weapon
+;3145:
+;3146:Generates weapon events and modifes the weapon counter
+;3147:==============
+;3148:*/
+;3149:static void PM_Weapon( void ) {
+line 3152
+;3150:	int		addTime;
+;3151:	int amount;
+;3152:	int		killAfterItem = 0;
+ADDRLP4 8
+CNSTI4 0
+ASGNI4
+line 3154
+;3153:
+;3154:	if (pm->ps->usingATST)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1270
+line 3155
+;3155:	{
+line 3156
+;3156:		if ( pm->ps->weaponTime > 0 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1272
+line 3157
+;3157:		{
+line 3158
+;3158:			pm->ps->weaponTime -= pml.msec;
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 12
+INDIRP4
+INDIRI4
+ADDRGP4 pml+40
+INDIRI4
+SUBI4
+ASGNI4
+line 3159
+;3159:		}
+LABELV $1272
+line 3161
+;3160:
+;3161:		if (pm->ps->weaponTime < 1 && (pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)))
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 1
+GEI4 $1269
+ADDRLP4 12
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 129
+BANDI4
+CNSTI4 0
+EQI4 $1269
+line 3162
+;3162:		{
+line 3163
+;3163:			pm->ps->weaponTime += 500;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 16
+INDIRP4
+INDIRI4
+CNSTI4 500
+ADDI4
+ASGNI4
+line 3165
+;3164:
+;3165:			if (pm->ps->atstAltFire)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1308
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1277
+line 3166
+;3166:			{
+line 3167
+;3167:				PM_AddEvent( EV_ALT_FIRE );
+CNSTI4 25
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3168
+;3168:				pm->ps->atstAltFire = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1308
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3169
+;3169:			}
+ADDRGP4 $1269
+JUMPV
+LABELV $1277
+line 3171
+;3170:			else
+;3171:			{
+line 3172
+;3172:				PM_AddEvent( EV_FIRE_WEAPON );
+CNSTI4 24
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3173
+;3173:				pm->ps->atstAltFire = qtrue;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1308
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3174
+;3174:			}
+line 3175
+;3175:		}
+line 3177
+;3176:
+;3177:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1270
+line 3180
+;3178:	}
+;3179:
+;3180:	if (pm->ps->weapon != WP_DISRUPTOR && pm->ps->weapon != WP_ROCKET_LAUNCHER)
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 12
+INDIRI4
+CNSTI4 5
+EQI4 $1279
+ADDRLP4 12
+INDIRI4
+CNSTI4 10
+EQI4 $1279
+line 3181
+;3181:	{ //check for exceeding max charge time if not using disruptor or rocket launcher
+line 3182
+;3182:		if ( pm->ps->weaponstate == WEAPON_CHARGING_ALT )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1281
+line 3183
+;3183:		{
+line 3184
+;3184:			int timeDif = (pm->cmd.serverTime - pm->ps->weaponChargeTime);
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 16
+ADDRLP4 20
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ADDRLP4 20
+INDIRP4
+INDIRP4
+CNSTI4 48
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3186
+;3185:
+;3186:			if (timeDif > MAX_WEAPON_CHARGE_TIME)
+ADDRLP4 16
+INDIRI4
+CNSTI4 5000
+LEI4 $1283
+line 3187
+;3187:			{
+line 3188
+;3188:				pm->cmd.buttons &= ~BUTTON_ALT_ATTACK;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CNSTI4 -129
+BANDI4
+ASGNI4
+line 3189
+;3189:			}
+LABELV $1283
+line 3190
+;3190:		}
+LABELV $1281
+line 3192
+;3191:
+;3192:		if ( pm->ps->weaponstate == WEAPON_CHARGING )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 4
+NEI4 $1285
+line 3193
+;3193:		{
+line 3194
+;3194:			int timeDif = (pm->cmd.serverTime - pm->ps->weaponChargeTime);
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 16
+ADDRLP4 20
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ADDRLP4 20
+INDIRP4
+INDIRP4
+CNSTI4 48
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3196
+;3195:
+;3196:			if (timeDif > MAX_WEAPON_CHARGE_TIME)
+ADDRLP4 16
+INDIRI4
+CNSTI4 5000
+LEI4 $1287
+line 3197
+;3197:			{
+line 3198
+;3198:				pm->cmd.buttons &= ~BUTTON_ATTACK;
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CNSTI4 -2
+BANDI4
+ASGNI4
+line 3199
+;3199:			}
+LABELV $1287
+line 3200
+;3200:		}
+LABELV $1285
+line 3201
+;3201:	}
+LABELV $1279
+line 3203
+;3202:
+;3203:	if (pm->ps->forceHandExtend == HANDEXTEND_WEAPONREADY)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 6
+NEI4 $1289
+line 3204
+;3204:	{ //reset into weapon stance
+line 3205
+;3205:		if (pm->ps->weapon != WP_SABER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+EQI4 $1291
+line 3206
+;3206:		{ //saber handles its own anims
+line 3207
+;3207:			if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1)
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1293
+ADDRLP4 16
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1293
+line 3208
+;3208:			{
+line 3210
+;3209:				//PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
+;3210:				PM_StartTorsoAnim( TORSO_RAISEWEAP1);
+CNSTI4 958
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3211
+;3211:			}
+ADDRGP4 $1294
+JUMPV
+LABELV $1293
+line 3213
+;3212:			else
+;3213:			{
+line 3214
+;3214:				if (pm->ps->weapon == WP_EMPLACED_GUN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1295
+line 3215
+;3215:				{
+line 3216
+;3216:					PM_StartTorsoAnim( BOTH_GUNSIT1 );
+CNSTI4 710
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3217
+;3217:				}
+ADDRGP4 $1296
+JUMPV
+LABELV $1295
+line 3219
+;3218:				else
+;3219:				{
+line 3221
+;3220:					//PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+;3221:					PM_StartTorsoAnim( TORSO_RAISEWEAP1);
+CNSTI4 958
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3222
+;3222:				}
+LABELV $1296
+line 3223
+;3223:			}
+LABELV $1294
+line 3224
+;3224:		}
+LABELV $1291
+line 3228
+;3225:
+;3226:		//we now go into a weapon raise anim after every force hand extend.
+;3227:		//this is so that my holster-view-weapon-when-hand-extend stuff works.
+;3228:		pm->ps->weaponstate = WEAPON_RAISING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3229
+;3229:		pm->ps->weaponTime += 250;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+ADDRLP4 16
+INDIRP4
+INDIRI4
+CNSTI4 250
+ADDI4
+ASGNI4
+line 3231
+;3230:
+;3231:		pm->ps->forceHandExtend = HANDEXTEND_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3232
+;3232:	}
+ADDRGP4 $1290
+JUMPV
+LABELV $1289
+line 3233
+;3233:	else if (pm->ps->forceHandExtend != HANDEXTEND_NONE)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1297
+line 3234
+;3234:	{ //nothing else should be allowed to happen during this time, including weapon fire
+line 3235
+;3235:		int desiredAnim = 0;
+ADDRLP4 16
+CNSTI4 0
+ASGNI4
+line 3237
+;3236:
+;3237:		switch(pm->ps->forceHandExtend)
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+CNSTI4 1
+LTI4 $1299
+ADDRLP4 20
+INDIRI4
+CNSTI4 10
+GTI4 $1299
+ADDRLP4 20
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 $1317-4
+ADDP4
+INDIRP4
+JUMPV
+lit
+align 4
+LABELV $1317
+address $1302
+address $1303
+address $1304
+address $1305
+address $1306
+address $1299
+address $1307
+address $1308
+address $1315
+address $1316
+code
+line 3238
+;3238:		{
+LABELV $1302
+line 3240
+;3239:		case HANDEXTEND_FORCEPUSH:
+;3240:			desiredAnim = BOTH_FORCEPUSH;
+ADDRLP4 16
+CNSTI4 936
+ASGNI4
+line 3241
+;3241:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1303
+line 3243
+;3242:		case HANDEXTEND_FORCEPULL:
+;3243:			desiredAnim = BOTH_FORCEPULL;
+ADDRLP4 16
+CNSTI4 937
+ASGNI4
+line 3244
+;3244:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1304
+line 3246
+;3245:		case HANDEXTEND_FORCEGRIP:
+;3246:			desiredAnim = BOTH_FORCEGRIP_HOLD;
+ADDRLP4 16
+CNSTI4 950
+ASGNI4
+line 3247
+;3247:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1305
+line 3249
+;3248:		case HANDEXTEND_SABERPULL:
+;3249:			desiredAnim = BOTH_SABERPULL;
+ADDRLP4 16
+CNSTI4 946
+ASGNI4
+line 3250
+;3250:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1306
+line 3252
+;3251:		case HANDEXTEND_CHOKE:
+;3252:			desiredAnim = BOTH_CHOKE3;//TORSO_CHOKING1;
+ADDRLP4 16
+CNSTI4 927
+ASGNI4
+line 3253
+;3253:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1307
+line 3255
+;3254:		case HANDEXTEND_DODGE:
+;3255:			desiredAnim = pm->ps->forceDodgeAnim;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+INDIRI4
+ASGNI4
+line 3256
+;3256:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1308
+line 3258
+;3257:		case HANDEXTEND_KNOCKDOWN:
+;3258:			if (pm->ps->forceDodgeAnim)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1309
+line 3259
+;3259:			{
+line 3260
+;3260:				if (pm->ps->forceDodgeAnim == 2)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1311
+line 3261
+;3261:				{
+line 3262
+;3262:					desiredAnim = BOTH_FORCE_GETUP_B1;
+ADDRLP4 16
+CNSTI4 843
+ASGNI4
+line 3263
+;3263:				}
+ADDRGP4 $1300
+JUMPV
+LABELV $1311
+line 3264
+;3264:				else if (pm->ps->forceDodgeAnim == 3)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $1313
+line 3265
+;3265:				{
+line 3266
+;3266:					desiredAnim = BOTH_FORCE_GETUP_B3;
+ADDRLP4 16
+CNSTI4 845
+ASGNI4
+line 3267
+;3267:				}
+ADDRGP4 $1300
+JUMPV
+LABELV $1313
+line 3269
+;3268:				else
+;3269:				{
+line 3270
+;3270:					desiredAnim = BOTH_GETUP1;
+ADDRLP4 16
+CNSTI4 834
+ASGNI4
+line 3271
+;3271:				}
+line 3272
+;3272:			}
+ADDRGP4 $1300
+JUMPV
+LABELV $1309
+line 3274
+;3273:			else
+;3274:			{
+line 3275
+;3275:				desiredAnim = BOTH_KNOCKDOWN1;
+ADDRLP4 16
+CNSTI4 829
+ASGNI4
+line 3276
+;3276:			}
+line 3277
+;3277:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1315
+line 3279
+;3278:		case HANDEXTEND_DUELCHALLENGE:
+;3279:			desiredAnim = BOTH_ENGAGETAUNT;
+ADDRLP4 16
+CNSTI4 802
+ASGNI4
+line 3280
+;3280:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1316
+line 3282
+;3281:		case HANDEXTEND_TAUNT:
+;3282:			desiredAnim = pm->ps->forceDodgeAnim;
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+INDIRI4
+ASGNI4
+line 3283
+;3283:			break;
+ADDRGP4 $1300
+JUMPV
+LABELV $1299
+line 3285
+;3284:		default:
+;3285:			desiredAnim = BOTH_FORCEPUSH;
+ADDRLP4 16
+CNSTI4 936
+ASGNI4
+line 3286
+;3286:			break;
+LABELV $1300
+line 3289
+;3287:		}
+;3288:
+;3289:		PM_SetAnim(SETANIM_TORSO, desiredAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 100);
+CNSTI4 1
+ARGI4
+ADDRLP4 16
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 3290
+;3290:		pm->ps->torsoTimer = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3292
+;3291:
+;3292:		if (pm->ps->forceHandExtend == HANDEXTEND_DODGE || pm->ps->forceHandExtend == HANDEXTEND_KNOCKDOWN /*||
+ADDRLP4 28
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 28
+INDIRI4
+CNSTI4 7
+EQI4 $1321
+ADDRLP4 28
+INDIRI4
+CNSTI4 8
+NEI4 $1269
+LABELV $1321
+line 3294
+;3293:			pm->ps->forceHandExtend == HANDEXTEND_CHOKE*/)
+;3294:		{ //special case, play dodge anim on whole body
+line 3295
+;3295:			PM_SetAnim(SETANIM_LEGS, desiredAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 100);
+CNSTI4 2
+ARGI4
+ADDRLP4 16
+INDIRI4
+ARGI4
+CNSTI4 3
+ARGI4
+CNSTI4 100
+ARGI4
+ADDRGP4 PM_SetAnim
+CALLV
+pop
+line 3296
+;3296:			pm->ps->legsTimer = 1;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3297
+;3297:		}
+line 3299
+;3298:
+;3299:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1297
+LABELV $1290
+line 3302
+;3300:	}
+;3301:
+;3302:	if (BG_InSpecialJump(pm->ps->legsAnim) ||
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 16
+ADDRGP4 BG_InSpecialJump
+CALLI4
+ASGNI4
+ADDRLP4 16
+INDIRI4
+CNSTI4 0
+NEI4 $1325
+ADDRLP4 20
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+ARGP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 24
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 24
+INDIRI4
+CNSTI4 0
+NEI4 $1325
+ADDRLP4 28
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+ARGP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 32
+ADDRGP4 PM_InRollComplete
+CALLI4
+ASGNI4
+ADDRLP4 32
+INDIRI4
+CNSTI4 0
+EQI4 $1322
+LABELV $1325
+line 3305
+;3303:		BG_InRoll(pm->ps, pm->ps->legsAnim) ||
+;3304:		PM_InRollComplete(pm->ps, pm->ps->legsAnim))
+;3305:	{
+line 3306
+;3306:		pm->cmd.weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTU1 2
+ASGNU1
+line 3307
+;3307:		pm->ps->weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+CNSTI4 2
+ASGNI4
+line 3308
+;3308:	}
+LABELV $1322
+line 3310
+;3309:
+;3310:	if (pm->ps->duelInProgress)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1292
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1326
+line 3311
+;3311:	{
+line 3312
+;3312:		pm->cmd.weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTU1 2
+ASGNU1
+line 3313
+;3313:		pm->ps->weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+CNSTI4 2
+ASGNI4
+line 3315
+;3314:
+;3315:		if (pm->ps->duelTime >= pm->cmd.serverTime)
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+INDIRP4
+CNSTI4 1288
+ADDP4
+INDIRI4
+ADDRLP4 36
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+LTI4 $1328
+line 3316
+;3316:		{
+line 3317
+;3317:			pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 3318
+;3318:			pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 3319
+;3319:			pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 3320
+;3320:		}
+LABELV $1328
+line 3321
+;3321:	}
+LABELV $1326
+line 3323
+;3322:
+;3323:	if (pm->ps->weapon == WP_SABER && pm->ps->saberMove != LS_READY && pm->ps->saberMove != LS_NONE)
+ADDRLP4 36
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1330
+ADDRLP4 40
+ADDRLP4 36
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 40
+INDIRI4
+CNSTI4 1
+EQI4 $1330
+ADDRLP4 40
+INDIRI4
+CNSTI4 0
+EQI4 $1330
+line 3324
+;3324:	{
+line 3325
+;3325:		pm->cmd.weapon = WP_SABER; //don't allow switching out mid-attack
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTU1 2
+ASGNU1
+line 3326
+;3326:	}
+LABELV $1330
+line 3328
+;3327:
+;3328:	if (pm->ps->weapon == WP_SABER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1332
+line 3329
+;3329:	{
+line 3331
+;3330:		//rww - we still need the item stuff, so we won't return immediately
+;3331:		PM_WeaponLightsaber();
+ADDRGP4 PM_WeaponLightsaber
+CALLV
+pop
+line 3332
+;3332:		killAfterItem = 1;
+ADDRLP4 8
+CNSTI4 1
+ASGNI4
+line 3333
+;3333:	}
+ADDRGP4 $1333
+JUMPV
+LABELV $1332
+line 3335
+;3334:	else
+;3335:	{
+line 3336
+;3336:		pm->ps->saberHolstered = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1300
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3337
+;3337:	}
+LABELV $1333
+line 3339
+;3338:
+;3339:	if (pm->ps->weapon == WP_THERMAL ||
+ADDRLP4 44
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 44
+INDIRI4
+CNSTI4 11
+EQI4 $1337
+ADDRLP4 44
+INDIRI4
+CNSTI4 12
+EQI4 $1337
+ADDRLP4 44
+INDIRI4
+CNSTI4 13
+NEI4 $1334
+LABELV $1337
+line 3342
+;3340:		pm->ps->weapon == WP_TRIP_MINE ||
+;3341:		pm->ps->weapon == WP_DET_PACK)
+;3342:	{
+line 3343
+;3343:		if (pm->ps->weapon == WP_THERMAL)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 11
+NEI4 $1338
+line 3344
+;3344:		{
+line 3345
+;3345:			if ((pm->ps->torsoAnim&~ANIM_TOGGLEBIT) == WeaponAttackAnim[pm->ps->weapon] &&
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ADDRLP4 48
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponAttackAnim
+ADDP4
+INDIRI4
+NEI4 $1339
+ADDRLP4 48
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 200
+SUBI4
+CNSTI4 0
+GTI4 $1339
+line 3347
+;3346:				(pm->ps->weaponTime-200) <= 0)
+;3347:			{
+line 3348
+;3348:				PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3349
+;3349:			}
+line 3350
+;3350:		}
+ADDRGP4 $1339
+JUMPV
+LABELV $1338
+line 3352
+;3351:		else
+;3352:		{
+line 3353
+;3353:			if ((pm->ps->torsoAnim&~ANIM_TOGGLEBIT) == WeaponAttackAnim[pm->ps->weapon] &&
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ADDRLP4 48
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponAttackAnim
+ADDP4
+INDIRI4
+NEI4 $1342
+ADDRLP4 48
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 700
+SUBI4
+CNSTI4 0
+GTI4 $1342
+line 3355
+;3354:				(pm->ps->weaponTime-700) <= 0)
+;3355:			{
+line 3356
+;3356:				PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3357
+;3357:			}
+LABELV $1342
+line 3358
+;3358:		}
+LABELV $1339
+line 3359
+;3359:	}
+LABELV $1334
+line 3362
+;3360:
+;3361:	// don't allow attack until all buttons are up
+;3362:	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 512
+BANDI4
+CNSTI4 0
+EQI4 $1344
+line 3363
+;3363:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1344
+line 3367
+;3364:	}
+;3365:
+;3366:	// ignore if spectator
+;3367:	if ( pm->ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 292
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $1346
+line 3368
+;3368:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1346
+line 3372
+;3369:	}
+;3370:
+;3371:	// check for dead player
+;3372:	if ( pm->ps->stats[STAT_HEALTH] <= 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 0
+GTI4 $1348
+line 3373
+;3373:		pm->ps->weapon = WP_NONE;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3374
+;3374:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1348
+line 3378
+;3375:	}
+;3376:
+;3377:	// check for item using
+;3378:	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $1350
+line 3379
+;3379:		if ( ! ( pm->ps->pm_flags & PMF_USE_ITEM_HELD ) ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 1024
+BANDI4
+CNSTI4 0
+NEI4 $1351
+line 3381
+;3380:
+;3381:			if (!pm->ps->stats[STAT_HOLDABLE_ITEM])
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1354
+line 3382
+;3382:			{
+line 3383
+;3383:				return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1354
+line 3386
+;3384:			}
+;3385:
+;3386:			if (!PM_ItemUsable(pm->ps, 0))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+CNSTI4 0
+ARGI4
+ADDRLP4 48
+ADDRGP4 PM_ItemUsable
+CALLI4
+ASGNI4
+ADDRLP4 48
+INDIRI4
+CNSTI4 0
+NEI4 $1356
+line 3387
+;3387:			{
+line 3388
+;3388:				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+ADDRLP4 52
+INDIRP4
+INDIRI4
+CNSTI4 1024
+BORI4
+ASGNI4
+line 3389
+;3389:				return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1356
+line 3392
+;3390:			}
+;3391:			else
+;3392:			{
+line 3393
+;3393:				if (pm->ps->stats[STAT_HOLDABLE_ITEMS] & (1 << bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag))
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 224
+ADDP4
+INDIRI4
+CNSTI4 1
+CNSTI4 52
+ADDRLP4 52
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+LSHI4
+BANDI4
+CNSTI4 0
+EQI4 $1269
+line 3394
+;3394:				{
+line 3395
+;3395:					if (bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag != HI_BINOCULARS)
+CNSTI4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+CNSTI4 5
+EQI4 $1359
+line 3396
+;3396:					{ //never use up the binoculars
+line 3397
+;3397:						pm->ps->stats[STAT_HOLDABLE_ITEMS] -= (1 << bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag);
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 60
+ADDRLP4 56
+INDIRP4
+CNSTI4 224
+ADDP4
+ASGNP4
+ADDRLP4 60
+INDIRP4
+ADDRLP4 60
+INDIRP4
+INDIRI4
+CNSTI4 1
+CNSTI4 52
+ADDRLP4 56
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+LSHI4
+SUBI4
+ASGNI4
+line 3398
+;3398:					}
+line 3399
+;3399:				}
+line 3401
+;3400:				else
+;3401:				{
+line 3402
+;3402:					return; //this should not happen...
+LABELV $1359
+line 3405
+;3403:				}
+;3404:
+;3405:				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+ADDRLP4 56
+INDIRP4
+INDIRI4
+CNSTI4 1024
+BORI4
+ASGNI4
+line 3406
+;3406:				PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
+CNSTI4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+CNSTI4 40
+ADDI4
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3408
+;3407:
+;3408:				if (bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag != HI_BINOCULARS)
+CNSTI4 52
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 bg_itemlist+40
+ADDP4
+INDIRI4
+CNSTI4 5
+EQI4 $1269
+line 3409
+;3409:				{
+line 3410
+;3410:					pm->ps->stats[STAT_HOLDABLE_ITEM] = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3411
+;3411:					BG_CycleInven(pm->ps, 1);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ARGP4
+CNSTI4 1
+ARGI4
+ADDRGP4 BG_CycleInven
+CALLV
+pop
+line 3412
+;3412:				}
+line 3413
+;3413:			}
+line 3414
+;3414:			return;
+ADDRGP4 $1269
+JUMPV
+line 3416
+;3415:		}
+;3416:	} else {
+LABELV $1350
+line 3417
+;3417:		pm->ps->pm_flags &= ~PMF_USE_ITEM_HELD;
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRI4
+CNSTI4 -1025
+BANDI4
+ASGNI4
+line 3418
+;3418:	}
+LABELV $1351
+line 3420
+;3419:
+;3420:	if (pm->ps->weapon == WP_SABER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1369
+line 3421
+;3421:	{ //we can't toggle zoom while using saber (for obvious reasons) so make sure it's always off
+line 3422
+;3422:		pm->ps->zoomMode = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3423
+;3423:		pm->ps->zoomFov = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+CNSTF4 0
+ASGNF4
+line 3424
+;3424:		pm->ps->zoomLocked = qfalse;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3425
+;3425:		pm->ps->zoomLockTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1336
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3426
+;3426:	}
+LABELV $1369
+line 3428
+;3427:
+;3428:	if (killAfterItem)
+ADDRLP4 8
+INDIRI4
+CNSTI4 0
+EQI4 $1371
+line 3429
+;3429:	{
+line 3430
+;3430:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1371
+line 3434
+;3431:	}
+;3432:
+;3433:	// make weapon function
+;3434:	if ( pm->ps->weaponTime > 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1373
+line 3435
+;3435:		pm->ps->weaponTime -= pml.msec;
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRI4
+ADDRGP4 pml+40
+INDIRI4
+SUBI4
+ASGNI4
+line 3436
+;3436:	}
+LABELV $1373
+line 3438
+;3437:
+;3438:	if (pm->ps->isJediMaster && pm->ps->emplacedIndex)
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 52
+CNSTI4 0
+ASGNI4
+ADDRLP4 48
+INDIRP4
+CNSTI4 604
+ADDP4
+INDIRI4
+ADDRLP4 52
+INDIRI4
+EQI4 $1376
+ADDRLP4 48
+INDIRP4
+CNSTI4 596
+ADDP4
+INDIRI4
+ADDRLP4 52
+INDIRI4
+EQI4 $1376
+line 3439
+;3439:	{
+line 3440
+;3440:		pm->ps->emplacedIndex = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 596
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3441
+;3441:	}
+LABELV $1376
+line 3443
+;3442:
+;3443:	if (pm->ps->duelInProgress && pm->ps->emplacedIndex)
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 60
+CNSTI4 0
+ASGNI4
+ADDRLP4 56
+INDIRP4
+CNSTI4 1292
+ADDP4
+INDIRI4
+ADDRLP4 60
+INDIRI4
+EQI4 $1378
+ADDRLP4 56
+INDIRP4
+CNSTI4 596
+ADDP4
+INDIRI4
+ADDRLP4 60
+INDIRI4
+EQI4 $1378
+line 3444
+;3444:	{
+line 3445
+;3445:		pm->ps->emplacedIndex = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 596
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3446
+;3446:	}
+LABELV $1378
+line 3448
+;3447:
+;3448:	if (pm->ps->weapon == WP_EMPLACED_GUN && pm->ps->emplacedIndex)
+ADDRLP4 64
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 64
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1380
+ADDRLP4 64
+INDIRP4
+CNSTI4 596
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1380
+line 3449
+;3449:	{
+line 3450
+;3450:		pm->cmd.weapon = WP_EMPLACED_GUN; //No switch for you!
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTU1 14
+ASGNU1
+line 3451
+;3451:		PM_StartTorsoAnim( BOTH_GUNSIT1 );
+CNSTI4 710
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3452
+;3452:	}
+LABELV $1380
+line 3454
+;3453:
+;3454:	if (pm->ps->isJediMaster || pm->ps->duelInProgress)
+ADDRLP4 68
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 72
+CNSTI4 0
+ASGNI4
+ADDRLP4 68
+INDIRP4
+CNSTI4 604
+ADDP4
+INDIRI4
+ADDRLP4 72
+INDIRI4
+NEI4 $1384
+ADDRLP4 68
+INDIRP4
+CNSTI4 1292
+ADDP4
+INDIRI4
+ADDRLP4 72
+INDIRI4
+EQI4 $1382
+LABELV $1384
+line 3455
+;3455:	{
+line 3456
+;3456:		pm->cmd.weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTU1 2
+ASGNU1
+line 3457
+;3457:		pm->ps->weapon = WP_SABER;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+CNSTI4 2
+ASGNI4
+line 3459
+;3458:
+;3459:		if (pm->ps->isJediMaster)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 604
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1385
+line 3460
+;3460:		{
+line 3461
+;3461:			pm->ps->stats[STAT_WEAPONS] = (1 << WP_SABER);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 232
+ADDP4
+CNSTI4 4
+ASGNI4
+line 3462
+;3462:		}
+LABELV $1385
+line 3463
+;3463:	}
+LABELV $1382
+line 3465
+;3464:
+;3465:	amount = weaponData[pm->ps->weapon].energyPerShot;
+ADDRLP4 4
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+8
+ADDP4
+INDIRI4
+ASGNI4
+line 3468
+;3466:
+;3467:	// take an ammo away if not infinite
+;3468:	if ( pm->ps->weapon != WP_NONE &&
+ADDRLP4 76
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 80
+ADDRLP4 76
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 84
+ADDRLP4 80
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 88
+CNSTI4 0
+ASGNI4
+ADDRLP4 84
+INDIRI4
+ADDRLP4 88
+INDIRI4
+EQI4 $1388
+ADDRLP4 84
+INDIRI4
+ADDRLP4 76
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRU1
+CVUI4 1
+NEI4 $1388
+ADDRLP4 80
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+ADDRLP4 88
+INDIRI4
+LEI4 $1390
+ADDRLP4 80
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 3
+EQI4 $1388
+LABELV $1390
+line 3471
+;3469:		pm->ps->weapon == pm->cmd.weapon &&
+;3470:		(pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING) )
+;3471:	{
+line 3472
+;3472:		if ( pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] != -1 )
+ADDRLP4 92
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+CNSTI4 56
+ADDRLP4 92
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 92
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+CNSTI4 -1
+EQI4 $1391
+line 3473
+;3473:		{
+line 3475
+;3474:			// enough energy to fire this weapon?
+;3475:			if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < weaponData[pm->ps->weapon].energyPerShot &&
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 100
+CNSTI4 56
+ADDRLP4 96
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 104
+ADDRLP4 100
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 96
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 104
+INDIRI4
+ADDRLP4 100
+INDIRI4
+ADDRGP4 weaponData+8
+ADDP4
+INDIRI4
+GEI4 $1393
+ADDRLP4 104
+INDIRI4
+ADDRLP4 100
+INDIRI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+GEI4 $1393
+line 3477
+;3476:				pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < weaponData[pm->ps->weapon].altEnergyPerShot) 
+;3477:			{ //the weapon is out of ammo essentially because it cannot fire primary or secondary, so do the switch
+line 3479
+;3478:			  //regardless of if the player is attacking or not
+;3479:				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
+CNSTI4 22
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 16
+ADDI4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3481
+;3480:
+;3481:				if (pm->ps->weaponTime < 500)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 500
+GEI4 $1269
+line 3482
+;3482:				{
+line 3483
+;3483:					pm->ps->weaponTime += 500;
+ADDRLP4 108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 108
+INDIRP4
+ADDRLP4 108
+INDIRP4
+INDIRI4
+CNSTI4 500
+ADDI4
+ASGNI4
+line 3484
+;3484:				}
+line 3485
+;3485:				return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1393
+line 3488
+;3486:			}
+;3487:
+;3488:			if (pm->ps->weapon == WP_DET_PACK && !pm->ps->hasDetPackPlanted && pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < 1)
+ADDRLP4 108
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 112
+ADDRLP4 108
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 112
+INDIRI4
+CNSTI4 13
+NEI4 $1399
+ADDRLP4 108
+INDIRP4
+CNSTI4 628
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1399
+CNSTI4 56
+ADDRLP4 112
+INDIRI4
+MULI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 108
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+CNSTI4 1
+GEI4 $1399
+line 3489
+;3489:			{
+line 3490
+;3490:				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
+CNSTI4 22
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 16
+ADDI4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3492
+;3491:
+;3492:				if (pm->ps->weaponTime < 500)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 500
+GEI4 $1269
+line 3493
+;3493:				{
+line 3494
+;3494:					pm->ps->weaponTime += 500;
+ADDRLP4 116
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 116
+INDIRP4
+ADDRLP4 116
+INDIRP4
+INDIRI4
+CNSTI4 500
+ADDI4
+ASGNI4
+line 3495
+;3495:				}
+line 3496
+;3496:				return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1399
+line 3498
+;3497:			}
+;3498:		}
+LABELV $1391
+line 3499
+;3499:	}
+LABELV $1388
+line 3504
+;3500:
+;3501:	// check for weapon change
+;3502:	// can't change if weapon is firing, but can change
+;3503:	// again if lowering or raising
+;3504:	if ( pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING ) {
+ADDRLP4 92
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 92
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1405
+ADDRLP4 92
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 3
+EQI4 $1403
+LABELV $1405
+line 3505
+;3505:		if ( pm->ps->weapon != pm->cmd.weapon ) {
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 96
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ADDRLP4 96
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRU1
+CVUI4 1
+EQI4 $1406
+line 3506
+;3506:			PM_BeginWeaponChange( pm->cmd.weapon );
+ADDRGP4 pm
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRU1
+CVUI4 1
+ARGI4
+ADDRGP4 PM_BeginWeaponChange
+CALLV
+pop
+line 3507
+;3507:		}
+LABELV $1406
+line 3508
+;3508:	}
+LABELV $1403
+line 3510
+;3509:
+;3510:	if ( pm->ps->weaponTime > 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1408
+line 3511
+;3511:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1408
+line 3515
+;3512:	}
+;3513:
+;3514:	// change weapon if time
+;3515:	if ( pm->ps->weaponstate == WEAPON_DROPPING ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1410
+line 3516
+;3516:		PM_FinishWeaponChange();
+ADDRGP4 PM_FinishWeaponChange
+CALLV
+pop
+line 3517
+;3517:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1410
+line 3520
+;3518:	}
+;3519:
+;3520:	if ( pm->ps->weaponstate == WEAPON_RAISING ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1412
+line 3521
+;3521:		pm->ps->weaponstate = WEAPON_READY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3522
+;3522:		if ( pm->ps->weapon == WP_SABER ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1414
+line 3523
+;3523:			PM_StartTorsoAnim( PM_GetSaberStance() );
+ADDRLP4 96
+ADDRGP4 PM_GetSaberStance
+CALLI4
+ASGNI4
+ADDRLP4 96
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3524
+;3524:		} else {
+ADDRGP4 $1269
+JUMPV
+LABELV $1414
+line 3525
+;3525:			if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1)
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 96
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1416
+ADDRLP4 96
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1416
+line 3526
+;3526:			{
+line 3527
+;3527:				PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
+CNSTI4 965
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3528
+;3528:			}
+ADDRGP4 $1269
+JUMPV
+LABELV $1416
+line 3530
+;3529:			else
+;3530:			{
+line 3531
+;3531:				if (pm->ps->weapon == WP_EMPLACED_GUN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1418
+line 3532
+;3532:				{
+line 3533
+;3533:					PM_StartTorsoAnim( BOTH_GUNSIT1 );
+CNSTI4 710
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3534
+;3534:				}
+ADDRGP4 $1269
+JUMPV
+LABELV $1418
+line 3536
+;3535:				else
+;3536:				{
+line 3537
+;3537:					PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3538
+;3538:				}
+line 3539
+;3539:			}
+line 3540
+;3540:		}
+line 3541
+;3541:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1412
+line 3544
+;3542:	}
+;3543:
+;3544:	if (((pm->ps->torsoAnim & ~ANIM_TOGGLEBIT) == TORSO_WEAPONREADY4 ||
+ADDRLP4 96
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 96
+INDIRI4
+CNSTI4 965
+EQI4 $1422
+ADDRLP4 96
+INDIRI4
+CNSTI4 109
+NEI4 $1420
+LABELV $1422
+ADDRLP4 100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 100
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1423
+ADDRLP4 100
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+EQI4 $1420
+LABELV $1423
+line 3547
+;3545:		(pm->ps->torsoAnim & ~ANIM_TOGGLEBIT) == BOTH_ATTACK4) &&
+;3546:		(pm->ps->weapon != WP_DISRUPTOR || pm->ps->zoomMode != 1))
+;3547:	{
+line 3548
+;3548:		if (pm->ps->weapon == WP_EMPLACED_GUN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1424
+line 3549
+;3549:		{
+line 3550
+;3550:			PM_StartTorsoAnim( BOTH_GUNSIT1 );
+CNSTI4 710
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3551
+;3551:		}
+ADDRGP4 $1421
+JUMPV
+LABELV $1424
+line 3553
+;3552:		else
+;3553:		{
+line 3554
+;3554:			PM_StartTorsoAnim( WeaponReadyAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponReadyAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3555
+;3555:		}
+line 3556
+;3556:	}
+ADDRGP4 $1421
+JUMPV
+LABELV $1420
+line 3557
+;3557:	else if (((pm->ps->torsoAnim & ~ANIM_TOGGLEBIT) != TORSO_WEAPONREADY4 &&
+ADDRLP4 104
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 108
+ADDRLP4 104
+INDIRP4
+CNSTI4 100
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 108
+INDIRI4
+CNSTI4 965
+EQI4 $1426
+ADDRLP4 108
+INDIRI4
+CNSTI4 109
+EQI4 $1426
+ADDRLP4 104
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1426
+ADDRLP4 104
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1426
+line 3560
+;3558:		(pm->ps->torsoAnim & ~ANIM_TOGGLEBIT) != BOTH_ATTACK4) &&
+;3559:		(pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1))
+;3560:	{
+line 3561
+;3561:		PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
+CNSTI4 965
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3562
+;3562:	}
+LABELV $1426
+LABELV $1421
+line 3565
+;3563:
+;3564:
+;3565:	if (pm->ps->weapon != WP_ROCKET_LAUNCHER)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 10
+EQI4 $1428
+line 3566
+;3566:	{
+line 3567
+;3567:		pm->ps->rocketLockIndex = MAX_CLIENTS;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 580
+ADDP4
+CNSTI4 32
+ASGNI4
+line 3568
+;3568:		pm->ps->rocketLockTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 588
+ADDP4
+CNSTF4 0
+ASGNF4
+line 3569
+;3569:		pm->ps->rocketTargetTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 592
+ADDP4
+CNSTF4 0
+ASGNF4
+line 3570
+;3570:	}
+LABELV $1428
+line 3572
+;3571:
+;3572:	if ( PM_DoChargedWeapons())
+ADDRLP4 112
+ADDRGP4 PM_DoChargedWeapons
+CALLI4
+ASGNI4
+ADDRLP4 112
+INDIRI4
+CNSTI4 0
+EQI4 $1430
+line 3573
+;3573:	{
+line 3575
+;3574:		// In some cases the charged weapon code may want us to short circuit the rest of the firing code
+;3575:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1430
+line 3579
+;3576:	}
+;3577:
+;3578:	// check for fire
+;3579:	if ( ! (pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK))) 
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 129
+BANDI4
+CNSTI4 0
+NEI4 $1432
+line 3580
+;3580:	{
+line 3581
+;3581:		pm->ps->weaponTime = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3582
+;3582:		pm->ps->weaponstate = WEAPON_READY;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3583
+;3583:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1432
+line 3586
+;3584:	}
+;3585:
+;3586:	if (pm->ps->weapon == WP_EMPLACED_GUN)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1434
+line 3587
+;3587:	{
+line 3588
+;3588:		addTime = weaponData[pm->ps->weapon].fireTime;
+ADDRLP4 0
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+12
+ADDP4
+INDIRI4
+ASGNI4
+line 3589
+;3589:		pm->ps->weaponTime += addTime;
+ADDRLP4 116
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 116
+INDIRP4
+ADDRLP4 116
+INDIRP4
+INDIRI4
+ADDRLP4 0
+INDIRI4
+ADDI4
+ASGNI4
+line 3590
+;3590:		PM_AddEvent( EV_FIRE_WEAPON );
+CNSTI4 24
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3591
+;3591:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1434
+line 3594
+;3592:	}
+;3593:
+;3594:	if (pm->ps->weapon == WP_DISRUPTOR &&
+ADDRLP4 116
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 120
+ADDRLP4 116
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 120
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1437
+ADDRLP4 124
+CNSTI4 0
+ASGNI4
+ADDRLP4 116
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+ADDRLP4 124
+INDIRI4
+EQI4 $1437
+ADDRLP4 120
+INDIRP4
+CNSTI4 1328
+ADDP4
+INDIRI4
+ADDRLP4 124
+INDIRI4
+NEI4 $1437
+line 3597
+;3595:		(pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
+;3596:		!pm->ps->zoomLocked)
+;3597:	{
+line 3598
+;3598:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1437
+line 3601
+;3599:	}
+;3600:
+;3601:	if (pm->ps->weapon == WP_DISRUPTOR &&
+ADDRLP4 128
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 132
+ADDRLP4 128
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 132
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1439
+ADDRLP4 128
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1439
+ADDRLP4 132
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1439
+line 3604
+;3602:		(pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
+;3603:		pm->ps->zoomMode == 2)
+;3604:	{ //can't use disruptor secondary while zoomed binoculars
+line 3605
+;3605:		return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1439
+line 3608
+;3606:	}
+;3607:
+;3608:	if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode == 1)
+ADDRLP4 136
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 136
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1441
+ADDRLP4 136
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1441
+line 3609
+;3609:	{
+line 3610
+;3610:		PM_StartTorsoAnim( BOTH_ATTACK4 );
+CNSTI4 109
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3611
+;3611:	}
+ADDRGP4 $1442
+JUMPV
+LABELV $1441
+line 3613
+;3612:	else
+;3613:	{
+line 3614
+;3614:		PM_StartTorsoAnim( WeaponAttackAnim[pm->ps->weapon] );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 WeaponAttackAnim
+ADDP4
+INDIRI4
+ARGI4
+ADDRGP4 PM_StartTorsoAnim
+CALLV
+pop
+line 3615
+;3615:	}
+LABELV $1442
+line 3617
+;3616:
+;3617:	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1443
+line 3618
+;3618:	{
+line 3619
+;3619:		amount = weaponData[pm->ps->weapon].altEnergyPerShot;
+ADDRLP4 4
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+ASGNI4
+line 3620
+;3620:	}
+ADDRGP4 $1444
+JUMPV
+LABELV $1443
+line 3622
+;3621:	else
+;3622:	{
+line 3623
+;3623:		amount = weaponData[pm->ps->weapon].energyPerShot;
+ADDRLP4 4
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+8
+ADDP4
+INDIRI4
+ASGNI4
+line 3624
+;3624:	}
+LABELV $1444
+line 3626
+;3625:
+;3626:	pm->ps->weaponstate = WEAPON_FIRING;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 152
+ADDP4
+CNSTI4 3
+ASGNI4
+line 3629
+;3627:
+;3628:	// take an ammo away if not infinite
+;3629:	if ( pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] != -1 )
+ADDRLP4 140
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+CNSTI4 56
+ADDRLP4 140
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 140
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+CNSTI4 -1
+EQI4 $1447
+line 3630
+;3630:	{
+line 3632
+;3631:		// enough energy to fire this weapon?
+;3632:		if ((pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] - amount) >= 0) 
+ADDRLP4 144
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+CNSTI4 56
+ADDRLP4 144
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 144
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+SUBI4
+CNSTI4 0
+LTI4 $1449
+line 3633
+;3633:		{
+line 3634
+;3634:			pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= amount;
+ADDRLP4 148
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 152
+CNSTI4 56
+ADDRLP4 148
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 148
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+ASGNP4
+ADDRLP4 152
+INDIRP4
+ADDRLP4 152
+INDIRP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+SUBI4
+ASGNI4
+line 3635
+;3635:		}
+ADDRGP4 $1450
+JUMPV
+LABELV $1449
+line 3637
+;3636:		else	// Not enough energy
+;3637:		{
+line 3639
+;3638:			// Switch weapons
+;3639:			if (pm->ps->weapon != WP_DET_PACK || !pm->ps->hasDetPackPlanted)
+ADDRLP4 148
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 148
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 13
+NEI4 $1453
+ADDRLP4 148
+INDIRP4
+CNSTI4 628
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1269
+LABELV $1453
+line 3640
+;3640:			{
+line 3641
+;3641:				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
+CNSTI4 22
+ARGI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 16
+ADDI4
+ARGI4
+ADDRGP4 PM_AddEventWithParm
+CALLV
+pop
+line 3642
+;3642:				if (pm->ps->weaponTime < 500)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+CNSTI4 500
+GEI4 $1269
+line 3643
+;3643:				{
+line 3644
+;3644:					pm->ps->weaponTime += 500;
+ADDRLP4 152
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 152
+INDIRP4
+ADDRLP4 152
+INDIRP4
+INDIRI4
+CNSTI4 500
+ADDI4
+ASGNI4
+line 3645
+;3645:				}
+line 3646
+;3646:			}
+line 3647
+;3647:			return;
+ADDRGP4 $1269
+JUMPV
+LABELV $1450
+line 3649
+;3648:		}
+;3649:	}
+LABELV $1447
+line 3651
+;3650:
+;3651:	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK ) 	{
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1456
+line 3652
+;3652:		if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->zoomMode != 1)
+ADDRLP4 144
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 144
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1458
+ADDRLP4 144
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+EQI4 $1458
+line 3653
+;3653:		{
+line 3654
+;3654:			PM_AddEvent( EV_FIRE_WEAPON );
+CNSTI4 24
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3655
+;3655:			addTime = weaponData[pm->ps->weapon].fireTime;
+ADDRLP4 0
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+12
+ADDP4
+INDIRI4
+ASGNI4
+line 3656
+;3656:		}
+ADDRGP4 $1457
+JUMPV
+LABELV $1458
+line 3658
+;3657:		else
+;3658:		{
+line 3659
+;3659:			PM_AddEvent( EV_ALT_FIRE );
+CNSTI4 25
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3660
+;3660:			addTime = weaponData[pm->ps->weapon].altFireTime;
+ADDRLP4 0
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+24
+ADDP4
+INDIRI4
+ASGNI4
+line 3661
+;3661:		}
+line 3662
+;3662:	}
+ADDRGP4 $1457
+JUMPV
+LABELV $1456
+line 3663
+;3663:	else {
+line 3664
+;3664:		PM_AddEvent( EV_FIRE_WEAPON );
+CNSTI4 24
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3665
+;3665:		addTime = weaponData[pm->ps->weapon].fireTime;
+ADDRLP4 0
+CNSTI4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ADDRGP4 weaponData+12
+ADDP4
+INDIRI4
+ASGNI4
+line 3666
+;3666:	}
+LABELV $1457
+line 3668
+;3667:
+;3668:	if ( pm->ps->powerups[PW_HASTE] ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 356
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1463
+line 3669
+;3669:		addTime /= 1.3;
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CVIF4 4
+CNSTF4 1067869798
+DIVF4
+CVFI4 4
+ASGNI4
+line 3670
+;3670:	}
+LABELV $1463
+line 3672
+;3671:
+;3672:	if (pm->ps->fd.forcePowersActive & (1 << FP_RAGE))
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 256
+BANDI4
+CNSTI4 0
+EQI4 $1465
+line 3673
+;3673:	{
+line 3674
+;3674:		addTime *= 0.75;
+ADDRLP4 0
+CNSTF4 1061158912
+ADDRLP4 0
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 3675
+;3675:	}
+ADDRGP4 $1466
+JUMPV
+LABELV $1465
+line 3676
+;3676:	else if (pm->ps->fd.forceRageRecoveryTime > pm->cmd.serverTime)
+ADDRLP4 144
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 144
+INDIRP4
+INDIRP4
+CNSTI4 1160
+ADDP4
+INDIRI4
+ADDRLP4 144
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+LEI4 $1467
+line 3677
+;3677:	{
+line 3678
+;3678:		addTime *= 1.5;
+ADDRLP4 0
+CNSTF4 1069547520
+ADDRLP4 0
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 3679
+;3679:	}
+LABELV $1467
+LABELV $1466
+line 3681
+;3680:
+;3681:	pm->ps->weaponTime += addTime;
+ADDRLP4 148
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+ASGNP4
+ADDRLP4 148
+INDIRP4
+ADDRLP4 148
+INDIRP4
+INDIRI4
+ADDRLP4 0
+INDIRI4
+ADDI4
+ASGNI4
+line 3682
+;3682:}
+LABELV $1269
+endproc PM_Weapon 156 16
+proc PM_Animate 12 4
+line 3690
+;3683:
+;3684:/*
+;3685:================
+;3686:PM_Animate
+;3687:================
+;3688:*/
+;3689:
+;3690:static void PM_Animate( void ) {
+line 3691
+;3691:	if ( pm->cmd.buttons & BUTTON_GESTURE ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 8
+BANDI4
+CNSTI4 0
+EQI4 $1470
+line 3692
+;3692:		if ( pm->ps->torsoTimer < 1 && pm->ps->forceHandExtend == HANDEXTEND_NONE &&
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 4
+CNSTI4 1
+ASGNI4
+ADDRLP4 0
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+GEI4 $1472
+ADDRLP4 0
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1472
+ADDRLP4 0
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+GEI4 $1472
+ADDRLP4 0
+INDIRP4
+CNSTI4 44
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+GEI4 $1472
+line 3693
+;3693:			pm->ps->legsTimer < 1 && pm->ps->weaponTime < 1 ) {
+line 3699
+;3694:			/*
+;3695:			PM_StartTorsoAnim( BOTH_TALKGESTURE3 );
+;3696:			pm->ps->torsoTimer = TIMER_GESTURE;
+;3697:			*/
+;3698:
+;3699:			pm->ps->forceHandExtend = HANDEXTEND_TAUNT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1236
+ADDP4
+CNSTI4 10
+ASGNI4
+line 3702
+;3700:
+;3701:			//FIXME: random taunt anims?
+;3702:			pm->ps->forceDodgeAnim = BOTH_ENGAGETAUNT;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1248
+ADDP4
+CNSTI4 802
+ASGNI4
+line 3704
+;3703:
+;3704:			pm->ps->forceHandExtendTime = pm->cmd.serverTime + 1000;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+INDIRP4
+CNSTI4 1240
+ADDP4
+ADDRLP4 8
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1000
+ADDI4
+ASGNI4
+line 3706
+;3705:			
+;3706:			pm->ps->weaponTime = 100;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 44
+ADDP4
+CNSTI4 100
+ASGNI4
+line 3708
+;3707:
+;3708:			PM_AddEvent( EV_TAUNT );
+CNSTI4 102
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3709
+;3709:		}
+LABELV $1472
+line 3745
+;3710:#if 0
+;3711:// Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
+;3712:// I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.
+;3713:// We can always add some back in if we want though.
+;3714:	} else if ( pm->cmd.buttons & BUTTON_GETFLAG ) {
+;3715:		if ( pm->ps->torsoTimer == 0 ) {
+;3716:			PM_StartTorsoAnim( TORSO_GETFLAG );
+;3717:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3718:		}
+;3719:	} else if ( pm->cmd.buttons & BUTTON_GUARDBASE ) {
+;3720:		if ( pm->ps->torsoTimer == 0 ) {
+;3721:			PM_StartTorsoAnim( TORSO_GUARDBASE );
+;3722:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3723:		}
+;3724:	} else if ( pm->cmd.buttons & BUTTON_PATROL ) {
+;3725:		if ( pm->ps->torsoTimer == 0 ) {
+;3726:			PM_StartTorsoAnim( TORSO_PATROL );
+;3727:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3728:		}
+;3729:	} else if ( pm->cmd.buttons & BUTTON_FOLLOWME ) {
+;3730:		if ( pm->ps->torsoTimer == 0 ) {
+;3731:			PM_StartTorsoAnim( TORSO_FOLLOWME );
+;3732:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3733:		}
+;3734:	} else if ( pm->cmd.buttons & BUTTON_AFFIRMATIVE ) {
+;3735:		if ( pm->ps->torsoTimer == 0 ) {
+;3736:			PM_StartTorsoAnim( TORSO_AFFIRMATIVE);
+;3737:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3738:		}
+;3739:	} else if ( pm->cmd.buttons & BUTTON_NEGATIVE ) {
+;3740:		if ( pm->ps->torsoTimer == 0 ) {
+;3741:			PM_StartTorsoAnim( TORSO_NEGATIVE );
+;3742:			pm->ps->torsoTimer = 600;	//TIMER_GESTURE;
+;3743:		}
+;3744:#endif //
+;3745:	}
+LABELV $1470
+line 3746
+;3746:}
+LABELV $1469
+endproc PM_Animate 12 4
+proc PM_DropTimers 4 0
+line 3754
+;3747:
+;3748:
+;3749:/*
+;3750:================
+;3751:PM_DropTimers
+;3752:================
+;3753:*/
+;3754:static void PM_DropTimers( void ) {
+line 3756
+;3755:	// drop misc timing counter
+;3756:	if ( pm->ps->pm_time ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1475
+line 3757
+;3757:		if ( pml.msec >= pm->ps->pm_time ) {
+ADDRGP4 pml+40
+INDIRI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+INDIRI4
+LTI4 $1477
+line 3758
+;3758:			pm->ps->pm_flags &= ~PMF_ALL_TIMES;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRI4
+CNSTI4 -353
+BANDI4
+ASGNI4
+line 3759
+;3759:			pm->ps->pm_time = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3760
+;3760:		} else {
+ADDRGP4 $1478
+JUMPV
+LABELV $1477
+line 3761
+;3761:			pm->ps->pm_time -= pml.msec;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 16
+ADDP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRI4
+ADDRGP4 pml+40
+INDIRI4
+SUBI4
+ASGNI4
+line 3762
+;3762:		}
+LABELV $1478
+line 3763
+;3763:	}
+LABELV $1475
+line 3766
+;3764:
+;3765:	// drop animation counter
+;3766:	if ( pm->ps->legsTimer > 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1481
+line 3767
+;3767:		pm->ps->legsTimer -= pml.msec;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRI4
+ADDRGP4 pml+40
+INDIRI4
+SUBI4
+ASGNI4
+line 3768
+;3768:		if ( pm->ps->legsTimer < 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 0
+GEI4 $1484
+line 3769
+;3769:			pm->ps->legsTimer = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3770
+;3770:		}
+LABELV $1484
+line 3771
+;3771:	}
+LABELV $1481
+line 3773
+;3772:
+;3773:	if ( pm->ps->torsoTimer > 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+CNSTI4 0
+LEI4 $1486
+line 3774
+;3774:		pm->ps->torsoTimer -= pml.msec;
+ADDRLP4 0
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+ADDRLP4 0
+INDIRP4
+INDIRI4
+ADDRGP4 pml+40
+INDIRI4
+SUBI4
+ASGNI4
+line 3775
+;3775:		if ( pm->ps->torsoTimer < 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+INDIRI4
+CNSTI4 0
+GEI4 $1489
+line 3776
+;3776:			pm->ps->torsoTimer = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 96
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3777
+;3777:		}
+LABELV $1489
+line 3778
+;3778:	}
+LABELV $1486
+line 3779
+;3779:}
+LABELV $1474
+endproc PM_DropTimers 4 0
+export PM_UpdateViewAngles
+proc PM_UpdateViewAngles 24 0
+line 3789
+;3780:
+;3781:/*
+;3782:================
+;3783:PM_UpdateViewAngles
+;3784:
+;3785:This can be used as another entry point when only the viewangles
+;3786:are being updated isntead of a full move
+;3787:================
+;3788:*/
+;3789:void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
+line 3793
+;3790:	short		temp;
+;3791:	int		i;
+;3792:
+;3793:	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPINTERMISSION) {
+ADDRLP4 8
+ADDRFP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 8
+INDIRI4
+CNSTI4 6
+EQI4 $1494
+ADDRLP4 8
+INDIRI4
+CNSTI4 7
+NEI4 $1492
+LABELV $1494
+line 3794
+;3794:		return;		// no view changes at all
+ADDRGP4 $1491
+JUMPV
+LABELV $1492
+line 3797
+;3795:	}
+;3796:
+;3797:	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 ) {
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 3
+EQI4 $1495
+ADDRLP4 12
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 0
+GTI4 $1495
+line 3798
+;3798:		return;		// no view changes at all
+ADDRGP4 $1491
+JUMPV
+LABELV $1495
+line 3802
+;3799:	}
+;3800:
+;3801:	// circularly clamp the angles with deltas
+;3802:	for (i=0 ; i<3 ; i++) {
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+LABELV $1497
+line 3803
+;3803:		temp = cmd->angles[i] + ps->delta_angles[i];
+ADDRLP4 16
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 4
+ADDRLP4 16
+INDIRI4
+ADDRFP4 4
+INDIRP4
+CNSTI4 4
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 68
+ADDP4
+ADDP4
+INDIRI4
+ADDI4
+CVII2 4
+ASGNI2
+line 3804
+;3804:		if ( i == PITCH ) {
+ADDRLP4 0
+INDIRI4
+CNSTI4 0
+NEI4 $1501
+line 3806
+;3805:			// don't let the player look up or down more than 90 degrees
+;3806:			if ( temp > 16000 ) {
+ADDRLP4 4
+INDIRI2
+CVII4 2
+CNSTI4 16000
+LEI4 $1503
+line 3807
+;3807:				ps->delta_angles[i] = 16000 - cmd->angles[i];
+ADDRLP4 20
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 68
+ADDP4
+ADDP4
+CNSTI4 16000
+ADDRLP4 20
+INDIRI4
+ADDRFP4 4
+INDIRP4
+CNSTI4 4
+ADDP4
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3808
+;3808:				temp = 16000;
+ADDRLP4 4
+CNSTI2 16000
+ASGNI2
+line 3809
+;3809:			} else if ( temp < -16000 ) {
+ADDRGP4 $1504
+JUMPV
+LABELV $1503
+ADDRLP4 4
+INDIRI2
+CVII4 2
+CNSTI4 -16000
+GEI4 $1505
+line 3810
+;3810:				ps->delta_angles[i] = -16000 - cmd->angles[i];
+ADDRLP4 20
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ASGNI4
+ADDRLP4 20
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 68
+ADDP4
+ADDP4
+CNSTI4 -16000
+ADDRLP4 20
+INDIRI4
+ADDRFP4 4
+INDIRP4
+CNSTI4 4
+ADDP4
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3811
+;3811:				temp = -16000;
+ADDRLP4 4
+CNSTI2 -16000
+ASGNI2
+line 3812
+;3812:			}
+LABELV $1505
+LABELV $1504
+line 3813
+;3813:		}
+LABELV $1501
+line 3814
+;3814:		ps->viewangles[i] = SHORT2ANGLE(temp);
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 156
+ADDP4
+ADDP4
+CNSTF4 1001652224
+ADDRLP4 4
+INDIRI2
+CVII4 2
+CVIF4 4
+MULF4
+ASGNF4
+line 3815
+;3815:	}
+LABELV $1498
+line 3802
+ADDRLP4 0
+ADDRLP4 0
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 3
+LTI4 $1497
+line 3817
+;3816:
+;3817:}
+LABELV $1491
+endproc PM_UpdateViewAngles 24 0
+export PM_AdjustAttackStates
+proc PM_AdjustAttackStates 56 4
+line 3822
+;3818:
+;3819://-------------------------------------------
+;3820:void PM_AdjustAttackStates( pmove_t *pm )
+;3821://-------------------------------------------
+;3822:{
+line 3826
+;3823:	int amount;
+;3824:
+;3825:	// get ammo usage
+;3826:	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1508
+line 3827
+;3827:	{
+line 3828
+;3828:		amount = pm->ps->ammo[weaponData[ pm->ps->weapon ].ammoIndex] - weaponData[pm->ps->weapon].altEnergyPerShot;
+ADDRLP4 4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 8
+CNSTI4 56
+ADDRLP4 4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 8
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 4
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 8
+INDIRI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3829
+;3829:	}
+ADDRGP4 $1509
+JUMPV
+LABELV $1508
+line 3831
+;3830:	else
+;3831:	{
+line 3832
+;3832:		amount = pm->ps->ammo[weaponData[ pm->ps->weapon ].ammoIndex] - weaponData[pm->ps->weapon].energyPerShot;
+ADDRLP4 4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 8
+CNSTI4 56
+ADDRLP4 4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 8
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 4
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 8
+INDIRI4
+ADDRGP4 weaponData+8
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3833
+;3833:	}
+LABELV $1509
+line 3836
+;3834:
+;3835:	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
+;3836:	if ( pm->ps->weapon == WP_DISRUPTOR && pm->ps->weaponstate == WEAPON_READY )
+ADDRLP4 4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1512
+ADDRLP4 4
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1512
+line 3837
+;3837:	{
+line 3838
+;3838:		if ( !(pm->ps->eFlags & EF_ALT_FIRING) && (pm->cmd.buttons & BUTTON_ALT_ATTACK) /*&&
+ADDRLP4 8
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTI4 0
+ASGNI4
+ADDRLP4 8
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+INDIRI4
+CNSTI4 512
+BANDI4
+ADDRLP4 12
+INDIRI4
+NEI4 $1514
+ADDRLP4 8
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+ADDRLP4 12
+INDIRI4
+EQI4 $1514
+line 3840
+;3839:			pm->cmd.upmove <= 0 && !pm->cmd.forwardmove && !pm->cmd.rightmove*/)
+;3840:		{
+line 3842
+;3841:			// We just pressed the alt-fire key
+;3842:			if ( !pm->ps->zoomMode )
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1516
+line 3843
+;3843:			{
+line 3845
+;3844:				// not already zooming, so do it now
+;3845:				pm->ps->zoomMode = 1;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3846
+;3846:				pm->ps->zoomLocked = qfalse;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3847
+;3847:				pm->ps->zoomFov = 80.0f;//cg_fov.value;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+CNSTF4 1117782016
+ASGNF4
+line 3848
+;3848:				pm->ps->zoomLockTime = pm->cmd.serverTime + 50;
+ADDRLP4 16
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+INDIRP4
+CNSTI4 1336
+ADDP4
+ADDRLP4 16
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 50
+ADDI4
+ASGNI4
+line 3849
+;3849:				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+CNSTI4 35
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3850
+;3850:			}
+ADDRGP4 $1515
+JUMPV
+LABELV $1516
+line 3851
+;3851:			else if (pm->ps->zoomMode == 1 && pm->ps->zoomLockTime < pm->cmd.serverTime)
+ADDRLP4 16
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 20
+ADDRLP4 16
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1515
+ADDRLP4 20
+INDIRP4
+CNSTI4 1336
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1515
+line 3852
+;3852:			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
+line 3854
+;3853:				// already zooming, so must be wanting to turn it off
+;3854:				pm->ps->zoomMode = 0;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3855
+;3855:				pm->ps->zoomTime = pm->ps->commandTime;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 1324
+ADDP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+ASGNI4
+line 3856
+;3856:				pm->ps->zoomLocked = qfalse;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3857
+;3857:				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+CNSTI4 35
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3858
+;3858:			}
+line 3859
+;3859:		}
+ADDRGP4 $1515
+JUMPV
+LABELV $1514
+line 3860
+;3860:		else if ( !(pm->cmd.buttons & BUTTON_ALT_ATTACK ) && pm->ps->zoomLockTime < pm->cmd.serverTime)
+ADDRLP4 16
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 16
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+NEI4 $1520
+ADDRLP4 16
+INDIRP4
+INDIRP4
+CNSTI4 1336
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1520
+line 3861
+;3861:		{
+line 3863
+;3862:			// Not pressing zoom any more
+;3863:			if ( pm->ps->zoomMode )
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1522
+line 3864
+;3864:			{
+line 3865
+;3865:				if (pm->ps->zoomMode == 1 && !pm->ps->zoomLocked)
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1524
+ADDRLP4 20
+INDIRP4
+CNSTI4 1328
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1524
+line 3866
+;3866:				{ //approximate what level the client should be zoomed at based on how long zoom was held
+line 3867
+;3867:					pm->ps->zoomFov = ((pm->cmd.serverTime+50) - pm->ps->zoomLockTime) * 0.035f;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 28
+ADDRLP4 24
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 1332
+ADDP4
+CNSTF4 1024416809
+ADDRLP4 24
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 50
+ADDI4
+ADDRLP4 28
+INDIRP4
+CNSTI4 1336
+ADDP4
+INDIRI4
+SUBI4
+CVIF4 4
+MULF4
+ASGNF4
+line 3868
+;3868:					if (pm->ps->zoomFov > 50)
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+INDIRF4
+CNSTF4 1112014848
+LEF4 $1526
+line 3869
+;3869:					{
+line 3870
+;3870:						pm->ps->zoomFov = 50;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+CNSTF4 1112014848
+ASGNF4
+line 3871
+;3871:					}
+LABELV $1526
+line 3872
+;3872:					if (pm->ps->zoomFov < 1)
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+INDIRF4
+CNSTF4 1065353216
+GEF4 $1528
+line 3873
+;3873:					{
+line 3874
+;3874:						pm->ps->zoomFov = 1;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1332
+ADDP4
+CNSTF4 1065353216
+ASGNF4
+line 3875
+;3875:					}
+LABELV $1528
+line 3876
+;3876:				}
+LABELV $1524
+line 3878
+;3877:				// were zooming in, so now lock the zoom
+;3878:				pm->ps->zoomLocked = qtrue;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 1
+ASGNI4
+line 3879
+;3879:			}
+LABELV $1522
+line 3880
+;3880:		}
+LABELV $1520
+LABELV $1515
+line 3891
+;3881:		//This seemed like a good idea, but apparently it confuses people. So disabled for now.
+;3882:		/*
+;3883:		else if (!(pm->ps->eFlags & EF_ALT_FIRING) && (pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
+;3884:			(pm->cmd.upmove > 0 || pm->cmd.forwardmove || pm->cmd.rightmove))
+;3885:		{ //if you try to zoom while moving, just convert it into a primary attack
+;3886:			pm->cmd.buttons &= ~BUTTON_ALT_ATTACK;
+;3887:			pm->cmd.buttons |= BUTTON_ATTACK;
+;3888:		}
+;3889:		*/
+;3890:
+;3891:		if (pm->cmd.upmove > 0 || pm->cmd.forwardmove || pm->cmd.rightmove)
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 24
+CNSTI4 0
+ASGNI4
+ADDRLP4 20
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 24
+INDIRI4
+GTI4 $1533
+ADDRLP4 20
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 24
+INDIRI4
+NEI4 $1533
+ADDRLP4 20
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 24
+INDIRI4
+EQI4 $1530
+LABELV $1533
+line 3892
+;3892:		{
+line 3893
+;3893:			if (pm->ps->zoomMode == 1 && pm->ps->zoomLockTime < pm->cmd.serverTime)
+ADDRLP4 28
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 32
+ADDRLP4 28
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1534
+ADDRLP4 32
+INDIRP4
+CNSTI4 1336
+ADDP4
+INDIRI4
+ADDRLP4 28
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1534
+line 3894
+;3894:			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
+line 3895
+;3895:				pm->ps->zoomMode = 0;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3896
+;3896:				pm->ps->zoomTime = pm->ps->commandTime;
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+CNSTI4 1324
+ADDP4
+ADDRLP4 36
+INDIRP4
+INDIRI4
+ASGNI4
+line 3897
+;3897:				pm->ps->zoomLocked = qfalse;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3898
+;3898:				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+CNSTI4 35
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3899
+;3899:			}
+LABELV $1534
+line 3900
+;3900:		}
+LABELV $1530
+line 3902
+;3901:
+;3902:		if ( pm->cmd.buttons & BUTTON_ATTACK )
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 1
+BANDI4
+CNSTI4 0
+EQI4 $1536
+line 3903
+;3903:		{
+line 3906
+;3904:			// If we are zoomed, we should switch the ammo usage to the alt-fire, otherwise, we'll
+;3905:			//	just use whatever ammo was selected from above
+;3906:			if ( pm->ps->zoomMode )
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1513
+line 3907
+;3907:			{
+line 3908
+;3908:				amount = pm->ps->ammo[weaponData[ pm->ps->weapon ].ammoIndex] - 
+ADDRLP4 28
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 32
+CNSTI4 56
+ADDRLP4 28
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+MULI4
+ASGNI4
+ADDRLP4 0
+ADDRLP4 32
+INDIRI4
+ADDRGP4 weaponData
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRLP4 28
+INDIRP4
+CNSTI4 408
+ADDP4
+ADDP4
+INDIRI4
+ADDRLP4 32
+INDIRI4
+ADDRGP4 weaponData+20
+ADDP4
+INDIRI4
+SUBI4
+ASGNI4
+line 3910
+;3909:							weaponData[pm->ps->weapon].altEnergyPerShot;
+;3910:			}
+line 3911
+;3911:		}
+ADDRGP4 $1513
+JUMPV
+LABELV $1536
+line 3913
+;3912:		else
+;3913:		{
+line 3915
+;3914:			// alt-fire button pressing doesn't use any ammo
+;3915:			amount = 0;
+ADDRLP4 0
+CNSTI4 0
+ASGNI4
+line 3916
+;3916:		}
+line 3917
+;3917:	}
+ADDRGP4 $1513
+JUMPV
+LABELV $1512
+line 3918
+;3918:	else if (pm->ps->weapon == WP_DISRUPTOR) //still perform certain checks, even if the weapon is not ready
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1541
+line 3919
+;3919:	{
+line 3920
+;3920:		if (pm->cmd.upmove > 0 || pm->cmd.forwardmove || pm->cmd.rightmove)
+ADDRLP4 8
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTI4 0
+ASGNI4
+ADDRLP4 8
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 12
+INDIRI4
+GTI4 $1546
+ADDRLP4 8
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 12
+INDIRI4
+NEI4 $1546
+ADDRLP4 8
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 12
+INDIRI4
+EQI4 $1543
+LABELV $1546
+line 3921
+;3921:		{
+line 3922
+;3922:			if (pm->ps->zoomMode == 1 && pm->ps->zoomLockTime < pm->cmd.serverTime)
+ADDRLP4 16
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 20
+ADDRLP4 16
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1547
+ADDRLP4 20
+INDIRP4
+CNSTI4 1336
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+GEI4 $1547
+line 3923
+;3923:			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
+line 3924
+;3924:				pm->ps->zoomMode = 0;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1320
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3925
+;3925:				pm->ps->zoomTime = pm->ps->commandTime;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 1324
+ADDP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+ASGNI4
+line 3926
+;3926:				pm->ps->zoomLocked = qfalse;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1328
+ADDP4
+CNSTI4 0
+ASGNI4
+line 3927
+;3927:				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
+CNSTI4 35
+ARGI4
+ADDRGP4 PM_AddEvent
+CALLV
+pop
+line 3928
+;3928:			}
+LABELV $1547
+line 3929
+;3929:		}
+LABELV $1543
+line 3930
+;3930:	}
+LABELV $1541
+LABELV $1513
+line 3961
+;3931:
+;3932:	/*
+;3933:	// set the firing flag for continuous beam weapons
+;3934:	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION
+;3935:		&& ( pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) && pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] ) 
+;3936:	{
+;3937:		// Check more in depth here.
+;3938:		if ((pm->cmd.buttons & BUTTON_ATTACK) && 
+;3939:				pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].energyPerShot)
+;3940:		{
+;3941:			pm->ps->eFlags |= EF_FIRING;
+;3942:			pm->ps->eFlags &= ~EF_ALT_FIRING;
+;3943:		}
+;3944:		else if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) && 
+;3945:				pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot)
+;3946:		{
+;3947:			pm->ps->eFlags |= (EF_FIRING|EF_ALT_FIRING);	// Both are set in the event of an alt fire
+;3948:		}
+;3949:		else
+;3950:		{
+;3951:			pm->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+;3952:		}
+;3953:	} 
+;3954:	else 
+;3955:	{
+;3956:		pm->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+;3957:	}
+;3958:	*/
+;3959:
+;3960:	// set the firing flag for continuous beam weapons, saber will fire even if out of ammo
+;3961:	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && 
+ADDRLP4 8
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+ADDRLP4 8
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 16
+CNSTI4 0
+ASGNI4
+ADDRLP4 12
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 512
+BANDI4
+ADDRLP4 16
+INDIRI4
+NEI4 $1549
+ADDRLP4 12
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 6
+EQI4 $1549
+ADDRLP4 8
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 129
+BANDI4
+ADDRLP4 16
+INDIRI4
+EQI4 $1549
+ADDRLP4 0
+INDIRI4
+ADDRLP4 16
+INDIRI4
+GEI4 $1551
+ADDRLP4 12
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1549
+LABELV $1551
+line 3965
+;3962:			pm->ps->pm_type != PM_INTERMISSION && 
+;3963:			( pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) && 
+;3964:			( amount >= 0 || pm->ps->weapon == WP_SABER ))
+;3965:	{
+line 3966
+;3966:		if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+CNSTI4 0
+EQI4 $1552
+line 3967
+;3967:		{
+line 3968
+;3968:			pm->ps->eFlags |= EF_ALT_FIRING;
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+ADDRLP4 20
+INDIRP4
+INDIRI4
+CNSTI4 512
+BORI4
+ASGNI4
+line 3969
+;3969:		}
+ADDRGP4 $1553
+JUMPV
+LABELV $1552
+line 3971
+;3970:		else
+;3971:		{
+line 3972
+;3972:			pm->ps->eFlags &= ~EF_ALT_FIRING;
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+ADDRLP4 20
+INDIRP4
+INDIRI4
+CNSTI4 -513
+BANDI4
+ASGNI4
+line 3973
+;3973:		}
+LABELV $1553
+line 3976
+;3974:
+;3975:		// This flag should always get set, even when alt-firing
+;3976:		pm->ps->eFlags |= EF_FIRING;
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+ADDRLP4 20
+INDIRP4
+INDIRI4
+CNSTI4 256
+BORI4
+ASGNI4
+line 3977
+;3977:	} 
+ADDRGP4 $1550
+JUMPV
+LABELV $1549
+line 3979
+;3978:	else 
+;3979:	{
+line 3981
+;3980:		// Clear 'em out
+;3981:		pm->ps->eFlags &= ~(EF_FIRING|EF_ALT_FIRING);
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 20
+INDIRP4
+ADDRLP4 20
+INDIRP4
+INDIRI4
+CNSTI4 -769
+BANDI4
+ASGNI4
+line 3982
+;3982:	}
+LABELV $1550
+line 3985
+;3983:
+;3984:	// disruptor should convert a main fire to an alt-fire if the gun is currently zoomed
+;3985:	if ( pm->ps->weapon == WP_DISRUPTOR)
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1554
+line 3986
+;3986:	{
+line 3987
+;3987:		if ( pm->cmd.buttons & BUTTON_ATTACK && pm->ps->zoomMode == 1 && pm->ps->zoomLocked)
+ADDRLP4 20
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 24
+CNSTI4 1
+ASGNI4
+ADDRLP4 28
+CNSTI4 0
+ASGNI4
+ADDRLP4 20
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+ADDRLP4 24
+INDIRI4
+BANDI4
+ADDRLP4 28
+INDIRI4
+EQI4 $1556
+ADDRLP4 32
+ADDRLP4 20
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+ADDRLP4 24
+INDIRI4
+NEI4 $1556
+ADDRLP4 32
+INDIRP4
+CNSTI4 1328
+ADDP4
+INDIRI4
+ADDRLP4 28
+INDIRI4
+EQI4 $1556
+line 3988
+;3988:		{
+line 3990
+;3989:			// converting the main fire to an alt-fire
+;3990:			pm->cmd.buttons |= BUTTON_ALT_ATTACK;
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+ADDRLP4 36
+INDIRP4
+INDIRI4
+CNSTI4 128
+BORI4
+ASGNI4
+line 3991
+;3991:			pm->ps->eFlags |= EF_ALT_FIRING;
+ADDRLP4 40
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 40
+INDIRP4
+ADDRLP4 40
+INDIRP4
+INDIRI4
+CNSTI4 512
+BORI4
+ASGNI4
+line 3992
+;3992:		}
+ADDRGP4 $1557
+JUMPV
+LABELV $1556
+line 3993
+;3993:		else if ( pm->cmd.buttons & BUTTON_ALT_ATTACK && pm->ps->zoomMode == 1 && pm->ps->zoomLocked)
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 40
+CNSTI4 0
+ASGNI4
+ADDRLP4 36
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 128
+BANDI4
+ADDRLP4 40
+INDIRI4
+EQI4 $1558
+ADDRLP4 44
+ADDRLP4 36
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+CNSTI4 1320
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1558
+ADDRLP4 44
+INDIRP4
+CNSTI4 1328
+ADDP4
+INDIRI4
+ADDRLP4 40
+INDIRI4
+EQI4 $1558
+line 3994
+;3994:		{
+line 3995
+;3995:			pm->cmd.buttons &= ~BUTTON_ALT_ATTACK;
+ADDRLP4 48
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRI4
+CNSTI4 -129
+BANDI4
+ASGNI4
+line 3996
+;3996:			pm->ps->eFlags &= ~EF_ALT_FIRING;
+ADDRLP4 52
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+ADDRLP4 52
+INDIRP4
+INDIRI4
+CNSTI4 -513
+BANDI4
+ASGNI4
+line 3997
+;3997:		}
+LABELV $1558
+LABELV $1557
+line 3998
+;3998:	}
+LABELV $1554
+line 3999
+;3999:}
+LABELV $1507
+endproc PM_AdjustAttackStates 56 4
+export BG_CmdForRoll
+proc BG_CmdForRoll 8 0
+line 4002
+;4000:
+;4001:void BG_CmdForRoll( int anim, usercmd_t *pCmd )
+;4002:{
+line 4003
+;4003:	switch ( (anim&~ANIM_TOGGLEBIT) )
+ADDRLP4 0
+ADDRFP4 0
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 0
+INDIRI4
+CNSTI4 781
+LTI4 $1561
+ADDRLP4 0
+INDIRI4
+CNSTI4 784
+GTI4 $1561
+ADDRLP4 0
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 $1568-3124
+ADDP4
+INDIRP4
+JUMPV
+lit
+align 4
+LABELV $1568
+address $1564
+address $1565
+address $1567
+address $1566
+code
+line 4004
+;4004:	{
+LABELV $1564
+line 4006
+;4005:	case BOTH_ROLL_F:
+;4006:		pCmd->forwardmove = 127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTI1 127
+ASGNI1
+line 4007
+;4007:		pCmd->rightmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4008
+;4008:		break;
+ADDRGP4 $1562
+JUMPV
+LABELV $1565
+line 4010
+;4009:	case BOTH_ROLL_B:
+;4010:		pCmd->forwardmove = -127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTI1 -127
+ASGNI1
+line 4011
+;4011:		pCmd->rightmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4012
+;4012:		break;
+ADDRGP4 $1562
+JUMPV
+LABELV $1566
+line 4014
+;4013:	case BOTH_ROLL_R:
+;4014:		pCmd->forwardmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4015
+;4015:		pCmd->rightmove = 127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 127
+ASGNI1
+line 4016
+;4016:		break;
+ADDRGP4 $1562
+JUMPV
+LABELV $1567
+line 4018
+;4017:	case BOTH_ROLL_L:
+;4018:		pCmd->forwardmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4019
+;4019:		pCmd->rightmove = -127;
+ADDRFP4 4
+INDIRP4
+CNSTI4 25
+ADDP4
+CNSTI1 -127
+ASGNI1
+line 4020
+;4020:		break;
+LABELV $1561
+LABELV $1562
+line 4022
+;4021:	}
+;4022:	pCmd->upmove = 0;
+ADDRFP4 4
+INDIRP4
+CNSTI4 26
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4023
+;4023:}
+LABELV $1560
+endproc BG_CmdForRoll 8 0
+export BG_AdjustClientSpeed
+proc BG_AdjustClientSpeed 60 8
+line 4026
+;4024:
+;4025:void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
+;4026:{
+line 4030
+;4027:	//For prediction, always reset speed back to the last known server base speed
+;4028:	//If we didn't do this, under lag we'd eventually dwindle speed down to 0 even though
+;4029:	//that would not be the correct predicted value.
+;4030:	ps->speed = ps->basespeed;
+ADDRLP4 0
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ADDRLP4 0
+INDIRP4
+CNSTI4 64
+ADDP4
+INDIRI4
+ASGNI4
+line 4032
+;4031:
+;4032:	if (ps->forceHandExtend == HANDEXTEND_DODGE)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 7
+NEI4 $1571
+line 4033
+;4033:	{
+line 4034
+;4034:		ps->speed = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4035
+;4035:	}
+LABELV $1571
+line 4037
+;4036:
+;4037:	if (ps->forceHandExtend == HANDEXTEND_KNOCKDOWN)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1236
+ADDP4
+INDIRI4
+CNSTI4 8
+NEI4 $1573
+line 4038
+;4038:	{
+line 4039
+;4039:		ps->speed = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4040
+;4040:	}
+LABELV $1573
+line 4042
+;4041:
+;4042:	if (ps->usingATST && (cmd->rightmove ||
+ADDRLP4 4
+CNSTI4 0
+ASGNI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+ADDRLP4 4
+INDIRI4
+EQI4 $1575
+ADDRLP4 8
+ADDRFP4 4
+INDIRP4
+ASGNP4
+ADDRLP4 8
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 4
+INDIRI4
+NEI4 $1577
+ADDRLP4 8
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 4
+INDIRI4
+EQI4 $1575
+LABELV $1577
+line 4044
+;4043:		cmd->forwardmove))
+;4044:	{
+line 4045
+;4045:		if (!ps->holdMoveTime)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+CNSTI4 0
+NEI4 $1576
+line 4046
+;4046:		{
+line 4047
+;4047:			ps->torsoAnim = ( ( ps->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+CNSTI4 100
+ADDP4
+ASGNP4
+ADDRLP4 16
+CNSTI4 2048
+ASGNI4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 12
+INDIRP4
+INDIRI4
+ADDRLP4 16
+INDIRI4
+BANDI4
+ADDRLP4 16
+INDIRI4
+BXORI4
+CNSTI4 732
+BORI4
+ASGNI4
+line 4049
+;4048:				| BOTH_RUN1START;
+;4049:			ps->holdMoveTime = svTime;
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+ADDRFP4 8
+INDIRI4
+ASGNI4
+line 4050
+;4050:		}
+line 4051
+;4051:	}
+ADDRGP4 $1576
+JUMPV
+LABELV $1575
+line 4053
+;4052:	else
+;4053:	{
+line 4054
+;4054:		ps->holdMoveTime = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4056
+;4055:
+;4056:		if (ps->usingATST)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1580
+line 4057
+;4057:		{
+line 4058
+;4058:			ps->torsoAnim = ( ( ps->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+CNSTI4 100
+ADDP4
+ASGNP4
+ADDRLP4 16
+CNSTI4 2048
+ASGNI4
+ADDRLP4 12
+INDIRP4
+ADDRLP4 12
+INDIRP4
+INDIRI4
+ADDRLP4 16
+INDIRI4
+BANDI4
+ADDRLP4 16
+INDIRI4
+BXORI4
+CNSTI4 550
+BORI4
+ASGNI4
+line 4060
+;4059:				| BOTH_STAND1;
+;4060:		}
+LABELV $1580
+line 4061
+;4061:	}
+LABELV $1576
+line 4063
+;4062:
+;4063:	if (ps->usingATST &&
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 16
+CNSTI4 0
+ASGNI4
+ADDRLP4 12
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+ADDRLP4 16
+INDIRI4
+EQI4 $1582
+ADDRLP4 20
+ADDRLP4 12
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+ASGNI4
+ADDRFP4 8
+INDIRI4
+ADDRLP4 20
+INDIRI4
+SUBI4
+CNSTI4 500
+LTI4 $1584
+ADDRLP4 20
+INDIRI4
+ADDRLP4 16
+INDIRI4
+NEI4 $1582
+LABELV $1584
+line 4066
+;4064:		((svTime - ps->holdMoveTime) < 500 ||
+;4065:		!ps->holdMoveTime))
+;4066:	{
+line 4067
+;4067:		ps->speed = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4068
+;4068:	}
+ADDRGP4 $1583
+JUMPV
+LABELV $1582
+line 4069
+;4069:	else if (ps->usingATST)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1304
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1585
+line 4070
+;4070:	{
+line 4071
+;4071:		if ((svTime - ps->holdMoveTime) < 600)
+ADDRFP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 600
+GEI4 $1587
+line 4072
+;4072:		{
+line 4073
+;4073:			ps->speed *= 0.4;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1053609165
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4074
+;4074:		}
+ADDRGP4 $1588
+JUMPV
+LABELV $1587
+line 4075
+;4075:		else if ((svTime - ps->holdMoveTime) < 1000)
+ADDRFP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 1000
+GEI4 $1589
+line 4076
+;4076:		{
+line 4077
+;4077:			ps->speed *= 0.5;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4078
+;4078:		}
+ADDRGP4 $1590
+JUMPV
+LABELV $1589
+line 4079
+;4079:		else if ((svTime - ps->holdMoveTime) < 1400)
+ADDRFP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 1400
+GEI4 $1591
+line 4080
+;4080:		{
+line 4081
+;4081:			ps->speed *= 0.6;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1058642330
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4082
+;4082:		}
+ADDRGP4 $1592
+JUMPV
+LABELV $1591
+line 4083
+;4083:		else if ((svTime - ps->holdMoveTime) < 1700)
+ADDRFP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 1700
+GEI4 $1593
+line 4084
+;4084:		{
+line 4085
+;4085:			ps->speed *= 0.7;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1060320051
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4086
+;4086:		}
+ADDRGP4 $1594
+JUMPV
+LABELV $1593
+line 4087
+;4087:		else if ((svTime - ps->holdMoveTime) < 1900)
+ADDRFP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 1312
+ADDP4
+INDIRI4
+SUBI4
+CNSTI4 1900
+GEI4 $1595
+line 4088
+;4088:		{
+line 4089
+;4089:			ps->speed *= 0.8;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1061997773
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4090
+;4090:		}
+LABELV $1595
+LABELV $1594
+LABELV $1592
+LABELV $1590
+LABELV $1588
+line 4092
+;4091:
+;4092:		if (cmd->forwardmove < 0)
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $1597
+line 4093
+;4093:		{
+line 4094
+;4094:			ps->torsoAnim = ( ( ps->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 100
+ADDP4
+ASGNP4
+ADDRLP4 28
+CNSTI4 2048
+ASGNI4
+ADDRLP4 24
+INDIRP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+ADDRLP4 28
+INDIRI4
+BANDI4
+ADDRLP4 28
+INDIRI4
+BXORI4
+CNSTI4 748
+BORI4
+ASGNI4
+line 4096
+;4095:				| BOTH_WALKBACK1;
+;4096:			ps->speed *= 0.6;
+ADDRLP4 32
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+CNSTF4 1058642330
+ADDRLP4 32
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4097
+;4097:		}
+ADDRGP4 $1598
+JUMPV
+LABELV $1597
+line 4099
+;4098:		else
+;4099:		{
+line 4100
+;4100:			ps->torsoAnim = ( ( ps->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 100
+ADDP4
+ASGNP4
+ADDRLP4 28
+CNSTI4 2048
+ASGNI4
+ADDRLP4 24
+INDIRP4
+ADDRLP4 24
+INDIRP4
+INDIRI4
+ADDRLP4 28
+INDIRI4
+BANDI4
+ADDRLP4 28
+INDIRI4
+BXORI4
+CNSTI4 731
+BORI4
+ASGNI4
+line 4102
+;4101:				| BOTH_RUN1;
+;4102:		}
+LABELV $1598
+line 4103
+;4103:	}
+LABELV $1585
+LABELV $1583
+line 4105
+;4104:
+;4105:	if (ps->fd.forcePowersActive & (1 << FP_SPEED))
+ADDRFP4 0
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $1599
+line 4106
+;4106:	{
+line 4107
+;4107:		if (ps->fd.forceSpeedSmash < 1.2)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1124
+ADDP4
+INDIRF4
+CNSTF4 1067030938
+GEF4 $1601
+line 4108
+;4108:		{
+line 4109
+;4109:			ps->fd.forceSpeedSmash = 1.2;
+ADDRFP4 0
+INDIRP4
+CNSTI4 1124
+ADDP4
+CNSTF4 1067030938
+ASGNF4
+line 4110
+;4110:		}
+LABELV $1601
+line 4111
+;4111:		if (ps->fd.forceSpeedSmash > forceSpeedLevels[ps->fd.forcePowerLevel[FP_SPEED]]) //2.8
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTI4 1124
+ADDP4
+INDIRF4
+ADDRLP4 24
+INDIRP4
+CNSTI4 940
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 forceSpeedLevels
+ADDP4
+INDIRF4
+LEF4 $1603
+line 4112
+;4112:		{
+line 4113
+;4113:			ps->fd.forceSpeedSmash = forceSpeedLevels[ps->fd.forcePowerLevel[FP_SPEED]];
+ADDRLP4 28
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 1124
+ADDP4
+ADDRLP4 28
+INDIRP4
+CNSTI4 940
+ADDP4
+INDIRI4
+CNSTI4 2
+LSHI4
+ADDRGP4 forceSpeedLevels
+ADDP4
+INDIRF4
+ASGNF4
+line 4114
+;4114:		}
+LABELV $1603
+line 4115
+;4115:		ps->speed *= ps->fd.forceSpeedSmash;
+ADDRLP4 28
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 32
+ADDRLP4 28
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+ADDRLP4 32
+INDIRP4
+INDIRI4
+CVIF4 4
+ADDRLP4 28
+INDIRP4
+CNSTI4 1124
+ADDP4
+INDIRF4
+MULF4
+CVFI4 4
+ASGNI4
+line 4116
+;4116:		ps->fd.forceSpeedSmash += 0.005f;
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+CNSTI4 1124
+ADDP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+ADDRLP4 36
+INDIRP4
+INDIRF4
+CNSTF4 1000593162
+ADDF4
+ASGNF4
+line 4117
+;4117:	}
+LABELV $1599
+line 4119
+;4118:
+;4119:	if (ps->fd.forcePowersActive & (1 << FP_RAGE))
+ADDRFP4 0
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 256
+BANDI4
+CNSTI4 0
+EQI4 $1605
+line 4120
+;4120:	{
+line 4121
+;4121:		ps->speed *= 1.3;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1067869798
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4122
+;4122:	}
+ADDRGP4 $1606
+JUMPV
+LABELV $1605
+line 4123
+;4123:	else if (ps->fd.forceRageRecoveryTime > svTime)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1160
+ADDP4
+INDIRI4
+ADDRFP4 8
+INDIRI4
+LEI4 $1607
+line 4124
+;4124:	{
+line 4125
+;4125:		ps->speed *= 0.75;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1061158912
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4126
+;4126:	}
+LABELV $1607
+LABELV $1606
+line 4128
+;4127:
+;4128:	if (ps->fd.forceGripCripple)
+ADDRFP4 0
+INDIRP4
+CNSTI4 1108
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1609
+line 4129
+;4129:	{
+line 4130
+;4130:		if (ps->fd.forcePowersActive & (1 << FP_RAGE))
+ADDRFP4 0
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 256
+BANDI4
+CNSTI4 0
+EQI4 $1611
+line 4131
+;4131:		{
+line 4132
+;4132:			ps->speed *= 0.9;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1063675494
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4133
+;4133:		}
+ADDRGP4 $1612
+JUMPV
+LABELV $1611
+line 4134
+;4134:		else if (ps->fd.forcePowersActive & (1 << FP_SPEED))
+ADDRFP4 0
+INDIRP4
+CNSTI4 836
+ADDP4
+INDIRI4
+CNSTI4 4
+BANDI4
+CNSTI4 0
+EQI4 $1613
+line 4135
+;4135:		{ //force speed will help us escape
+line 4136
+;4136:			ps->speed *= 0.8;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1061997773
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4137
+;4137:		}
+ADDRGP4 $1614
+JUMPV
+LABELV $1613
+line 4139
+;4138:		else
+;4139:		{
+line 4140
+;4140:			ps->speed *= 0.2;
+ADDRLP4 24
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+CNSTF4 1045220557
+ADDRLP4 24
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4141
+;4141:		}
+LABELV $1614
+LABELV $1612
+line 4142
+;4142:	}
+LABELV $1609
+line 4144
+;4143:
+;4144:	if ( BG_SaberInAttack( ps->saberMove ) && cmd->forwardmove < 0 )
+ADDRFP4 0
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 24
+ADDRGP4 BG_SaberInAttack
+CALLI4
+ASGNI4
+ADDRLP4 28
+CNSTI4 0
+ASGNI4
+ADDRLP4 24
+INDIRI4
+ADDRLP4 28
+INDIRI4
+EQI4 $1615
+ADDRFP4 4
+INDIRP4
+CNSTI4 24
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 28
+INDIRI4
+GEI4 $1615
+line 4145
+;4145:	{//if running backwards while attacking, don't run as fast.
+line 4146
+;4146:		switch( ps->fd.saberAnimLevel )
+ADDRLP4 32
+ADDRFP4 0
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 32
+INDIRI4
+CNSTI4 1
+EQI4 $1620
+ADDRLP4 32
+INDIRI4
+CNSTI4 2
+EQI4 $1621
+ADDRLP4 32
+INDIRI4
+CNSTI4 3
+EQI4 $1622
+ADDRGP4 $1616
+JUMPV
+line 4147
+;4147:		{
+LABELV $1620
+line 4149
+;4148:		case FORCE_LEVEL_1:
+;4149:			ps->speed *= 0.75f;
+ADDRLP4 40
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 40
+INDIRP4
+CNSTF4 1061158912
+ADDRLP4 40
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4150
+;4150:			break;
+ADDRGP4 $1616
+JUMPV
+LABELV $1621
+line 4152
+;4151:		case FORCE_LEVEL_2:
+;4152:			ps->speed *= 0.60f;
+ADDRLP4 44
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+CNSTF4 1058642330
+ADDRLP4 44
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4153
+;4153:			break;
+ADDRGP4 $1616
+JUMPV
+LABELV $1622
+line 4155
+;4154:		case FORCE_LEVEL_3:
+;4155:			ps->speed *= 0.45f;
+ADDRLP4 48
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+CNSTF4 1055286886
+ADDRLP4 48
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4156
+;4156:			break;
+line 4158
+;4157:		default:
+;4158:			break;
+line 4160
+;4159:		}
+;4160:	}
+ADDRGP4 $1616
+JUMPV
+LABELV $1615
+line 4161
+;4161:	else if ( BG_SpinningSaberAnim( ps->legsAnim ) )
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 32
+ADDRGP4 BG_SpinningSaberAnim
+CALLI4
+ASGNI4
+ADDRLP4 32
+INDIRI4
+CNSTI4 0
+EQI4 $1623
+line 4162
+;4162:	{
+line 4163
+;4163:		ps->speed *= 0.5f;
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 36
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4164
+;4164:	}
+ADDRGP4 $1624
+JUMPV
+LABELV $1623
+line 4165
+;4165:	else if ( ps->weapon == WP_SABER && BG_SaberInAttack( ps->saberMove ) )
+ADDRLP4 36
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 36
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1625
+ADDRLP4 36
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 40
+ADDRGP4 BG_SaberInAttack
+CALLI4
+ASGNI4
+ADDRLP4 40
+INDIRI4
+CNSTI4 0
+EQI4 $1625
+line 4166
+;4166:	{//if attacking with saber while running, drop your speed
+line 4167
+;4167:		switch( ps->fd.saberAnimLevel )
+ADDRLP4 44
+ADDRFP4 0
+INDIRP4
+CNSTI4 1216
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 44
+INDIRI4
+CNSTI4 2
+EQI4 $1630
+ADDRLP4 44
+INDIRI4
+CNSTI4 3
+EQI4 $1631
+ADDRGP4 $1628
+JUMPV
+line 4168
+;4168:		{
+LABELV $1630
+line 4170
+;4169:		case FORCE_LEVEL_2:
+;4170:			ps->speed *= 0.85f;
+ADDRLP4 52
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTF4 1062836634
+ADDRLP4 52
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4171
+;4171:			break;
+ADDRGP4 $1628
+JUMPV
+LABELV $1631
+line 4173
+;4172:		case FORCE_LEVEL_3:
+;4173:			ps->speed *= 0.70f;
+ADDRLP4 56
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+CNSTF4 1060320051
+ADDRLP4 56
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4174
+;4174:			break;
+line 4176
+;4175:		default:
+;4176:			break;
+LABELV $1628
+line 4178
+;4177:		}
+;4178:	}
+LABELV $1625
+LABELV $1624
+LABELV $1616
+line 4181
+;4179:
+;4180:
+;4181:	if ( BG_InRoll( ps, ps->legsAnim ) && ps->speed > 200 )
+ADDRLP4 44
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 44
+INDIRP4
+ARGP4
+ADDRLP4 44
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRLP4 48
+ADDRGP4 BG_InRoll
+CALLI4
+ASGNI4
+ADDRLP4 48
+INDIRI4
+CNSTI4 0
+EQI4 $1632
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CNSTI4 200
+LEI4 $1632
+line 4182
+;4182:	{ //can't roll unless you're able to move normally
+line 4183
+;4183:		BG_CmdForRoll( ps->legsAnim, cmd );
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+ARGI4
+ADDRFP4 4
+INDIRP4
+ARGP4
+ADDRGP4 BG_CmdForRoll
+CALLV
+pop
+line 4184
+;4184:		if ((ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_ROLL_B)
+ADDRFP4 0
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+CNSTI4 782
+NEI4 $1634
+line 4185
+;4185:		{ //backwards roll is pretty fast, should also be slower
+line 4186
+;4186:			ps->speed = ps->legsTimer/2.5;
+ADDRLP4 52
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 60
+ADDP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CVIF4 4
+CNSTF4 1075838976
+DIVF4
+CVFI4 4
+ASGNI4
+line 4187
+;4187:		}
+ADDRGP4 $1635
+JUMPV
+LABELV $1634
+line 4189
+;4188:		else
+;4189:		{
+line 4190
+;4190:			ps->speed = ps->legsTimer/1.5;//450;
+ADDRLP4 52
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 60
+ADDP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CVIF4 4
+CNSTF4 1069547520
+DIVF4
+CVFI4 4
+ASGNI4
+line 4191
+;4191:		}
+LABELV $1635
+line 4192
+;4192:		if (ps->speed > 600)
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+INDIRI4
+CNSTI4 600
+LEI4 $1636
+line 4193
+;4193:		{
+line 4194
+;4194:			ps->speed = 600;
+ADDRFP4 0
+INDIRP4
+CNSTI4 60
+ADDP4
+CNSTI4 600
+ASGNI4
+line 4195
+;4195:		}
+LABELV $1636
+line 4197
+;4196:		//Automatically slow down as the roll ends.
+;4197:	}
+LABELV $1632
+line 4198
+;4198:}
+LABELV $1570
+endproc BG_AdjustClientSpeed 60 8
+export PmoveSingle
+proc PmoveSingle 108 16
+line 4208
+;4199:
+;4200:/*
+;4201:================
+;4202:PmoveSingle
+;4203:
+;4204:================
+;4205:*/
+;4206:void trap_SnapVector( float *v );
+;4207:
+;4208:void PmoveSingle (pmove_t *pmove) {
+line 4209
+;4209:	pm = pmove;
+ADDRGP4 pm
+ADDRFP4 0
+INDIRP4
+ASGNP4
+line 4211
+;4210:
+;4211:	gPMDoSlowFall = PM_DoSlowFall();
+ADDRLP4 0
+ADDRGP4 PM_DoSlowFall
+CALLI4
+ASGNI4
+ADDRGP4 gPMDoSlowFall
+ADDRLP4 0
+INDIRI4
+ASGNI4
+line 4215
+;4212:
+;4213:	// this counter lets us debug movement problems with a journal
+;4214:	// by setting a conditional breakpoint fot the previous frame
+;4215:	c_pmove++;
+ADDRLP4 4
+ADDRGP4 c_pmove
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 1
+ADDI4
+ASGNI4
+line 4218
+;4216:
+;4217:	// clear results
+;4218:	pm->numtouch = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 52
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4219
+;4219:	pm->watertype = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 212
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4220
+;4220:	pm->waterlevel = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4222
+;4221:
+;4222:	if (pm->ps->pm_type == PM_FLOAT)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1639
+line 4223
+;4223:	{ //You get no control over where you go in grip movement
+line 4224
+;4224:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4225
+;4225:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4226
+;4226:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4227
+;4227:	}
+LABELV $1639
+line 4229
+;4228:
+;4229:	if (pm->ps->eFlags & EF_DISINTEGRATION)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 108
+ADDP4
+INDIRI4
+CNSTI4 33554432
+BANDI4
+CNSTI4 0
+EQI4 $1641
+line 4230
+;4230:	{
+line 4231
+;4231:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4232
+;4232:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4233
+;4233:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4234
+;4234:	}
+LABELV $1641
+line 4236
+;4235:
+;4236:	if ( pm->ps->saberMove == LS_A_LUNGE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+CNSTI4 14
+NEI4 $1643
+line 4237
+;4237:	{//can't move during lunge
+line 4238
+;4238:		pm->cmd.rightmove = pm->cmd.upmove = 0;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTI1 0
+ASGNI1
+ADDRLP4 8
+INDIRP4
+CNSTI4 30
+ADDP4
+ADDRLP4 12
+INDIRI1
+ASGNI1
+ADDRLP4 8
+INDIRP4
+CNSTI4 29
+ADDP4
+ADDRLP4 12
+INDIRI1
+ASGNI1
+line 4239
+;4239:		if ( pm->ps->legsTimer > 500 )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 88
+ADDP4
+INDIRI4
+CNSTI4 500
+LEI4 $1645
+line 4240
+;4240:		{
+line 4241
+;4241:			pm->cmd.forwardmove = 127;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 127
+ASGNI1
+line 4242
+;4242:		}
+ADDRGP4 $1646
+JUMPV
+LABELV $1645
+line 4244
+;4243:		else
+;4244:		{
+line 4245
+;4245:			pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4246
+;4246:		}
+LABELV $1646
+line 4247
+;4247:	}
+LABELV $1643
+line 4249
+;4248:
+;4249:	if ( pm->ps->saberMove == LS_A_JUMP_T__B_ )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+CNSTI4 15
+NEI4 $1647
+line 4250
+;4250:	{//can't move during leap
+line 4251
+;4251:		if ( pm->ps->groundEntityNum != ENTITYNUM_NONE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+EQI4 $1649
+line 4252
+;4252:		{//hit the ground
+line 4253
+;4253:			pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4254
+;4254:		}
+LABELV $1649
+line 4255
+;4255:		pm->cmd.rightmove = pm->cmd.upmove = 0;
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 12
+CNSTI1 0
+ASGNI1
+ADDRLP4 8
+INDIRP4
+CNSTI4 30
+ADDP4
+ADDRLP4 12
+INDIRI1
+ASGNI1
+ADDRLP4 8
+INDIRP4
+CNSTI4 29
+ADDP4
+ADDRLP4 12
+INDIRI1
+ASGNI1
+line 4256
+;4256:	}
+LABELV $1647
+line 4258
+;4257:
+;4258:	if ( pm->ps->saberMove == LS_A_BACK || pm->ps->saberMove == LS_A_BACK_CR 
+ADDRLP4 8
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 512
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 8
+INDIRI4
+CNSTI4 12
+EQI4 $1657
+ADDRLP4 8
+INDIRI4
+CNSTI4 13
+EQI4 $1657
+ADDRLP4 8
+INDIRI4
+CNSTI4 11
+EQI4 $1657
+ADDRLP4 8
+INDIRI4
+CNSTI4 16
+EQI4 $1657
+ADDRLP4 8
+INDIRI4
+CNSTI4 17
+EQI4 $1657
+ADDRLP4 8
+INDIRI4
+CNSTI4 15
+NEI4 $1651
+LABELV $1657
+line 4261
+;4259:		|| pm->ps->saberMove == LS_A_BACKSTAB || pm->ps->saberMove == LS_A_FLIP_STAB ||
+;4260:		pm->ps->saberMove == LS_A_FLIP_SLASH || pm->ps->saberMove == LS_A_JUMP_T__B_ )
+;4261:	{
+line 4262
+;4262:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4263
+;4263:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4264
+;4264:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4265
+;4265:	}
+LABELV $1651
+line 4267
+;4266:
+;4267:	if ((pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_A2_STABBACK1) ||
+ADDRLP4 12
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 92
+ADDP4
+INDIRI4
+CNSTI4 -2049
+BANDI4
+ASGNI4
+ADDRLP4 12
+INDIRI4
+CNSTI4 803
+EQI4 $1664
+ADDRLP4 12
+INDIRI4
+CNSTI4 804
+EQI4 $1664
+ADDRLP4 12
+INDIRI4
+CNSTI4 809
+EQI4 $1664
+ADDRLP4 12
+INDIRI4
+CNSTI4 807
+EQI4 $1664
+ADDRLP4 12
+INDIRI4
+CNSTI4 806
+EQI4 $1664
+ADDRLP4 12
+INDIRI4
+CNSTI4 805
+NEI4 $1658
+LABELV $1664
+line 4274
+;4268:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_ATTACK_BACK) ||
+;4269:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_CROUCHATTACKBACK1) ||
+;4270:		//(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_LUNGE2_B__T_) ||
+;4271:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_FORCELEAP2_T__B_) ||
+;4272:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_JUMPFLIPSTABDOWN) ||
+;4273:		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == (BOTH_JUMPFLIPSLASHDOWN1))
+;4274:	{
+line 4275
+;4275:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4276
+;4276:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4277
+;4277:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4278
+;4278:	}
+LABELV $1658
+line 4280
+;4279:
+;4280:	if (pm->ps->emplacedIndex)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 596
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1665
+line 4281
+;4281:	{
+line 4282
+;4282:		if (pm->cmd.forwardmove < 0)
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $1667
+line 4283
+;4283:		{
+line 4284
+;4284:			pm->ps->emplacedIndex = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 596
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4285
+;4285:		}
+ADDRGP4 $1668
+JUMPV
+LABELV $1667
+line 4287
+;4286:		else
+;4287:		{
+line 4288
+;4288:			pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4289
+;4289:			pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4290
+;4290:			pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4291
+;4291:		}
+LABELV $1668
+line 4292
+;4292:	}
+LABELV $1665
+line 4294
+;4293:
+;4294:	if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
+ADDRLP4 16
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ASGNP4
+ADDRLP4 20
+CNSTI4 5
+ASGNI4
+ADDRLP4 16
+INDIRP4
+CNSTI4 148
+ADDP4
+INDIRI4
+ADDRLP4 20
+INDIRI4
+NEI4 $1669
+ADDRLP4 16
+INDIRP4
+CNSTI4 152
+ADDP4
+INDIRI4
+ADDRLP4 20
+INDIRI4
+NEI4 $1669
+line 4295
+;4295:	{ //not allowed to move while charging the disruptor
+line 4296
+;4296:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4297
+;4297:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4298
+;4298:		if (pm->cmd.upmove > 0)
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+LEI4 $1671
+line 4299
+;4299:		{
+line 4300
+;4300:			pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4301
+;4301:		}
+LABELV $1671
+line 4302
+;4302:	}
+LABELV $1669
+line 4304
+;4303:
+;4304:	BG_AdjustClientSpeed(pm->ps, &pm->cmd, pm->cmd.serverTime);
+ADDRLP4 24
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 24
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 28
+ADDRLP4 24
+INDIRP4
+CNSTI4 4
+ADDP4
+ASGNP4
+ADDRLP4 28
+INDIRP4
+ARGP4
+ADDRLP4 28
+INDIRP4
+INDIRI4
+ARGI4
+ADDRGP4 BG_AdjustClientSpeed
+CALLV
+pop
+line 4306
+;4305:
+;4306:	if ( pm->ps->stats[STAT_HEALTH] <= 0 ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 0
+GTI4 $1673
+line 4307
+;4307:		pm->tracemask &= ~CONTENTS_BODY;	// corpses can fly through bodies
+ADDRLP4 32
+ADDRGP4 pm
+INDIRP4
+CNSTI4 32
+ADDP4
+ASGNP4
+ADDRLP4 32
+INDIRP4
+ADDRLP4 32
+INDIRP4
+INDIRI4
+CNSTI4 -257
+BANDI4
+ASGNI4
+line 4308
+;4308:	}
+LABELV $1673
+line 4312
+;4309:
+;4310:	// make sure walking button is clear if they are running, to avoid
+;4311:	// proxy no-footsteps cheats
+;4312:	if ( abs( pm->cmd.forwardmove ) > 64 || abs( pm->cmd.rightmove ) > 64 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ARGI4
+ADDRLP4 32
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 32
+INDIRI4
+CNSTI4 64
+GTI4 $1677
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ARGI4
+ADDRLP4 36
+ADDRGP4 abs
+CALLI4
+ASGNI4
+ADDRLP4 36
+INDIRI4
+CNSTI4 64
+LEI4 $1675
+LABELV $1677
+line 4313
+;4313:		pm->cmd.buttons &= ~BUTTON_WALKING;
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+CNSTI4 20
+ADDP4
+ASGNP4
+ADDRLP4 40
+INDIRP4
+ADDRLP4 40
+INDIRP4
+INDIRI4
+CNSTI4 -17
+BANDI4
+ASGNI4
+line 4314
+;4314:	}
+LABELV $1675
+line 4318
+;4315:
+;4316:	// In certain situations, we may want to control which attack buttons are pressed and what kind of functionality
+;4317:	//	is attached to them
+;4318:	PM_AdjustAttackStates( pm );
+ADDRGP4 pm
+INDIRP4
+ARGP4
+ADDRGP4 PM_AdjustAttackStates
+CALLV
+pop
+line 4321
+;4319:
+;4320:	// clear the respawned flag if attack and use are cleared
+;4321:	if ( pm->ps->stats[STAT_HEALTH] > 0 && 
+ADDRLP4 40
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 44
+CNSTI4 0
+ASGNI4
+ADDRLP4 40
+INDIRP4
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ADDRLP4 44
+INDIRI4
+LEI4 $1678
+ADDRLP4 40
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRI4
+CNSTI4 5
+BANDI4
+ADDRLP4 44
+INDIRI4
+NEI4 $1678
+line 4322
+;4322:		!( pm->cmd.buttons & (BUTTON_ATTACK | BUTTON_USE_HOLDABLE) ) ) {
+line 4323
+;4323:		pm->ps->pm_flags &= ~PMF_RESPAWNED;
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+ADDRLP4 48
+INDIRP4
+INDIRI4
+CNSTI4 -513
+BANDI4
+ASGNI4
+line 4324
+;4324:	}
+LABELV $1678
+line 4327
+;4325:
+;4326:	// clear all pmove local vars
+;4327:	memset (&pml, 0, sizeof(pml));
+ADDRGP4 pml
+ARGP4
+CNSTI4 0
+ARGI4
+CNSTI4 1164
+ARGI4
+ADDRGP4 memset
+CALLP4
+pop
+line 4330
+;4328:
+;4329:	// determine the time
+;4330:	pml.msec = pmove->cmd.serverTime - pm->ps->commandTime;
+ADDRGP4 pml+40
+ADDRFP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+INDIRI4
+SUBI4
+ASGNI4
+line 4331
+;4331:	if ( pml.msec < 1 ) {
+ADDRGP4 pml+40
+INDIRI4
+CNSTI4 1
+GEI4 $1681
+line 4332
+;4332:		pml.msec = 1;
+ADDRGP4 pml+40
+CNSTI4 1
+ASGNI4
+line 4333
+;4333:	} else if ( pml.msec > 200 ) {
+ADDRGP4 $1682
+JUMPV
+LABELV $1681
+ADDRGP4 pml+40
+INDIRI4
+CNSTI4 200
+LEI4 $1685
+line 4334
+;4334:		pml.msec = 200;
+ADDRGP4 pml+40
+CNSTI4 200
+ASGNI4
+line 4335
+;4335:	}
+LABELV $1685
+LABELV $1682
+line 4336
+;4336:	pm->ps->commandTime = pmove->cmd.serverTime;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ADDRFP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+line 4339
+;4337:
+;4338:	// save old org in case we get stuck
+;4339:	VectorCopy (pm->ps->origin, pml.previous_origin);
+ADDRGP4 pml+1136
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 20
+ADDP4
+INDIRB
+ASGNB 12
+line 4342
+;4340:
+;4341:	// save old velocity for crashlanding
+;4342:	VectorCopy (pm->ps->velocity, pml.previous_velocity);
+ADDRGP4 pml+1148
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+INDIRB
+ASGNB 12
+line 4344
+;4343:
+;4344:	pml.frametime = pml.msec * 0.001;
+ADDRGP4 pml+36
+CNSTF4 981668463
+ADDRGP4 pml+40
+INDIRI4
+CVIF4 4
+MULF4
+ASGNF4
+line 4346
+;4345:
+;4346:	PM_AdjustAngleForWallRun(pm->ps, &pm->cmd, qtrue);
+ADDRLP4 48
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 48
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 48
+INDIRP4
+CNSTI4 4
+ADDP4
+ARGP4
+CNSTI4 1
+ARGI4
+ADDRGP4 PM_AdjustAngleForWallRun
+CALLI4
+pop
+line 4349
+;4347:
+;4348:	// update the viewangles
+;4349:	PM_UpdateViewAngles( pm->ps, &pm->cmd );
+ADDRLP4 52
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 52
+INDIRP4
+INDIRP4
+ARGP4
+ADDRLP4 52
+INDIRP4
+CNSTI4 4
+ADDP4
+ARGP4
+ADDRGP4 PM_UpdateViewAngles
+CALLV
+pop
+line 4351
+;4350:
+;4351:	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 156
+ADDP4
+ARGP4
+ADDRGP4 pml
+ARGP4
+ADDRGP4 pml+12
+ARGP4
+ADDRGP4 pml+24
+ARGP4
+ADDRGP4 AngleVectors
+CALLV
+pop
+line 4353
+;4352:
+;4353:	if ( pm->cmd.upmove < 10 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 10
+GEI4 $1695
+line 4355
+;4354:		// not holding jump
+;4355:		pm->ps->pm_flags &= ~PMF_JUMP_HELD;
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+ADDRLP4 56
+INDIRP4
+INDIRI4
+CNSTI4 -3
+BANDI4
+ASGNI4
+line 4356
+;4356:	}
+LABELV $1695
+line 4359
+;4357:
+;4358:	// decide if backpedaling animations should be used
+;4359:	if ( pm->cmd.forwardmove < 0 ) {
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+CNSTI4 0
+GEI4 $1697
+line 4360
+;4360:		pm->ps->pm_flags |= PMF_BACKWARDS_RUN;
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 56
+INDIRP4
+ADDRLP4 56
+INDIRP4
+INDIRI4
+CNSTI4 16
+BORI4
+ASGNI4
+line 4361
+;4361:	} else if ( pm->cmd.forwardmove > 0 || ( pm->cmd.forwardmove == 0 && pm->cmd.rightmove ) ) {
+ADDRGP4 $1698
+JUMPV
+LABELV $1697
+ADDRLP4 56
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 60
+ADDRLP4 56
+INDIRP4
+CNSTI4 28
+ADDP4
+INDIRI1
+CVII4 1
+ASGNI4
+ADDRLP4 64
+CNSTI4 0
+ASGNI4
+ADDRLP4 60
+INDIRI4
+ADDRLP4 64
+INDIRI4
+GTI4 $1701
+ADDRLP4 60
+INDIRI4
+ADDRLP4 64
+INDIRI4
+NEI4 $1699
+ADDRLP4 56
+INDIRP4
+CNSTI4 29
+ADDP4
+INDIRI1
+CVII4 1
+ADDRLP4 64
+INDIRI4
+EQI4 $1699
+LABELV $1701
+line 4362
+;4362:		pm->ps->pm_flags &= ~PMF_BACKWARDS_RUN;
+ADDRLP4 68
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+ASGNP4
+ADDRLP4 68
+INDIRP4
+ADDRLP4 68
+INDIRP4
+INDIRI4
+CNSTI4 -17
+BANDI4
+ASGNI4
+line 4363
+;4363:	}
+LABELV $1699
+LABELV $1698
+line 4365
+;4364:
+;4365:	if ( pm->ps->pm_type >= PM_DEAD ) {
+ADDRLP4 68
+CNSTI4 4
+ASGNI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ADDRLP4 68
+INDIRI4
+ADDP4
+INDIRI4
+ADDRLP4 68
+INDIRI4
+LTI4 $1702
+line 4366
+;4366:		pm->cmd.forwardmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4367
+;4367:		pm->cmd.rightmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4368
+;4368:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4369
+;4369:	}
+LABELV $1702
+line 4371
+;4370:
+;4371:	if (pm->ps->saberLockTime >= pm->cmd.serverTime)
+ADDRLP4 72
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 72
+INDIRP4
+INDIRP4
+CNSTI4 524
+ADDP4
+INDIRI4
+ADDRLP4 72
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+LTI4 $1704
+line 4372
+;4372:	{
+line 4373
+;4373:		pm->cmd.upmove = 0;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4374
+;4374:		pm->cmd.forwardmove = 50;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 50
+ASGNI1
+line 4375
+;4375:		pm->cmd.rightmove = 0;//*= 0.1;
+ADDRGP4 pm
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4376
+;4376:	}
+LABELV $1704
+line 4378
+;4377:
+;4378:	if ( pm->ps->pm_type == PM_SPECTATOR ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 3
+NEI4 $1706
+line 4379
+;4379:		PM_CheckDuck ();
+ADDRGP4 PM_CheckDuck
+CALLV
+pop
+line 4380
+;4380:		PM_FlyMove ();
+ADDRGP4 PM_FlyMove
+CALLV
+pop
+line 4381
+;4381:		PM_DropTimers ();
+ADDRGP4 PM_DropTimers
+CALLV
+pop
+line 4382
+;4382:		return;
+ADDRGP4 $1638
+JUMPV
+LABELV $1706
+line 4385
+;4383:	}
+;4384:
+;4385:	if ( pm->ps->pm_type == PM_NOCLIP ) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 2
+NEI4 $1708
+line 4386
+;4386:		PM_NoclipMove ();
+ADDRGP4 PM_NoclipMove
+CALLV
+pop
+line 4387
+;4387:		PM_DropTimers ();
+ADDRGP4 PM_DropTimers
+CALLV
+pop
+line 4388
+;4388:		return;
+ADDRGP4 $1638
+JUMPV
+LABELV $1708
+line 4391
+;4389:	}
+;4390:
+;4391:	if (pm->ps->pm_type == PM_FREEZE) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 5
+NEI4 $1710
+line 4392
+;4392:		return;		// no movement at all
+ADDRGP4 $1638
+JUMPV
+LABELV $1710
+line 4395
+;4393:	}
+;4394:
+;4395:	if ( pm->ps->pm_type == PM_INTERMISSION || pm->ps->pm_type == PM_SPINTERMISSION) {
+ADDRLP4 76
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+ADDRLP4 76
+INDIRI4
+CNSTI4 6
+EQI4 $1714
+ADDRLP4 76
+INDIRI4
+CNSTI4 7
+NEI4 $1712
+LABELV $1714
+line 4396
+;4396:		return;		// no movement at all
+ADDRGP4 $1638
+JUMPV
+LABELV $1712
+line 4399
+;4397:	}
+;4398:
+;4399:	if (gPMDoSlowFall)
+ADDRGP4 gPMDoSlowFall
+INDIRI4
+CNSTI4 0
+EQI4 $1715
+line 4400
+;4400:	{
+line 4401
+;4401:		pm->ps->gravity *= 0.5;
+ADDRLP4 80
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 56
+ADDP4
+ASGNP4
+ADDRLP4 80
+INDIRP4
+CNSTF4 1056964608
+ADDRLP4 80
+INDIRP4
+INDIRI4
+CVIF4 4
+MULF4
+CVFI4 4
+ASGNI4
+line 4402
+;4402:	}
+LABELV $1715
+line 4405
+;4403:
+;4404:	// set watertype, and waterlevel
+;4405:	PM_SetWaterLevel();
+ADDRGP4 PM_SetWaterLevel
+CALLV
+pop
+line 4406
+;4406:	pml.previous_waterlevel = pmove->waterlevel;
+ADDRGP4 pml+1160
+ADDRFP4 0
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+ASGNI4
+line 4409
+;4407:
+;4408:	// set mins, maxs, and viewheight
+;4409:	PM_CheckDuck ();
+ADDRGP4 PM_CheckDuck
+CALLV
+pop
+line 4412
+;4410:
+;4411:	// set groundentity
+;4412:	PM_GroundTrace();
+ADDRGP4 PM_GroundTrace
+CALLV
+pop
+line 4414
+;4413:
+;4414:	if ( pm->ps->groundEntityNum != ENTITYNUM_NONE )
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 84
+ADDP4
+INDIRI4
+CNSTI4 1023
+EQI4 $1718
+line 4415
+;4415:	{//on ground
+line 4416
+;4416:		pm->ps->fd.forceJumpZStart = 0;
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 1080
+ADDP4
+CNSTF4 0
+ASGNF4
+line 4417
+;4417:	}
+LABELV $1718
+line 4419
+;4418:
+;4419:	if ( pm->ps->pm_type == PM_DEAD ) {
+ADDRLP4 80
+CNSTI4 4
+ASGNI4
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+ADDRLP4 80
+INDIRI4
+ADDP4
+INDIRI4
+ADDRLP4 80
+INDIRI4
+NEI4 $1720
+line 4420
+;4420:		PM_DeadMove ();
+ADDRGP4 PM_DeadMove
+CALLV
+pop
+line 4421
+;4421:	}
+LABELV $1720
+line 4423
+;4422:
+;4423:	PM_DropTimers();
+ADDRGP4 PM_DropTimers
+CALLV
+pop
+line 4425
+;4424:
+;4425:	if (pm->ps->pm_type == PM_FLOAT)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+CNSTI4 1
+NEI4 $1722
+line 4426
+;4426:	{
+line 4427
+;4427:		PM_FlyMove ();
+ADDRGP4 PM_FlyMove
+CALLV
+pop
+line 4428
+;4428:	}
+ADDRGP4 $1723
+JUMPV
+LABELV $1722
+line 4430
+;4429:	else
+;4430:	{
+line 4431
+;4431:		if (pm->ps->pm_flags & PMF_TIME_WATERJUMP) {
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 256
+BANDI4
+CNSTI4 0
+EQI4 $1724
+line 4432
+;4432:			PM_WaterJumpMove();
+ADDRGP4 PM_WaterJumpMove
+CALLV
+pop
+line 4433
+;4433:		} else if ( pm->waterlevel > 1 ) {
+ADDRGP4 $1725
+JUMPV
+LABELV $1724
+ADDRGP4 pm
+INDIRP4
+CNSTI4 216
+ADDP4
+INDIRI4
+CNSTI4 1
+LEI4 $1726
+line 4435
+;4434:			// swimming
+;4435:			PM_WaterMove();
+ADDRGP4 PM_WaterMove
+CALLV
+pop
+line 4436
+;4436:		} else if ( pml.walking ) {
+ADDRGP4 $1727
+JUMPV
+LABELV $1726
+ADDRGP4 pml+44
+INDIRI4
+CNSTI4 0
+EQI4 $1728
+line 4438
+;4437:			// walking on ground
+;4438:			PM_WalkMove();
+ADDRGP4 PM_WalkMove
+CALLV
+pop
+line 4439
+;4439:		} else {
+ADDRGP4 $1729
+JUMPV
+LABELV $1728
+line 4441
+;4440:			// airborne
+;4441:			PM_AirMove();
+ADDRGP4 PM_AirMove
+CALLV
+pop
+line 4442
+;4442:		}
+LABELV $1729
+LABELV $1727
+LABELV $1725
+line 4443
+;4443:	}
+LABELV $1723
+line 4445
+;4444:
+;4445:	PM_Animate();
+ADDRGP4 PM_Animate
+CALLV
+pop
+line 4448
+;4446:
+;4447:	// set groundentity, watertype, and waterlevel
+;4448:	PM_GroundTrace();
+ADDRGP4 PM_GroundTrace
+CALLV
+pop
+line 4449
+;4449:	PM_SetWaterLevel();
+ADDRGP4 PM_SetWaterLevel
+CALLV
+pop
+line 4451
+;4450:
+;4451:	if (pm->cmd.forcesel != -1 && (pm->ps->fd.forcePowersKnown & (1 << pm->cmd.forcesel)))
+ADDRLP4 84
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 88
+ADDRLP4 84
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRU1
+CVUI4 1
+ASGNI4
+ADDRLP4 88
+INDIRI4
+CNSTI4 -1
+EQI4 $1731
+ADDRLP4 84
+INDIRP4
+INDIRP4
+CNSTI4 832
+ADDP4
+INDIRI4
+CNSTI4 1
+ADDRLP4 88
+INDIRI4
+LSHI4
+BANDI4
+CNSTI4 0
+EQI4 $1731
+line 4452
+;4452:	{
+line 4453
+;4453:		pm->ps->fd.forcePowerSelected = pm->cmd.forcesel;
+ADDRLP4 92
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 92
+INDIRP4
+INDIRP4
+CNSTI4 840
+ADDP4
+ADDRLP4 92
+INDIRP4
+CNSTI4 25
+ADDP4
+INDIRU1
+CVUI4 1
+ASGNI4
+line 4454
+;4454:	}
+LABELV $1731
+line 4455
+;4455:	if (pm->cmd.invensel != -1 && (pm->ps->stats[STAT_HOLDABLE_ITEMS] & (1 << pm->cmd.invensel)))
+ADDRLP4 92
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 96
+ADDRLP4 92
+INDIRP4
+CNSTI4 26
+ADDP4
+INDIRU1
+CVUI4 1
+ASGNI4
+ADDRLP4 96
+INDIRI4
+CNSTI4 -1
+EQI4 $1733
+ADDRLP4 92
+INDIRP4
+INDIRP4
+CNSTI4 224
+ADDP4
+INDIRI4
+CNSTI4 1
+ADDRLP4 96
+INDIRI4
+LSHI4
+BANDI4
+CNSTI4 0
+EQI4 $1733
+line 4456
+;4456:	{
+line 4457
+;4457:		pm->ps->stats[STAT_HOLDABLE_ITEM] = BG_GetItemIndexByTag(pm->cmd.invensel, IT_HOLDABLE);
+ADDRLP4 100
+ADDRGP4 pm
+INDIRP4
+ASGNP4
+ADDRLP4 100
+INDIRP4
+CNSTI4 26
+ADDP4
+INDIRU1
+CVUI4 1
+ARGI4
+CNSTI4 6
+ARGI4
+ADDRLP4 104
+ADDRGP4 BG_GetItemIndexByTag
+CALLI4
+ASGNI4
+ADDRLP4 100
+INDIRP4
+INDIRP4
+CNSTI4 220
+ADDP4
+ADDRLP4 104
+INDIRI4
+ASGNI4
+line 4458
+;4458:	}
+LABELV $1733
+line 4461
+;4459:
+;4460:	// weapons
+;4461:	PM_Weapon();
+ADDRGP4 PM_Weapon
+CALLV
+pop
+line 4463
+;4462:
+;4463:	PM_Use();
+ADDRGP4 PM_Use
+CALLV
+pop
+line 4465
+;4464:
+;4465:	if (pm->ps->pm_flags & PMF_UPDATE_ANIM)
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 2048
+BANDI4
+CNSTI4 0
+EQI4 $1735
+line 4466
+;4466:	{
+line 4468
+;4467://		PM_UpdateGhoul2AnimFromState();
+;4468:	}
+LABELV $1735
+line 4471
+;4469:
+;4470:	// footstep events / legs animations
+;4471:	PM_Footsteps();
+ADDRGP4 PM_Footsteps
+CALLV
+pop
+line 4474
+;4472:
+;4473:	// entering / leaving water splashes
+;4474:	PM_WaterEvents();
+ADDRGP4 PM_WaterEvents
+CALLV
+pop
+line 4477
+;4475:
+;4476:	// snap some parts of playerstate to save network bandwidth
+;4477:	trap_SnapVector( pm->ps->velocity );
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 32
+ADDP4
+ARGP4
+ADDRGP4 trap_SnapVector
+CALLV
+pop
+line 4479
+;4478:
+;4479:	if (gPMDoSlowFall)
+ADDRGP4 gPMDoSlowFall
+INDIRI4
+CNSTI4 0
+EQI4 $1737
+line 4480
+;4480:	{
+line 4481
+;4481:		pm->ps->gravity *= 2;
+ADDRLP4 100
+ADDRGP4 pm
+INDIRP4
+INDIRP4
+CNSTI4 56
+ADDP4
+ASGNP4
+ADDRLP4 100
+INDIRP4
+ADDRLP4 100
+INDIRP4
+INDIRI4
+CNSTI4 1
+LSHI4
+ASGNI4
+line 4482
+;4482:	}
+LABELV $1737
+line 4483
+;4483:}
+LABELV $1638
+endproc PmoveSingle 108 16
+export Pmove
+proc Pmove 16 4
+line 4493
+;4484:
+;4485:
+;4486:/*
+;4487:================
+;4488:Pmove
+;4489:
+;4490:Can be called by either the server or the client
+;4491:================
+;4492:*/
+;4493:void Pmove (pmove_t *pmove) {
+line 4496
+;4494:	int			finalTime;
+;4495:
+;4496:	finalTime = pmove->cmd.serverTime;
+ADDRLP4 0
+ADDRFP4 0
+INDIRP4
+CNSTI4 4
+ADDP4
+INDIRI4
+ASGNI4
+line 4498
+;4497:
+;4498:	if ( finalTime < pmove->ps->commandTime ) {
+ADDRLP4 0
+INDIRI4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+INDIRI4
+GEI4 $1740
+line 4499
+;4499:		return;	// should not happen
+ADDRGP4 $1739
+JUMPV
+LABELV $1740
+line 4502
+;4500:	}
+;4501:
+;4502:	if ( finalTime > pmove->ps->commandTime + 1000 ) {
+ADDRLP4 0
+INDIRI4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+INDIRI4
+CNSTI4 1000
+ADDI4
+LEI4 $1742
+line 4503
+;4503:		pmove->ps->commandTime = finalTime - 1000;
+ADDRFP4 0
+INDIRP4
+INDIRP4
+ADDRLP4 0
+INDIRI4
+CNSTI4 1000
+SUBI4
+ASGNI4
+line 4504
+;4504:	}
+LABELV $1742
+line 4506
+;4505:
+;4506:	if (pmove->ps->fallingToDeath)
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 1340
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1744
+line 4507
+;4507:	{
+line 4508
+;4508:		pmove->cmd.forwardmove = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 28
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4509
+;4509:		pmove->cmd.rightmove = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 29
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4510
+;4510:		pmove->cmd.upmove = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 0
+ASGNI1
+line 4511
+;4511:		pmove->cmd.buttons = 0;
+ADDRFP4 0
+INDIRP4
+CNSTI4 20
+ADDP4
+CNSTI4 0
+ASGNI4
+line 4512
+;4512:	}
+LABELV $1744
+line 4514
+;4513:
+;4514:	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount+1) & ((1<<PS_PMOVEFRAMECOUNTBITS)-1);
+ADDRLP4 4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 488
+ADDP4
+ASGNP4
+ADDRLP4 4
+INDIRP4
+ADDRLP4 4
+INDIRP4
+INDIRI4
+CNSTI4 1
+ADDI4
+CNSTI4 63
+BANDI4
+ASGNI4
+ADDRGP4 $1747
+JUMPV
+LABELV $1746
+line 4518
+;4515:
+;4516:	// chop the move up if it is too long, to prevent framerate
+;4517:	// dependent behavior
+;4518:	while ( pmove->ps->commandTime != finalTime ) {
+line 4521
+;4519:		int		msec;
+;4520:
+;4521:		msec = finalTime - pmove->ps->commandTime;
+ADDRLP4 8
+ADDRLP4 0
+INDIRI4
+ADDRFP4 0
+INDIRP4
+INDIRP4
+INDIRI4
+SUBI4
+ASGNI4
+line 4523
+;4522:
+;4523:		if ( pmove->pmove_fixed ) {
+ADDRFP4 0
+INDIRP4
+CNSTI4 232
+ADDP4
+INDIRI4
+CNSTI4 0
+EQI4 $1749
+line 4524
+;4524:			if ( msec > pmove->pmove_msec ) {
+ADDRLP4 8
+INDIRI4
+ADDRFP4 0
+INDIRP4
+CNSTI4 236
+ADDP4
+INDIRI4
+LEI4 $1750
+line 4525
+;4525:				msec = pmove->pmove_msec;
+ADDRLP4 8
+ADDRFP4 0
+INDIRP4
+CNSTI4 236
+ADDP4
+INDIRI4
+ASGNI4
+line 4526
+;4526:			}
+line 4527
+;4527:		}
+ADDRGP4 $1750
+JUMPV
+LABELV $1749
+line 4528
+;4528:		else {
+line 4529
+;4529:			if ( msec > 66 ) {
+ADDRLP4 8
+INDIRI4
+CNSTI4 66
+LEI4 $1753
+line 4530
+;4530:				msec = 66;
+ADDRLP4 8
+CNSTI4 66
+ASGNI4
+line 4531
+;4531:			}
+LABELV $1753
+line 4532
+;4532:		}
+LABELV $1750
+line 4533
+;4533:		pmove->cmd.serverTime = pmove->ps->commandTime + msec;
+ADDRLP4 12
+ADDRFP4 0
+INDIRP4
+ASGNP4
+ADDRLP4 12
+INDIRP4
+CNSTI4 4
+ADDP4
+ADDRLP4 12
+INDIRP4
+INDIRP4
+INDIRI4
+ADDRLP4 8
+INDIRI4
+ADDI4
+ASGNI4
+line 4534
+;4534:		PmoveSingle( pmove );
+ADDRFP4 0
+INDIRP4
+ARGP4
+ADDRGP4 PmoveSingle
+CALLV
+pop
+line 4536
+;4535:
+;4536:		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
+ADDRFP4 0
+INDIRP4
+INDIRP4
+CNSTI4 12
+ADDP4
+INDIRI4
+CNSTI4 2
+BANDI4
+CNSTI4 0
+EQI4 $1755
+line 4537
+;4537:			pmove->cmd.upmove = 20;
+ADDRFP4 0
+INDIRP4
+CNSTI4 30
+ADDP4
+CNSTI1 20
+ASGNI1
+line 4538
+;4538:		}
+LABELV $1755
+line 4539
+;4539:	}
+LABELV $1747
+line 4518
+ADDRFP4 0
+INDIRP4
+INDIRP4
+INDIRI4
+ADDRLP4 0
+INDIRI4
+NEI4 $1746
+line 4543
+;4540:
+;4541:	//PM_CheckStuck();
+;4542:
+;4543:}
+LABELV $1739
+endproc Pmove 16 4
+import trap_SnapVector
+import PM_SetSaberMove
+import PM_WeaponLightsaber
+import PM_SetAnim
+import PM_ForceLegsAnim
+import PM_ContinueLegsAnim
+import PM_StartTorsoAnim
+import BG_CycleInven
+import PM_StepSlideMove
+import PM_SlideMove
+import PM_SaberJumpAttackMove
+import PM_SaberFlipOverAttackMove
+import PM_SomeoneInFront
+import PM_GroundDistance
+import PM_AnimLength
+import PM_InRollComplete
+import PM_InOnGroundAnim
+import PM_SpinningAnim
+import PM_LandingAnim
+import PM_JumpingAnim
+import PM_PainAnim
+import PM_InKnockDown
+import PM_InSaberAnim
+import PM_SaberInStart
+import PM_SaberInReflect
+import PM_SaberInParry
+import trap_FS_FCloseFile
+import trap_FS_Write
+import trap_FS_Read
+import trap_FS_FOpenFile
+bss
+export pml
+align 4
+LABELV pml
+skip 1164
+import forcePowerDarkLight
+import WeaponAttackAnim
+import WeaponReadyAnim
+import BG_OutOfMemory
+import BG_StringAlloc
+import BG_TempFree
+import BG_TempAlloc
+import BG_AllocUnaligned
+import BG_Alloc
+import BG_CanUseFPNow
+import BG_HasYsalamiri
+import BG_GetItemIndexByTag
+import BG_ParseAnimationFile
+import BG_PlayerTouchesItem
+import BG_G2PlayerAngles
+import BG_PlayerStateToEntityStateExtraPolate
+import BG_PlayerStateToEntityState
+import BG_TouchJumpPad
+import BG_AddPredictableEventToPlayerstate
+import BG_EvaluateTrajectoryDelta
+import BG_EvaluateTrajectory
+import BG_ForcePowerDrain
+import BG_SaberStartTransAnim
+import BG_InDeathAnim
+import BG_InRoll
+import BG_SaberInSpecialAttack
+import BG_SpinningSaberAnim
+import BG_FlippingAnim
+import BG_SaberInIdle
+import BG_SaberInSpecial
+import BG_SaberInAttack
+import BG_DirectFlippingAnim
+import BG_InSaberStandAnim
+import BG_InSpecialJump
+import BG_LegalizedForcePowers
+import saberMoveData
+import BG_CanItemBeGrabbed
+import BG_FindItemForHoldable
+import BG_FindItemForPowerup
+import BG_FindItemForWeapon
+import BG_FindItem
+import vectoyaw
+import bg_numItems
+import bg_itemlist
+export pm
+align 4
+LABELV pm
+skip 4
+import bgForcePowerCost
+import forceMasteryPoints
+import forceMasteryLevels
+import bgGlobalAnimations
+import BGPAFtextLoaded
+import forcePowerSorted
+import WP_MuzzlePoint
+import ammoData
+import weaponData
+import GetStringForID
+import GetIDForString
+import Q_irand
+import irand
+import flrand
+import Rand_Init
+import Com_Printf
+import Com_Error
+import Info_NextPair
+import Info_Validate
+import Info_SetValueForKey_Big
+import Info_SetValueForKey
+import Info_RemoveKey_big
+import Info_RemoveKey
+import Info_ValueForKey
+import va
+import Q_CleanStr
+import Q_PrintStrlen
+import Q_strcat
+import Q_strncpyz
+import Q_strrchr
+import Q_strupr
+import Q_strlwr
+import Q_stricmpn
+import Q_strncmp
+import Q_stricmp
+import Q_isalpha
+import Q_isupper
+import Q_islower
+import Q_isprint
+import Com_sprintf
+import Parse3DMatrix
+import Parse2DMatrix
+import Parse1DMatrix
+import SkipRestOfLine
+import SkipBracedSection
+import COM_MatchToken
+import COM_ParseWarning
+import COM_ParseError
+import COM_Compress
+import COM_ParseExt
+import COM_Parse
+import SkipWhitespace
+import COM_GetCurrentParseLine
+import COM_BeginParseSession
+import COM_DefaultExtension
+import COM_StripExtension
+import COM_SkipPath
+import Com_Clamp
+import PerpendicularVector
+import AngleVectors
+import MatrixMultiply
+import MakeNormalVectors
+import RotateAroundDirection
+import RotatePointAroundVector
+import ProjectPointOnPlane
+import PlaneFromPoints
+import AngleDelta
+import AngleNormalize180
+import AngleNormalize360
+import AnglesSubtract
+import AngleSubtract
+import LerpAngle
+import AngleMod
+import BoxOnPlaneSide
+import SetPlaneSignbits
+import AxisCopy
+import AxisClear
+import AnglesToAxis
+import vectoangles
+import Q_crandom
+import Q_random
+import Q_rand
+import Q_acos
+import Q_log2
+import VectorRotate
+import Vector4Scale
+import VectorNormalize2
+import VectorNormalize
+import CrossProduct
+import VectorInverse
+import VectorNormalizeFast
+import DistanceSquared
+import Distance
+import VectorLengthSquared
+import VectorLength
+import VectorCompare
+import AddPointToBounds
+import ClearBounds
+import RadiusFromBounds
+import NormalizeColor
+import ColorBytes4
+import ColorBytes3
+import _VectorMA
+import _VectorScale
+import _VectorCopy
+import _VectorAdd
+import _VectorSubtract
+import _DotProduct
+import ByteToDir
+import DirToByte
+import powf
+import ClampShort
+import ClampChar
+import Q_rsqrt
+import Q_fabs
+import axisDefault
+import vec3_origin
+import g_color_table
+import colorDkBlue
+import colorLtBlue
+import colorDkGrey
+import colorMdGrey
+import colorLtGrey
+import colorWhite
+import colorCyan
+import colorMagenta
+import colorYellow
+import colorBlue
+import colorGreen
+import colorRed
+import colorBlack
+import colorTable
+import bytedirs
+import Com_Memcpy
+import Com_Memset
+import Hunk_Alloc
+import FloatSwap
+import LongSwap
+import ShortSwap
+import acos
+import fabs
+import abs
+import tan
+import atan2
+import cos
+import sin
+import sqrt
+import floor
+import ceil
+import memcpy
+import memset
+import memmove
+import sscanf
+import vsprintf
+import _atoi
+import atoi
+import _atof
+import atof
+import toupper
+import tolower
+import strncpy
+import strstr
+import strchr
+import strcmp
+import strcpy
+import strcat
+import strlen
+import rand
+import srand
+import qsort
+lit
+align 1
+LABELV $954
+char 1 37
+char 1 105
+char 1 58
+char 1 76
+char 1 97
+char 1 110
+char 1 100
+char 1 10
+char 1 0
+align 1
+LABELV $943
+char 1 37
+char 1 105
+char 1 58
+char 1 115
+char 1 116
+char 1 101
+char 1 101
+char 1 112
+char 1 10
+char 1 0
+align 1
+LABELV $932
+char 1 37
+char 1 105
+char 1 58
+char 1 107
+char 1 105
+char 1 99
+char 1 107
+char 1 111
+char 1 102
+char 1 102
+char 1 10
+char 1 0
+align 1
+LABELV $885
+char 1 37
+char 1 105
+char 1 58
+char 1 108
+char 1 105
+char 1 102
+char 1 116
+char 1 10
+char 1 0
+align 1
+LABELV $858
+char 1 37
+char 1 105
+char 1 58
+char 1 97
+char 1 108
+char 1 108
+char 1 115
+char 1 111
+char 1 108
+char 1 105
+char 1 100
+char 1 10
+char 1 0
