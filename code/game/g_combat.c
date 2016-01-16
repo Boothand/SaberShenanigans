@@ -569,10 +569,10 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	int weapon = self->s.weapon;
 	int ammoSub;
 
-	if (weapon <= WP_BRYAR_PISTOL)
-	{ //can't have this
-		return;
-	}
+	//if (weapon <= WP_BRYAR_PISTOL)	//Boot - can totally have this.
+	//{ //can't have this
+	//	return;
+	//}
 
 	if (weapon == WP_EMPLACED_GUN ||
 		weapon == WP_TURRET)
@@ -659,7 +659,7 @@ void TossClientItems( gentity_t *self ) {
 
 	self->s.bolt2 = weapon;
 
-	if ( weapon > WP_BRYAR_PISTOL && 
+	if ( weapon > WP_SABER &&//WP_BRYAR_PISTOL && //Boot - allow dropping of bryar
 		weapon != WP_EMPLACED_GUN &&
 		weapon != WP_TURRET &&
 		self->client->ps.ammo[ weaponData[weapon].ammoIndex ] ) {
