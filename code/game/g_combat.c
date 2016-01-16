@@ -2008,20 +2008,23 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 
 	rightdot = DotProduct(right, diff);
 	zdiff = hitloc[2] - clEye[2];
-	
+
 	if ( zdiff > 0 )
 	{
 		if ( rightdot > 0.3 )
 		{
 			hitLoc = G2_MODELPART_RARM;
+			//trap_SendServerCommand(-1, va("print \"Hit right arm (2017).\n\""));
 		}
 		else if ( rightdot < -0.3 )
 		{
 			hitLoc = G2_MODELPART_LARM;
+			//trap_SendServerCommand(-1, va("print \"Hit left arm (2022).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_HEAD;
+			//trap_SendServerCommand(-1, va("print \"Hit head (2027).\n\""));
 		}
 	}
 	else if ( zdiff > -20 )
@@ -2029,14 +2032,17 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 		if ( rightdot > 0.1 )
 		{
 			hitLoc = G2_MODELPART_RARM;
+			//trap_SendServerCommand(-1, va("print \"Hit right arm (2035).\n\""));
 		}
 		else if ( rightdot < -0.1 )
 		{
 			hitLoc = G2_MODELPART_LARM;
+			//trap_SendServerCommand(-1, va("print \"Hit left arm (2040).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_HEAD;
+			//trap_SendServerCommand(-1, va("print \"Hit head (2045).\n\""));
 		}
 	}
 	else
@@ -2044,10 +2050,12 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 		if ( rightdot >= 0 )
 		{
 			hitLoc = G2_MODELPART_RLEG;
+			//trap_SendServerCommand(-1, va("print \"Hit right leg (2053).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_LLEG;
+			//trap_SendServerCommand(-1, va("print \"Hit left leg (2058).\n\""));
 		}
 	}
 
@@ -2059,23 +2067,29 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 	int hitLoc, hitLocUse = -1;
 	vec3_t boltPoint;
 	int dismember = g_dismember.integer;
+	bootSession_t *boot = &bootSession[ent - g_entities];
 
 	if (!dismember)
 	{
 		return;
 	}
 
-	if (Q_irand(0, 100) > dismember)
+	/*if (Q_irand(0, 100) > dismember)	//Boot - if you want dismemberment, you get it consistently. See below
 	{
 		return;
-	}
+	}*/
 
 	if (damage < 20)
 	{
 		return;
 	}
 
-	hitLoc = G_GetHitLocation( ent, point );
+	if (boot->bodyPartIMayLose)
+	{
+		hitLoc = boot->bodyPartIMayLose;
+	}
+
+	//hitLoc = G_GetHitLocation( ent, point );	//Do not need
 
 	switch(hitLoc)
 	{
@@ -2086,7 +2100,7 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 	case HL_FOOT_LT:
 	case HL_LEG_LT:
 		hitLocUse = G2_MODELPART_LLEG;
-		
+		break;	//Boot - they forgot?
 	case HL_WAIST:
 		hitLocUse = G2_MODELPART_WAIST;
 		break;
@@ -2109,10 +2123,15 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 		break;
 	case HL_HEAD:
 		hitLocUse = G2_MODELPART_HEAD;
+		break;	//Boot - they forgot?
 	default:
-		hitLocUse = G_GetHitQuad(ent, point);
+		//hitLocUse = G_GetHitQuad(ent, point);
 		break;
 	}
+
+	
+
+	//trap_SendServerCommand(-1, va("print \"g_combat: %s got hit in: %i.\n\"", ent->client->pers.netname, boot->bodyPartIMayLose));
 
 	if (hitLocUse == -1)
 	{

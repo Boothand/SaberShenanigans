@@ -10834,6 +10834,7 @@ import CG_Printf
 import CG_Argv
 import CG_ConfigString
 import cg_debugBB
+import ss_blockingMethod
 import ui_myteam
 import cg_recordSPDemoName
 import cg_recordSPDemo

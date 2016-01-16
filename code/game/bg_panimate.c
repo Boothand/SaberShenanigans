@@ -287,7 +287,7 @@ qboolean BG_InDeathAnim( int anim )
 //Called only where pm is valid (not all require pm, but some do):
 qboolean PM_SaberInParry( int move )
 {
-	if ( move >= LS_PARRY_UP && move <= LS_PARRY_LL )
+	if ( move >= LS_PARRY_UP && move <= BOOT_LS_PARRY_DIAG_RIGHT)//LS_PARRY_LL )	//Boot
 	{
 		return qtrue;
 	}
@@ -938,6 +938,8 @@ setAnimLegs:
 			PM_DebugLegsAnim(anim);
 			Com_Printf("%i\n", pm->ps->legsTimer);
 			*/
+
+			//pm->ps->legsTimer /= 1.3; //Boot. Maybe lessen effectiveness of rolls?
 
 			if (pm->ps->fd.forcePowersActive & (1 << FP_RAGE))
 			{

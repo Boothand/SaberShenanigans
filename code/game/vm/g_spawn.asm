@@ -3503,6 +3503,10 @@ import trap_Argc
 import trap_Milliseconds
 import trap_Error
 import trap_Printf
+import boot_noFlips
+import boot_screenShakeOnHeadChop
+import boot_trainingMode
+import boot_feintTimer
 import g_timeouttospec
 import g_forceDodge
 import g_dismember
@@ -3610,6 +3614,9 @@ import G_LogWeaponKill
 import G_LogWeaponDamage
 import G_LogWeaponFire
 import G_LogWeaponPickup
+import Boot_BlockMatchesAttack
+import Boot_GetParryAnimFromMovement
+import Boot_ManualBlockThink
 import Jedi_DodgeEvasion
 import ForceTelepathy
 import ForceThrow
@@ -3653,6 +3660,8 @@ import G_InitMemory
 import G_Alloc
 import Team_CheckDroppedItem
 import OnSameTeam
+import Boot_GetDirFromMouseMovement
+import BootPort_PM_SomeoneInFront
 import G_RunClient
 import ClientEndFrame
 import ClientThink
@@ -3713,6 +3722,7 @@ import G_BounceProjectile
 import CreateMissile
 import G_RunMissile
 import G_ReflectMissile
+import G_GetHitLocation
 import ExplodeDeath
 import TossClientCubes
 import TossClientItems
@@ -3807,6 +3817,7 @@ import SetTeam
 import BroadcastTeamChange
 import StopFollowing
 import Cmd_Score_f
+import bootSession
 import g2SaberInstance
 import forcePowerDarkLight
 import WeaponAttackAnim
@@ -4265,14 +4276,22 @@ char 1 105
 char 1 0
 align 1
 LABELV $353
-char 1 98
+char 1 83
 char 1 97
-char 1 115
+char 1 98
 char 1 101
-char 1 106
-char 1 107
-char 1 45
-char 1 49
+char 1 114
+char 1 83
+char 1 104
+char 1 101
+char 1 110
+char 1 97
+char 1 110
+char 1 105
+char 1 103
+char 1 97
+char 1 110
+char 1 115
 char 1 0
 align 1
 LABELV $352

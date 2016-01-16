@@ -512,6 +512,24 @@ void Cmd_Kill_f( gentity_t *ent ) {
 	player_die (ent, ent, ent, 100000, MOD_SUICIDE);
 }
 
+void Cmd_Info_Boot(gentity_t *ent)
+{
+	char *s1 = "\n\n               ^1********* ^7Saber Shenanigans.^1********* \n\n";
+	char *s2 = "\n^7In this mod you must manually parry attacks. It can be bound like this:\n^3bind mouse2 +button14\n\n";
+	char *s3 = "\n^7Use movement directions to parry up, sides and lower sides (a total of 5 directions).\n";
+	char *s4 = "\n^7For the full experience, ^3DOWNLOAD THE CLIENTSIDE! ^7If you haven't already, type:\n^3sv_allowDownload 1^7. Then ^3/reconnect^7.\n";
+	char *s5 = "\n\n^7To view all commands, type ^3/commands^7. To view all features, type ^3/features^7.\n";
+
+	trap_SendServerCommand(ent - g_entities, va("print \"%s%s%s%s%s\"", s1, s2, s3, s4, s5));
+}
+
+Cmd_ToggleMouseMovementBlock_Boot(gentity_t *ent)
+{
+	bootSession_t *boot = &bootSession[ent - g_entities];
+
+	boot->usesMouseMovementBlock = !boot->usesMouseMovementBlock;
+}
+
 gentity_t *G_GetDuelWinner(gclient_t *client)
 {
 	gclient_t *wCl;
@@ -1958,20 +1976,22 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	}
 	*/
 
-	if (ent->client->saberCycleQueue)
-	{ //resume off of the queue if we haven't gotten a chance to update it yet
-		selectLevel = ent->client->saberCycleQueue;
-	}
-	else
-	{
-		selectLevel = ent->client->ps.fd.saberAnimLevel;
-	}
+	//if (ent->client->saberCycleQueue)	//Boot comment
+	//{ //resume off of the queue if we haven't gotten a chance to update it yet
+	//	selectLevel = ent->client->saberCycleQueue;
+	//}
+	//else
+	//{
+	//	selectLevel = ent->client->ps.fd.saberAnimLevel;
+	//}
 
-	selectLevel++;
-	if ( selectLevel > ent->client->ps.fd.forcePowerLevel[FP_SABERATTACK] )
-	{
-		selectLevel = FORCE_LEVEL_1;
-	}
+	//selectLevel++;
+	//if ( selectLevel > ent->client->ps.fd.forcePowerLevel[FP_SABERATTACK] )
+	//{
+	//	selectLevel = FORCE_LEVEL_2;//FORCE_LEVEL_1; Boot - disable blue stance.
+	//}
+
+	selectLevel = FORCE_LEVEL_2; //Boot - yellow only for now
 /*
 #ifndef FINAL_BUILD
 	switch ( selectLevel )
@@ -2384,6 +2404,10 @@ void ClientCommand( int clientNum ) {
 			}
 		}
 	}
+	else if (Q_stricmp (cmd, "info") == 0)	//Boot
+		Cmd_Info_Boot( ent );
+	else if (Q_stricmp(cmd, "switchBlockingMethod") == 0)	//Boot
+		Cmd_ToggleMouseMovementBlock_Boot(ent);
 #ifdef _DEBUG
 	else if (Q_stricmp(cmd, "gotocoord") == 0 && CheatsOk( ent ))
 	{

@@ -31,6 +31,12 @@ FX_BryarHitWall
 void FX_BryarHitWall( vec3_t origin, vec3_t normal )
 {
 	trap_FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal );
+	//Boot:
+	/*if (Q_irand(0, 4) > 2)
+	{*/
+		trap_FX_PlayEffectID(trap_FX_RegisterEffect("smoke_alot.efx"), origin, normal);
+		trap_FX_PlayEffectID(trap_FX_RegisterEffect("blaster/intense_sparks.efx"), origin, normal);
+	//}
 }
 
 /*
@@ -48,6 +54,9 @@ void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
 	{
 		trap_FX_PlayEffectID( cgs.effects.bryarDroidImpactEffect, origin, normal );
 	}
+
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect("smoke_alot.efx"), origin, normal);
+	//trap_FX_PlayEffectID(trap_FX_RegisterEffect("blaster/intense_sparks.efx"), origin, normal);
 }
 
 
@@ -105,6 +114,9 @@ void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power )
 		trap_FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal );
 		break;
 	}
+
+	trap_FX_PlayEffectID(trap_FX_RegisterEffect("smoke_alot.efx"), origin, normal);
+	trap_FX_PlayEffectID(trap_FX_RegisterEffect("blaster/intense_sparks.efx"), origin, normal);
 }
 
 /*

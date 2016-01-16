@@ -5679,6 +5679,10 @@ endproc trap_G2API_CleanGhoul2Models 0 8
 import trap_SP_Register
 import trap_Cvar_VariableValue
 import trap_Args
+import boot_noFlips
+import boot_screenShakeOnHeadChop
+import boot_trainingMode
+import boot_feintTimer
 import g_timeouttospec
 import g_forceDodge
 import g_dismember
@@ -5786,6 +5790,9 @@ import G_LogWeaponKill
 import G_LogWeaponDamage
 import G_LogWeaponFire
 import G_LogWeaponPickup
+import Boot_BlockMatchesAttack
+import Boot_GetParryAnimFromMovement
+import Boot_ManualBlockThink
 import Jedi_DodgeEvasion
 import ForceTelepathy
 import ForceThrow
@@ -5829,6 +5836,8 @@ import G_InitMemory
 import G_Alloc
 import Team_CheckDroppedItem
 import OnSameTeam
+import Boot_GetDirFromMouseMovement
+import BootPort_PM_SomeoneInFront
 import G_RunClient
 import ClientEndFrame
 import ClientThink
@@ -5889,6 +5898,7 @@ import G_BounceProjectile
 import CreateMissile
 import G_RunMissile
 import G_ReflectMissile
+import G_GetHitLocation
 import ExplodeDeath
 import TossClientCubes
 import TossClientItems
@@ -5971,6 +5981,7 @@ import G_SpawnVector
 import G_SpawnInt
 import G_SpawnFloat
 import G_SpawnString
+import bootSession
 import g2SaberInstance
 import precachedKyle
 import forcePowerDarkLight

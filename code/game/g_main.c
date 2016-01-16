@@ -18,6 +18,9 @@ typedef struct {
 gentity_t		g_entities[MAX_GENTITIES];
 gclient_t		g_clients[MAX_CLIENTS];
 
+//Boot
+bootSession_t	bootSession[MAX_CLIENTS];
+
 qboolean gDuelExit = qfalse;
 
 vmCvar_t	g_gametype;
@@ -92,6 +95,10 @@ vmCvar_t	g_enableBreath;
 vmCvar_t	g_dismember;
 vmCvar_t	g_forceDodge;
 vmCvar_t	g_timeouttospec;
+vmCvar_t	boot_feintTimer;
+vmCvar_t	boot_trainingMode;
+vmCvar_t	boot_screenShakeOnHeadChop;
+vmCvar_t	boot_noFlips;
 
 int gDuelist1 = -1;
 int gDuelist2 = -1;
@@ -123,10 +130,10 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_maxForceRank, "g_maxForceRank", "6", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_forceBasedTeams, "g_forceBasedTeams", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_privateDuel, "g_privateDuel", "1", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
-	{ &g_saberLocking, "g_saberLocking", "1", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
+	{ &g_saberLocking, "g_saberLocking", "0", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },	//1
 	{ &g_forceRegenTime, "g_forceRegenTime", "200", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
 
-	{ &g_spawnInvulnerability, "g_spawnInvulnerability", "3000", CVAR_ARCHIVE, 0, qtrue  },
+	{ &g_spawnInvulnerability, "g_spawnInvulnerability", "500", CVAR_ARCHIVE, 0, qtrue  },		//Boot 3000
 
 	{ &g_forcePowerDisable, "g_forcePowerDisable", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_LATCH, 0, qtrue  },
 	{ &g_weaponDisable, "g_weaponDisable", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_LATCH, 0, qtrue  },
@@ -164,9 +171,9 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &g_dedicated, "dedicated", "0", 0, 0, qfalse  },
 
-	{ &g_speed, "g_speed", "250", 0, 0, qtrue  },
+	{ &g_speed, "g_speed", "201", 0, 0, qtrue  },	//250 boot
 	{ &g_gravity, "g_gravity", "800", 0, 0, qtrue  },
-	{ &g_knockback, "g_knockback", "1000", 0, 0, qtrue  },
+	{ &g_knockback, "g_knockback", "200", 0, 0, qtrue  },	//Boot, change default knockback. Default = 1000
 	{ &g_quadfactor, "g_quadfactor", "3", 0, 0, qtrue  },
 	{ &g_weaponRespawn, "g_weaponrespawn", "5", 0, 0, qtrue  },
 	{ &g_weaponTeamRespawn, "g_weaponTeamRespawn", "5", 0, 0, qtrue },
@@ -176,7 +183,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, qfalse },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, qfalse },
 	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, qfalse },
-	{ &g_motd, "g_motd", "", 0, 0, qfalse },
+	{ &g_motd, "g_motd", "^1Saber Shenanigans ^7alpha v2.6", 0, 0, qfalse },
 	{ &g_blood, "com_blood", "1", 0, 0, qfalse },
 
 	{ &g_podiumDist, "g_podiumDist", "80", 0, 0, qfalse },
@@ -203,10 +210,16 @@ static cvarTable_t		gameCvarTable[] = {
 
 	{ &g_rankings, "g_rankings", "0", 0, 0, qfalse},
 
-	{ &g_dismember, "g_dismember", "0", 0, 0, qtrue  },
+	{ &g_dismember, "g_dismember", "1", 0, 0, qtrue  },	//0
 	{ &g_forceDodge, "g_forceDodge", "1", 0, 0, qtrue  },
 
 	{ &g_timeouttospec, "g_timeouttospec", "70", CVAR_ARCHIVE, 0, qfalse },
+
+	//Boot
+	{ &boot_feintTimer, "ss_feintTimer", "250", 0, 0, qtrue },
+	{ &boot_trainingMode, "ss_trainingMode", "0", 0, 0, qtrue },
+	{ &boot_screenShakeOnHeadChop, "ss_screenShakeOnHeadChop", "1", 0, 0, qtrue },
+	{ &boot_noFlips, "ss_noFlips", "1", 0, 0, qtrue },
 };
 
 // bk001129 - made static to avoid aliasing

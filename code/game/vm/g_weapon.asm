@@ -18,7 +18,7 @@ line 106
 ;13:// Bryar Pistol
 ;14://--------
 ;15:#define BRYAR_PISTOL_VEL			1600
-;16:#define BRYAR_PISTOL_DAMAGE			10
+;16:#define BRYAR_PISTOL_DAMAGE			65	//Boot, 10
 ;17:#define BRYAR_CHARGE_UNIT			200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
 ;18:#define BRYAR_ALT_SIZE				1.0f
 ;19:
@@ -40,7 +40,7 @@ line 106
 ;35:
 ;36:// Wookiee Bowcaster
 ;37://----------
-;38:#define	BOWCASTER_DAMAGE			50
+;38:#define	BOWCASTER_DAMAGE			100	//50 Boot
 ;39:#define	BOWCASTER_VELOCITY			1300
 ;40:#define BOWCASTER_SPLASH_DAMAGE		0
 ;41:#define BOWCASTER_SPLASH_RADIUS		0
@@ -403,7 +403,7 @@ line 169
 line 170
 ;170:	int damage = BRYAR_PISTOL_DAMAGE;
 ADDRLP4 8
-CNSTI4 10
+CNSTI4 65
 ASGNI4
 line 173
 ;171:	int count;
@@ -1712,8 +1712,11 @@ LTI4 $136
 line 452
 ;452:		{
 line 453
-;453:			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
+;453:			if (WP_SaberCanBlock(traceEnt, ent, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
 ADDRLP4 0
+INDIRP4
+ARGP4
+ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRLP4 4+12
@@ -2624,8 +2627,11 @@ LTI4 $211
 line 611
 ;611:		{
 line 612
-;612:			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR_SNIPER, qtrue, 0))
+;612:			if (WP_SaberCanBlock(traceEnt, ent, tr.endpos, 0, MOD_DISRUPTOR_SNIPER, qtrue, 0))
 ADDRLP4 0
+INDIRP4
+ARGP4
+ADDRFP4 0
 INDIRP4
 ARGP4
 ADDRLP4 4+12
@@ -3606,7 +3612,7 @@ line 764
 line 765
 ;765:	int	damage	= BOWCASTER_DAMAGE;
 ADDRLP4 4
-CNSTI4 50
+CNSTI4 100
 ASGNI4
 line 767
 ;766:
@@ -3783,7 +3789,7 @@ line 789
 line 790
 ;790:	int			damage	= BOWCASTER_DAMAGE, count;
 ADDRLP4 40
-CNSTI4 50
+CNSTI4 100
 ASGNI4
 line 796
 ;791:	float		vel;
@@ -19227,7 +19233,6 @@ bss
 align 4
 LABELV ent_list
 skip 4096
-import G_GetHitLocation
 import G_BoxInBounds
 align 4
 LABELV muzzle
@@ -19431,6 +19436,10 @@ import trap_Argc
 import trap_Milliseconds
 import trap_Error
 import trap_Printf
+import boot_noFlips
+import boot_screenShakeOnHeadChop
+import boot_trainingMode
+import boot_feintTimer
 import g_timeouttospec
 import g_forceDodge
 import g_dismember
@@ -19538,6 +19547,9 @@ import G_LogWeaponKill
 import G_LogWeaponDamage
 import G_LogWeaponFire
 import G_LogWeaponPickup
+import Boot_BlockMatchesAttack
+import Boot_GetParryAnimFromMovement
+import Boot_ManualBlockThink
 import Jedi_DodgeEvasion
 import ForceTelepathy
 import ForceThrow
@@ -19581,6 +19593,8 @@ import G_InitMemory
 import G_Alloc
 import Team_CheckDroppedItem
 import OnSameTeam
+import Boot_GetDirFromMouseMovement
+import BootPort_PM_SomeoneInFront
 import G_RunClient
 import ClientEndFrame
 import ClientThink
@@ -19633,6 +19647,7 @@ import G_BounceProjectile
 import CreateMissile
 import G_RunMissile
 import G_ReflectMissile
+import G_GetHitLocation
 import ExplodeDeath
 import TossClientCubes
 import TossClientItems
@@ -19733,6 +19748,7 @@ import G_SpawnVector
 import G_SpawnInt
 import G_SpawnFloat
 import G_SpawnString
+import bootSession
 import g2SaberInstance
 import precachedKyle
 import forcePowerDarkLight

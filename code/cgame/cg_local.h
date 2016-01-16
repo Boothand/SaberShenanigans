@@ -1528,6 +1528,10 @@ extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 
 extern	vmCvar_t		ui_myteam;
+
+//Boot
+extern vmCvar_t			ss_blockingMethod;
+//
 /*
 Ghoul2 Insert Start
 */

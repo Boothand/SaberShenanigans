@@ -1328,6 +1328,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 //	areabits = client->areabits;
 
 	memset( client, 0, sizeof(*client) );
+	memset( &bootSession[clientNum], 0, sizeof(bootSession[clientNum]) );
 
 	client->pers.connected = CON_CONNECTING;
 
@@ -1799,7 +1800,7 @@ void ClientSpawn(gentity_t *ent) {
 	WP_SpawnInitForcePowers( ent );
 
 	// health will count down towards max_health
-	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] * 1.25;
+	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];// * 1.25;		Boot - no extra 25 hp on start.
 
 	// Start with a small amount of armor as well.
 	client->ps.stats[STAT_ARMOR] = client->ps.stats[STAT_MAX_HEALTH] * 0.25;

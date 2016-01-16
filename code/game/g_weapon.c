@@ -13,7 +13,7 @@ static	vec3_t	muzzle;
 // Bryar Pistol
 //--------
 #define BRYAR_PISTOL_VEL			1600
-#define BRYAR_PISTOL_DAMAGE			10
+#define BRYAR_PISTOL_DAMAGE			65	//Boot, 10
 #define BRYAR_CHARGE_UNIT			200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
 #define BRYAR_ALT_SIZE				1.0f
 
@@ -35,7 +35,7 @@ static	vec3_t	muzzle;
 
 // Wookiee Bowcaster
 //----------
-#define	BOWCASTER_DAMAGE			50
+#define	BOWCASTER_DAMAGE			100	//50 Boot
 #define	BOWCASTER_VELOCITY			1300
 #define BOWCASTER_SPLASH_DAMAGE		0
 #define BOWCASTER_SPLASH_RADIUS		0
@@ -450,7 +450,7 @@ static void WP_DisruptorMainFire( gentity_t *ent )
 		}
 		else if (traceEnt && traceEnt->client && traceEnt->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
 		{
-			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
+			if (WP_SaberCanBlock(traceEnt, ent, tr.endpos, 0, MOD_DISRUPTOR, qtrue, 0))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 
@@ -609,7 +609,7 @@ void WP_DisruptorAltFire( gentity_t *ent )
 		}
 		else if (traceEnt && traceEnt->client && traceEnt->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
 		{
-			if (WP_SaberCanBlock(traceEnt, tr.endpos, 0, MOD_DISRUPTOR_SNIPER, qtrue, 0))
+			if (WP_SaberCanBlock(traceEnt, ent, tr.endpos, 0, MOD_DISRUPTOR_SNIPER, qtrue, 0))
 			{ //broadcast and stop the shot because it was blocked
 				gentity_t *te = NULL;
 

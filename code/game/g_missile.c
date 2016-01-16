@@ -21,6 +21,8 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	float	speed;
 	gentity_t	*owner = ent;
 	int		isowner = 0;
+	vec3_t fwd;	//Boot
+	vec3_t targetDir;
 
 	if ( ent->r.ownerNum )
 	{
@@ -36,9 +38,16 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	speed = VectorNormalize( missile->s.pos.trDelta );
 
 	//if ( ent && owner && owner->NPC && owner->enemy && Q_stricmp( "Tavion", owner->NPC_type ) == 0 && Q_irand( 0, 3 ) )
-	if ( &g_entities[missile->r.ownerNum] && missile->s.weapon != WP_SABER && missile->s.weapon != G2_MODEL_PART && !isowner )
+	if (&g_entities[missile->r.ownerNum] && missile->s.weapon != WP_SABER && missile->s.weapon != G2_MODEL_PART && !isowner)
+		
 	{//bounce back at them if you can
-		VectorSubtract( g_entities[missile->r.ownerNum].r.currentOrigin, missile->r.currentOrigin, bounce_dir );
+
+		AngleVectors(ent->client->ps.viewangles, fwd, 0, 0);	//Boot	-- launch the missile where you're aiming
+		targetDir[0] = ent->client->ps.origin[0] - fwd[0];
+		targetDir[1] = ent->client->ps.origin[1] - fwd[1];
+		targetDir[2] = ent->client->ps.origin[2] - fwd[2];
+
+		VectorSubtract(/*g_entities[missile->r.ownerNum].r.currentOrigin*/ent->r.currentOrigin, targetDir/*Boot comment: missile->r.currentOrigin*/, bounce_dir);
 		VectorNormalize( bounce_dir );
 	}
 	else if (isowner)
@@ -61,10 +70,10 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 		VectorScale( bounce_dir, DotProduct( forward, missile_dir ), bounce_dir );
 		VectorNormalize( bounce_dir );
 	}
-	for ( i = 0; i < 3; i++ )
+	/*for ( i = 0; i < 3; i++ )	//Boot
 	{
 		bounce_dir[i] += RandFloat( -0.2f, 0.2f );
-	}
+	}*/
 
 	VectorNormalize( bounce_dir );
 	VectorScale( bounce_dir, speed, missile->s.pos.trDelta );
@@ -378,7 +387,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		ent->methodOfDeath != MOD_REPEATER_ALT &&
 		ent->methodOfDeath != MOD_FLECHETTE_ALT_SPLASH &&
 		other->client->ps.saberBlockTime < level.time &&
-		WP_SaberCanBlock(other, ent->r.currentOrigin, 0, 0, qtrue, 0))
+		WP_SaberCanBlock(other, ent, ent->r.currentOrigin, 0, 0, qtrue, 0))
 	{ //only block one projectile per 200ms (to prevent giant swarms of projectiles being blocked)
 		vec3_t fwd;
 		gentity_t *te;
@@ -448,7 +457,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			int otherDefLevel = otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND];
 
 			//in this case, deflect it even if we can't actually block it because it hit our saber
-			WP_SaberCanBlock(otherOwner, ent->r.currentOrigin, 0, 0, qtrue, 0);
+			WP_SaberCanBlock(otherOwner, ent, ent->r.currentOrigin, 0, 0, qtrue, 0);
 
 			te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
 			VectorCopy(ent->r.currentOrigin, te->s.origin);

@@ -16,55 +16,6 @@ float RandFloat(float min, float max) {
 	return ((rand() * (max - min)) / 32768.0F) + min;
 }
 
-/*
-void G_TestLine(vec3_t start, vec3_t end, int color, int time)
-{
-	gentity_t *te;
-
-	te = G_TempEntity( start, EV_TESTLINE );
-	VectorCopy(start, te->s.origin);
-	VectorCopy(end, te->s.origin2);
-	te->s.time2 = time;
-	te->s.weapon = color;
-	te->r.svFlags |= SVF_BROADCAST;
-}
-*/
-extern void G_TestLine(vec3_t start, vec3_t end, int color, int time);
-
-void	G_DebugBoxLines(vec3_t mins, vec3_t maxs, int duration)
-{
-	vec3_t start;
-	vec3_t end;
-
-	float x = maxs[0] - mins[0];
-	float y = maxs[1] - mins[1];
-
-	// top of box
-	VectorCopy(maxs, start);
-	VectorCopy(maxs, end);
-	start[0] -= x;
-	G_TestLine(start, end, 0x00000ff, duration);
-	end[0] = start[0];
-	end[1] -= y;
-	G_TestLine(start, end, 0x00000ff, duration);
-	start[1] = end[1];
-	start[0] += x;
-	G_TestLine(start, end, 0x00000ff, duration);
-	G_TestLine(start, maxs, 0x00000ff, duration);
-	// bottom of box
-	VectorCopy(mins, start);
-	VectorCopy(mins, end);
-	start[0] += x;
-	G_TestLine(start, end, 0x00000ff, duration);
-	end[0] = start[0];
-	end[1] += y;
-	G_TestLine(start, end, 0x00000ff, duration);
-	start[1] = end[1];
-	start[0] -= x;
-	G_TestLine(start, end, 0x00000ff, duration);
-	G_TestLine(start, mins, 0x00000ff, duration);
-}
-
 void SaberUpdateSelf(gentity_t *ent)
 {
 	if (ent->r.ownerNum == ENTITYNUM_NONE)
@@ -106,38 +57,6 @@ void SaberUpdateSelf(gentity_t *ent)
 	}
 	else
 	{
-		static int lastDebugBox[MAX_CLIENTS];
-
-		if ( lastDebugBox[ent->r.ownerNum] + boot_debugSaberBoxDelay.integer < level.time )
-		{ // Don't spam the box!
-			vec3_t dbgMins;
-			vec3_t dbgMaxs;
-
-			lastDebugBox[ent->r.ownerNum] = level.time;
-
-			if (boot_debugSaber.integer & 2)
-			{
-				VectorAdd( ent->r.currentOrigin, ent->r.mins, dbgMins );
-				VectorAdd( ent->r.currentOrigin, ent->r.maxs, dbgMaxs );
-
-				G_DebugBoxLines(dbgMins, dbgMaxs, boot_debugSaberBoxDelay.integer);
-			}
-			if (boot_debugSaber.integer & 4)
-			{
-				gentity_t *owner = &g_entities[ent->r.ownerNum];
-
-				VectorAdd( owner->r.currentOrigin, owner->r.mins, dbgMins );
-				VectorAdd( owner->r.currentOrigin, owner->r.maxs, dbgMaxs );
-
-				G_DebugBoxLines(dbgMins, dbgMaxs, boot_debugSaberBoxDelay.integer);
-			}
-		}
-
-		/*if (  )
-		{
-			trap_SendServerCommand(-1, va("print \"Rolling.\n\"") );
-		}*/
-
 		ent->r.contents = CONTENTS_LIGHTSABER;
 		ent->clipmask = MASK_PLAYERSOLID | CONTENTS_LIGHTSABER;
 	}
@@ -150,10 +69,6 @@ void SaberUpdateSelf(gentity_t *ent)
 void SaberGotHit( gentity_t *self, gentity_t *other, trace_t *trace )
 {
 	gentity_t *own = &g_entities[self->r.ownerNum];
-	if (boot_debugSaber.integer)
-	{
-		trap_SendServerCommand(-1, va("print \"SaberGotHit: It happened.\n\"") );
-	}
 
 	if (!own || !own->client)
 	{
@@ -1186,7 +1101,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	}
 	else if (self->client->ps.saberIdleWound < level.time)
 	{ //just touching, do minimal damage and only check for it every 200ms (mainly to cut down on network traffic for hit events)
-		dmg = boot_idleDamage.integer;
+		dmg = 5;
 		self->client->ps.saberIdleWound = level.time + 200;
 		idleDamage = qtrue;
 	}
@@ -1257,8 +1172,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			}
 		}
 
-		//Boot translate: If they block...
-		if (g_entities[tr.entityNum].client && !unblockable && WP_SaberCanBlock(&g_entities[tr.entityNum], &g_entities[self->client->ps.clientNum], tr.endpos, 0, MOD_SABER, qfalse, attackStr))
+		if (g_entities[tr.entityNum].client && !unblockable && WP_SaberCanBlock(&g_entities[tr.entityNum], self, tr.endpos, 0, MOD_SABER, qfalse, attackStr))
 		{
 			te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 			VectorCopy(tr.endpos, te->s.origin);
@@ -1291,31 +1205,22 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			//our attack was blocked, so bounce back?
 			if (dmg > 5)
 			{
-				if (!self->client->ps.fd.saberAnimLevel >= FORCE_LEVEL_3)
-				{
-					//Unreachable code?
-					trap_SendServerCommand(-1, va( "print\"This happened.\n\"") );
-					self->client->ps.weaponTime = 0;
-					self->client->ps.weaponstate = WEAPON_READY;
-					self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+				self->client->ps.weaponTime = 0;
+				self->client->ps.weaponstate = WEAPON_READY;
+				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 
-					self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-				}
+				self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
 			}
 			self->client->ps.saberAttackWound = level.time + 300;
 
-			//Boot commented out from here...
+			if (self->client->ps.fd.saberAnimLevel >= FORCE_LEVEL_3 && dmg > 5 && g_entities[tr.entityNum].client->ps.saberMove != LS_READY && g_entities[tr.entityNum].client->ps.saberMove != LS_NONE)
+			{
+				g_entities[tr.entityNum].client->ps.weaponTime = 0;
+				g_entities[tr.entityNum].client->ps.weaponstate = WEAPON_READY;
+				g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 
-			//if (self->client->ps.fd.saberAnimLevel >= FORCE_LEVEL_3 && dmg > 5 && g_entities[tr.entityNum].client->ps.saberMove != LS_READY && g_entities[tr.entityNum].client->ps.saberMove != LS_NONE)
-			//{
-			//	g_entities[tr.entityNum].client->ps.weaponTime = 0;
-			//	g_entities[tr.entityNum].client->ps.weaponstate = WEAPON_READY;
-			//	g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-
-			//	g_entities[tr.entityNum].client->ps.saberBlockTime = level.time + (350 - (g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-			//}
-
-			//... to here.
+				g_entities[tr.entityNum].client->ps.saberBlockTime = level.time + (350 - (g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+			}
 
 			//NOTE: Actual blocking is handled in WP_SaberCanBlock
 			/*
@@ -1376,7 +1281,6 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			self->client->ps.saberAttackWound = level.time + 100;
 		}
 	}
-	//Boot translate: Could this mean if the lightsaber boxes overlap? //FINDME: Saber box
 	else if ((tr.fraction != 1 || tr.startsolid) &&
 		(g_entities[tr.entityNum].r.contents & CONTENTS_LIGHTSABER) &&
 		g_entities[tr.entityNum].r.contents != -1)
@@ -1422,45 +1326,34 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			return qfalse;
 		}
 
-		//if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-		//Boot
-		if (dmg > 5)
+		if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
 		{
 			self->client->ps.weaponTime = 0;
 			self->client->ps.weaponstate = WEAPON_READY;
 			self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 			self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-			//Make Qboolean true, make sure bg_saber.c finds it, and if it's true and you're holding attack, still do this.
 
-			//Boot commented out this:
-			//if (otherOwner && otherOwner->client)
-			//{
-			//	if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-			//	{
-			//		//... I can block...
-			//		//trap_SendServerCommand( -1, va("print \"CheckSaberDamage (%s - %i): self: %2i) %s - otherOwner: %2i) %s\n\"", __FILE__, __LINE__, self-g_entities, self->client->pers.netname, otherOwner-g_entities, otherOwner->client->pers.netname, attackStr) );
-			//		WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1);
-			//	}
-			//}
+			if (otherOwner && otherOwner->client)
+			{
+				if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+				{
+					WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1);
+				}
+			}
 		}
-
-		//Boot commented out this:
-
-		//If their saber defence level is lower than or equal to my saber style
-		//else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
-		//{ //block
-		//	if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-		//	{
-		//		trap_SendServerCommand( -1, va("print \"CheckSaberDamage (%s - %i): self: %2i) %s - otherOwner: %2i) %s\n\"", __FILE__, __LINE__, self-g_entities, self->client->pers.netname, otherOwner-g_entities, otherOwner->client->pers.netname, attackStr) );
-		//		if (WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
-		//		{
-		//			otherOwner->client->ps.weaponTime = 0;
-		//			otherOwner->client->ps.weaponstate = WEAPON_READY;
-		//			otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-		//			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-		//		}
-		//	}
-		//}
+		else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
+		{ //block
+			if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+			{
+				if (WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
+				{
+					otherOwner->client->ps.weaponTime = 0;
+					otherOwner->client->ps.weaponstate = WEAPON_READY;
+					otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+					otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+				}
+			}
+		}
 
 		self->client->ps.saberAttackWound = level.time + 300;
 
@@ -1479,15 +1372,20 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 
 		if (dmg > 5)
 		{ //we clashed into this person's saber while attacking, so make them feel it too
-			if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
+			if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel(// &&
+				//(otherOwner->client->ps.saberMove >= LS_A_TL2BR && self->client->ps.saberMove >= LS_A_TL2BR))	//Boot
 			{
 			//	WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
-
+				//trap_SendServerCommand(-1, va("\print \"Saberclash\n\""));
 				otherOwner->client->ps.weaponTime = 0;
 				otherOwner->client->ps.weaponstate = WEAPON_READY;
 				otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 
 				self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+				//self->client->ps.weaponstate = WEAPON_READY;	//Boot
+				//self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+				//self->client->ps.weaponTime = 0;
+
 
 				otherOwner->client->ps.saberAttackWound = level.time + 300;
 			}
@@ -1560,7 +1458,7 @@ qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *saberOwner, gen
 
 			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
 			{ //Slice them
-				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, ent, tr.endpos, 0, MOD_SABER, qfalse, 8))		//Boot put the second ent. Doesn't know what to put. Doesn't need it either.
+				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, saberent, tr.endpos, 0, MOD_SABER, qfalse, 8))
 				{
 					te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 					VectorCopy(tr.endpos, te->s.origin);
@@ -2290,22 +2188,19 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 
 		if (mySaber && (mySaber->r.contents & CONTENTS_LIGHTSABER) && !self->client->ps.saberInFlight)
 		{ //place it roughly in the middle of the saber..
-			VectorMA( boltOrigin, 20, boltAngles, mySaber->r.currentOrigin );				//Boot: DAGGOLIN! FOUND SABER BOX!!! "20" is the position along the angles between the bolt and the "origin"...
-																						//... I believe. Thus, adding new ones should be just to change this number. Now how do we add new ones?...
+			VectorMA( boltOrigin, 20, boltAngles, mySaber->r.currentOrigin );
 
 			if (self->client->ps.dualBlade)
 			{
 				VectorCopy(boltOrigin, mySaber->r.currentOrigin);
 			}
+			//VectorCopy(/*boltOrigin*/end, mySaber->r.currentOrigin);
 		}
 	}
 
 	boltAngles[YAW] = self->client->ps.viewangles[YAW];
 
-	if (boot_debugSaber.integer & 8)
-	{
-		G_TestLine(boltOrigin, end, 0x000000ff, 50);				//Shows the line that deals damage to the player box
-	}
+	//G_TestLine(boltOrigin, end, 0x000000ff, 50);
 
 	if (self->client->ps.saberInFlight)
 	{ //do the thrown-saber stuff
@@ -2399,7 +2294,7 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 		{
 			saberent->r.svFlags |= (SVF_NOCLIENT);
 			saberent->r.contents = CONTENTS_LIGHTSABER;
-			VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );			//Boot: SIZE OF SABER BOX. Default -8 and 8. 3 or 4 should be good for individual boxes.
+			VectorSet( saberent->r.mins, -8.0f, -8.0f, -8.0f );
 			VectorSet( saberent->r.maxs, 8.0f, 8.0f, 8.0f );
 			saberent->s.loopSound = 0;
 		}
@@ -2419,8 +2314,8 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 				self->client->ps.saberIdleWound = level.time + Q_irand(400, 600);
 			}
 
-			VectorCopy(boltOrigin, self->client->lastSaberBase);			//Boot to Daggolin: I don't understand these things, but... considering that damage is dealt from the...
-			VectorCopy(end, self->client->lastSaberTip);					//... small tris that make up the saber blade (developer 1;r_showtris 1), couldn't blocking be calculated from the same values?
+			VectorCopy(boltOrigin, self->client->lastSaberBase);
+			VectorCopy(end, self->client->lastSaberTip);
 			self->client->hasCurrentPosition = qtrue;
 
 			self->client->ps.saberBlocked = BLOCKED_NONE;
@@ -2797,14 +2692,11 @@ void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
 	}
 }
 
-int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)	//Boot added *other.
+int WP_SaberCanBlock(gentity_t *self, /*Boot:*/gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
 {
 	qboolean thrownSaber = qfalse;
 	float blockFactor = 0;
-	int randomNum;
-	//whyMsg will be something that allows clients to type !why and find out why they got hit. Much more relevant for baseJK.
-	const char *whyMsg;
-	qboolean canManualBlock[MAX_CLIENTS];
+	bootSession_t *bootSelf = &bootSession[self - g_entities];
 
 	if (!self || !self->client || !point)
 	{
@@ -2819,7 +2711,6 @@ int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags
 
 	if (BG_SaberInAttack(self->client->ps.saberMove))
 	{
-		whyMsg = va("\print \"%s ^7could not block because they were attacking and the sabers did not collide.\n\"", self->client->pers.netname);
 		return 0;
 	}
 
@@ -2828,25 +2719,23 @@ int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags
 	{
 		if ( self->client->ps.saberMove < LS_PARRY_UP || self->client->ps.saberMove > LS_REFLECT_LL )
 		{
+			trap_SendServerCommand(-1, va("print \"Got hit line 2722.\n\""));
 			return 0;
 		}
 	}
 
 	if (self->client->ps.saberHolstered)
 	{
-		whyMsg = va("\print \"%s ^7could not block because they had not opened their saber.\n\"", self->client->pers.netname);
 		return 0;
 	}
 
 	if (self->client->ps.usingATST)
 	{
-		whyMsg = va("\print \"%s ^7could not block because they were busy riding an ATST.\n\"", self->client->pers.netname);
 		return 0;
 	}
 
 	if (self->client->ps.weapon != WP_SABER)
 	{
-		whyMsg = va("\print \"%s ^7could not block because they didn't use a saber.\n\"", self->client->pers.netname);
 		return 0;
 	}
 
@@ -2863,160 +2752,62 @@ int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags
 	if ((self->client->pers.cmd.buttons & BUTTON_ATTACK)/* &&
 		(projectile || attackStr == FORCE_LEVEL_3)*/)
 	{ //don't block when the player is trying to slash, if it's a projectile or he's doing a very strong attack
-		whyMsg = va("\print \"%s ^7could not block because they were attacking and the sabers did not collide.\n\"", self->client->pers.netname);
 		return 0;
 	}
 
-	if (boot_blockingSystem.integer == 1)		// Block only at saberbox.
+	/*if (attackStr == FORCE_LEVEL_3)	//Boot comment
 	{
-		return 0;
-	}
-	else if (boot_blockingSystem.integer >= 2)	//Block at saberbox and corresponding directions.
-	{
-		int attackDir[MAX_CLIENTS];
-		int correctBlock[MAX_CLIENTS];
-		int blockDir[MAX_CLIENTS];
-
-		attackDir[other->client->ps.clientNum] = other->client->ps.saberMove;
-
-		switch (attackDir[other->client->ps.clientNum])
+		if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
 		{
-		case LS_A_TL2BR:
-		case LS_A_L2R:
-			correctBlock[self->client->ps.clientNum] = BLOCKED_UPPER_RIGHT;
-			break;
-		case LS_A_BL2TR:
-			correctBlock[self->client->ps.clientNum] = BLOCKED_LOWER_LEFT;		//remember switched lower anims
-			break;
-		case LS_A_BR2TL:
-			correctBlock[self->client->ps.clientNum] = BLOCKED_LOWER_RIGHT;
-			break;
-		case LS_A_R2L:
-		case LS_A_TR2BL:
-			correctBlock[self->client->ps.clientNum] = BLOCKED_UPPER_LEFT;
-			break;
-		case LS_A_T2B:
-			correctBlock[self->client->ps.clientNum] = BLOCKED_TOP;
-			break;
-		default:
-			return 0;
-			break;
-		}
-
-		/*if (attackDir[other->client->ps.clientNum] == LS_A_BACKSTAB ||
-			attackDir[other->client->ps.clientNum] == LS_A_BACK ||
-			attackDir[other->client->ps.clientNum] == LS_A_BACK_CR)
-		{
-			
-		}*/
-		
-		blockDir[self->client->ps.clientNum] = Boot_LockedDir(self->client->ps.clientNum, &self->client->pers.cmd);
-		if (boot_debugSaber.integer >= 1)
-		{
-			trap_SendServerCommand(-1, va("print\"Attackdir = %i. Correct block was %i. Defender chose %i.\n\"", attackDir[other->client->ps.clientNum], correctBlock[self->client->ps.clientNum], blockDir[self->client->ps.clientNum]));
-		}
-
-		if (blockDir[self->client->ps.clientNum] == correctBlock[self->client->ps.clientNum])
-		{
-			canManualBlock[self->client->ps.clientNum] = qtrue;
-			//boot_feintTimer.integer = 0; //Make this happen for each client.
-			other->client->ps.weaponTime = 0;
-			other->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+			if (Q_irand(1, 10) < 3)
+			{
+				return 0;
+			}
 		}
 		else
 		{
-			canManualBlock[self->client->ps.clientNum] = qfalse;
+			return 0;
 		}
-	}
+	}*/
 
-//Boot commented out from here...
-
-	// Attacker is using red...
-	//if (attackStr == FORCE_LEVEL_3)
+	//if (attackStr == FORCE_LEVEL_2 && Q_irand(1, 10) < 3)	//Boot comment
 	//{
 	//	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-	//	{ // ...and we have DEFENSE 3...
-	//		randomNum = Q_irand(1, 10);
-	//		if (boot_debugSaber.integer)
-	//			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s (defence 3) ^7is being attacked by a ^1red ^7swing. RandomNum: %i (2:10 fail chance)\n\"", self-g_entities, self->client->pers.netname, randomNum) );
-	//		if (randomNum < 3)
-	//		{ // ...and the odds were against us (had a 20 percent chance of being against us) -> NO block
-	//			whyMsg = va("\print \"%s ^7could not block because the random number(^3%i^7) was below 3:10.\n\"", self->client->pers.netname, randomNum);
-	//			return 0;
-	//		}
-	//	}
-	//	else
-	//	{ // ...and we do NOT have DEFENSE 3 -> NO block
-	//		if (boot_debugSaber.integer)
-	//			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7could not block ^1red^7 without defence level 3.\n\"", self->client->pers.netname) );
-	//		whyMsg = va("\print \"%s ^7could not block because they did not have ^4defence level 3 ^7versus ^1red^7.\n\"", self->client->pers.netname);
-	//		return 0;
-	//	}
-	//}
-
-	//// The attacker is using yellow...
-	//randomNum = Q_irand(1, 10);
-	//if (attackStr == FORCE_LEVEL_2)
-	//	if (boot_debugSaber.integer)
-	//	trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7is being attacked by a ^3yellow ^7swing... RandomNum: %i (2:10 fail-chance).\n\"", self-g_entities, self->client->pers.netname, randomNum) );
-	//if (attackStr == FORCE_LEVEL_2 && randomNum < 3)
-	//{ // ...and the odds were against us (had a 20 percent chance of being against us)...
-	//	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-	//	{ // ...but we have DEFENSE 3! -> might block
+	//	{
 	//		//do nothing for now
-	//		if (boot_debugSaber.integer)
-	//			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i)^7... but has defence 3. Blocks.\n\"", self-g_entities, self->client->pers.netname) );
-	//		whyMsg = va("\print \"%s ^7blocked ^3yellow ^7because they had ^4defence level 3^7.\n\"", self->client->pers.netname);
 	//	}
 	//	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_2)
-	//	{ // ...and we only have DEFENSE 2...
-	//		randomNum = Q_irand(1, 10);
-	//		if (boot_debugSaber.integer)
-	//			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) ^7... and has level 2 defence. RandomNum: %i (4:10 fail chance)\n\"", self-g_entities, self->client->pers.netname, randomNum) );
-	//		if (randomNum < 5)
-	//		{ // ...and the odds were against us AGAIN (had a 40 percent chance of being against us)! -> NO block
-	//			whyMsg = va("\print \"%s ^7could not block ^3yellow ^7because they had ^4defence level 2 ^7and the random number (^3%i^7) was less than 5:10.\n\"", self->client->pers.netname, randomNum);
+	//	{
+	//		if (Q_irand(1, 10) < 5)
+	//		{
 	//			return 0;
 	//		}
 	//	}
 	//	else
-	//	{ // ...and we have LESS than DEFENSE 2! -> NO block
-	//		if (boot_debugSaber.integer)
-	//			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7could not block ^3yellow ^7(didn't have at least defence 2).\n\"", self->client->pers.netname) );
-	//		whyMsg = va("\print \"%s ^7could not block ^3yellow ^7because they had less than ^4defence level 2^7..\n\"", self->client->pers.netname);
+	//	{
 	//		return 0;
 	//	}
 	//}
 	//
-	//// The attacker is using blue OR a "saber clash" (tip of the saber?) occured...
-	//randomNum = Q_irand(1, 40);
-	//if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND])
-	//	if (boot_debugSaber.integer)
-	//		trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7is being attacked by a ^4blue ^7swing and has no defence level. RandomNum: %i (2:10 fail chance).\n\"", self-g_entities, self->client->pers.netname, randomNum) );
 	//if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] &&
-	//	randomNum < 3)
-	//{ // ...and the odds were against us!
-	//	//if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
-	//	whyMsg = va("\print \"%s ^7could not block ^4blue ^7because they had no ^4defence level ^7and the random number (^3%i^7) was less than 3:40.\n\"", self->client->pers.netname, randomNum);
+	//	Q_irand(1, 40) < 3)
+	//{ //if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
 	//	return 0;
 	//}
 
-	//if (SaberAttacking(self))
-	//{ //attacking, can't block now
-	//	if (boot_debugSaber.integer)
-	//		trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7was attacking and could not block.\n\"", self->client->pers.netname) );
-	//	//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
-	//	whyMsg = va("\print \"%s ^7could not block because they were attacking and the sabers did not collide.\n\"", self->client->pers.netname);
-	//	return 0;
-	//}
+	if (SaberAttacking(self))
+	{ //attacking, can't block now
 
-	//if (self->client->ps.saberMove != LS_READY &&
-	//	!self->client->ps.saberBlocking)
-	//{
-	//	return 0;
-	//}
-	
-//... to here.
+		//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
+		return 0;
+	}
+
+	if (self->client->ps.saberMove != LS_READY &&
+		!self->client->ps.saberBlocking)
+	{
+		trap_SendServerCommand(-1, va("print \"Got hit line 2808.\n\""));
+		return 0;
+	}
 
 	if (self->client->ps.saberBlockTime >= level.time)
 	{
@@ -3025,29 +2816,26 @@ int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags
 
 	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
 	{
-		if (boot_debugSaber.integer)
-			trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7was extending the force hand and could not block.\n\"", self->client->pers.netname) );
-		whyMsg = va("\print \"%s ^7could not block because they were extending their force hand.\n\"", self->client->pers.netname);
+		trap_SendServerCommand(-1, va("print \"Got hit line 2819.\n\""));
 		return 0;
 	}
-//... and here:
-	//if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_3)
-	//{
-	//	blockFactor = 0.05f;
-	//}
-	//else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_2)
-	//{
-	//	blockFactor = 0.6f;
-	//}
-	//else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_1)
-	//{
-	//	blockFactor = 0.9f;
-	//}
-	//else
-	//{ //for now we just don't get to autoblock with no def
-	//	whyMsg = va("\print \"%s ^7could not auto-block without any ^4saber defence level^7.\n\"", self->client->pers.netname);
-	//	return 0;
-	//}
+
+	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_3)
+	{
+		blockFactor = 0.05f;
+	}
+	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_2)
+	{
+		blockFactor = 0.6f;
+	}
+	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] == FORCE_LEVEL_1)
+	{
+		blockFactor = 0.9f;
+	}
+	else
+	{ //for now we just don't get to autoblock with no def
+		return 0;
+	}
 
 	if (thrownSaber)
 	{
@@ -3056,19 +2844,63 @@ int WP_SaberCanBlock(gentity_t *self, gentity_t *other, vec3_t point, int dflags
 
 	if (!InFront( point, self->client->ps.origin, self->client->ps.viewangles, blockFactor )) //orig 0.2f
 	{
-		//if (boot_debugSaber.integer) trap_SendServerCommand( -1, va("print \"WP_SaberCanBlock: %2i) %s ^7did not aim correctly and couldn't block.\n\"", self->client->pers.netname) );
+		trap_SendServerCommand(-1, va("print \"Got hit line 2847.\n\""));
 		return 0;
 	}
+	//Boot
 
-	if (!canManualBlock[self->client->ps.clientNum])
+	if (bootSelf->isParrying)
+	{
+		if (!Boot_BlockMatchesAttack(other->client->ps.saberMove, bootSelf->parryDirection) && !projectile)
+		{
+			trap_SendServerCommand(-1, va("print \"Got hit line 2856.\n\""));
+			return 0;
+		}
+		else if (projectile)
+		{
+			bootSelf->blockedProjectile = qtrue;
+		}
+		else
+		{
+			bootSelf->didSuccessfulParry = qtrue;
+		}
+	}
+	else
 	{
 		return 0;
 	}
 
 	WP_SaberBlockNonRandom(self, point, projectile);
-	whyMsg = va("\print \"^7No reason to give yet.\n\"");
+	trap_SendServerCommand(-1, va("print \"Didn't get hit.\n\""));
 	return 1;
 }
+
+qboolean Boot_BlockMatchesAttack(int attack, int block)
+{
+	if (attack == LS_A_T2B && block == BLOCKED_TOP) //Forward swing
+	{
+		return qtrue;
+	}
+	else if ( (attack == LS_A_L2R || attack == LS_A_TL2BR) && block == BLOCKED_UPPER_RIGHT)
+	{
+		return qtrue;
+	}
+	else if ( (attack == LS_A_R2L || attack == LS_A_TR2BL) && block == BLOCKED_UPPER_LEFT)
+	{
+		return qtrue;
+	}
+	else if (attack == LS_A_BL2TR && block == BLOCKED_LOWER_LEFT)
+	{
+		return qtrue;
+	}
+	else if (attack == LS_A_BR2TL && block == BLOCKED_LOWER_RIGHT)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 
 qboolean HasSetSaberOnly(void)
 {
@@ -3102,3 +2934,4 @@ qboolean HasSetSaberOnly(void)
 
 	return qtrue;
 }
+

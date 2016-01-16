@@ -997,6 +997,9 @@ void ClientThink_real( gentity_t *ent ) {
 	int			msec;
 	int			i;
 	usercmd_t	*ucmd;
+	bootSession_t *boot = &bootSession[ent - g_entities];
+	char userinfo[MAX_INFO_STRING];
+
 
 	client = ent->client;
 
@@ -1611,6 +1614,27 @@ void ClientThink_real( gentity_t *ent ) {
 	ClientTimerActions( ent, msec );
 
 	G_UpdateClientBroadcasts ( ent );
+
+	//Boot
+
+	if (ent->client->ps.weapon == WP_SABER)
+	{
+		Boot_ManualBlockThink(ent);
+	}
+
+	trap_GetUserinfo(ent->client->ps.clientNum, userinfo, sizeof(userinfo));
+
+	if (Q_stricmp(Info_ValueForKey(userinfo, "ss_blockingMethod"), "2") == 0)
+	{
+		boot->usesMouseMovementBlock = qtrue;
+	}
+	else
+	{
+		boot->usesMouseMovementBlock = qfalse;
+	}
+
+	//trap_SendServerCommand(ent->client->ps.clientNum, va("print \"Viewangles[1]: %i, viewangles[0]: %i\n\"", ent->client->ps.viewangles[1], ent->client->ps.viewangles[0]));
+
 }
 
 /*
@@ -1794,4 +1818,241 @@ void ClientEndFrame( gentity_t *ent ) {
 //	ent->client->areabits[i >> 3] |= 1 << (i & 7);
 }
 
+void Boot_ManualBlockThink(gentity_t *ent)
+{
+	bootSession_t *boot = &bootSession[ent - g_entities];
+	bootSession_t *bootOther;
+	trace_t	tr;
+	//static int oldDir[MAX_CLIENTS];
 
+	//Fix the chip-bug after rolling
+	boot->allowedToParry = qtrue;
+	if (pm->ps->pm_flags == PMF_ROLLING ||
+		(pm->ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_ROLL_B)
+	{
+		boot->allowedToParry = qfalse;
+	}
+
+
+
+	//Am I pressing blocking buttons?
+	if (ent->client->pers.cmd.buttons & BUTTON_MANUAL_BLOCK)
+	{
+		//If not already holding the button down
+		if (!boot->pressingParry)
+		{
+			if (!boot->usesMouseMovementBlock)
+			{
+				boot->parryDirection = BLOCKED_TOP;
+
+				if (ent->client->pers.cmd.rightmove < 0)
+				{
+					boot->parryDirection = BLOCKED_UPPER_LEFT;
+				}
+				else if (ent->client->pers.cmd.rightmove > 0)
+				{
+					boot->parryDirection = BLOCKED_UPPER_RIGHT;
+				}
+			}
+			else
+			{
+				boot->parryDirection = Boot_GetDirFromMouseMovement(ent);
+			}
+
+
+			boot->pressingParry = qtrue;
+			boot->isParrying = qtrue;
+			boot->didSuccessfulParry = qfalse;
+			boot->blockedProjectile = qfalse;
+			boot->blockingLower = qfalse;
+
+			//oldDir[ent->client->ps.clientNum] = boot->parryDirection;
+
+			pm->ps->weaponTime = 0;
+		}
+		else if (!boot->didSuccessfulParry) //While holding block
+		{
+			boot->parryTimer = level.time + boot_feintTimer.integer;	//... set the timer before you can stop blocking.
+		}
+	}
+	else //Released/Not pressing block
+	{
+		boot->pressingParry = qfalse;
+
+		if (boot->isParrying)// && !boot->saberKnocked) //400 milliseconds after block is released...
+		{
+			if (boot->parryTimer <= level.time || boot->didSuccessfulParry) //After the parry animation
+			{
+				ent->client->ps.saberBlocked = BLOCKED_NONE;
+				boot->isParrying = qfalse;
+				pm->ps->weaponTime = 0;		//Needs to be here both during and after the animation. See below.
+				boot->didSuccessfulParry = qfalse;
+			}
+			else //While still in parry animation
+			{
+				pm->ps->weaponTime = 0;		//Only allow full attacks after parrying. Prevents the small chips.
+			}
+		}
+	}
+
+	boot->lastViewAngle[0] = ent->client->ps.viewangles[0];
+	boot->lastViewAngle[1] = ent->client->ps.viewangles[1];
+
+
+#if 1
+
+	//Fancy stuff - change animation to a more suitable one, if you're blocking the correct way, depending on the incoming swing.
+	if (boot->isParrying)
+	{
+		if (BootPort_PM_SomeoneInFront(&tr) )
+		{
+			switch (boot->parryDirection)
+			{
+			case BOOT_BLOCKED_DIAG_LEFT:
+			case BLOCKED_UPPER_LEFT:
+			case BLOCKED_LOWER_LEFT:
+				switch (g_entities[tr.entityNum].client->ps.saberMove)
+				{
+				case LS_S_TR2BL:
+					boot->parryDirection = BOOT_BLOCKED_DIAG_LEFT;
+					break;
+				case LS_S_R2L:
+					boot->parryDirection = BLOCKED_UPPER_LEFT;
+					break;
+				case LS_S_BR2TL:
+					boot->parryDirection = BLOCKED_LOWER_LEFT;
+					break;
+				}
+				break;
+			case BOOT_BLOCKED_DIAG_RIGHT:
+			case BLOCKED_UPPER_RIGHT:
+			case BLOCKED_LOWER_RIGHT:
+				switch (g_entities[tr.entityNum].client->ps.saberMove)
+				{
+				case LS_S_TL2BR:
+					boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
+					break;
+				case LS_S_L2R:
+					boot->parryDirection = BLOCKED_UPPER_RIGHT;
+					break;
+				case LS_S_BL2TR:
+					boot->parryDirection = BLOCKED_LOWER_RIGHT;
+					break;
+				}
+				break;
+			}
+		}
+	}
+#endif
+
+	//Go into parry with the locked animation.
+	if (boot->allowedToParry && boot->isParrying && !boot->blockedProjectile)// && !boot->didSuccessfulParry)
+	{
+		ent->client->ps.saberBlocked = boot->parryDirection;
+	}
+
+	//if (boot->didSuccessfulParry)
+	//{
+	//	boot->isParrying = qfalse;
+	//	boot->didSuccessfulParry = qfalse;
+	//	pm->ps->weaponTime = 0;
+	//	ent->client->ps.saberBlocked = BLOCKED_NONE;
+	//	//pm->ps->weaponstate = WEAPON_READY;
+	//	//pm->ps->saberBlocked = BLOCKED_ATK_BOUNCE;
+	//	//pm->ps->saberBlockTime = level.time + 350;
+	//	//boot->saberKnocked = qtrue;
+	//}
+
+	if (boot->blockedProjectile)
+	{
+		boot->blockedProjectile = qfalse;
+		boot->isParrying = qfalse;
+	}
+}
+
+int Boot_GetDirFromMouseMovement(gentity_t *ent)
+{
+	vec3_t viewAngles;
+	bootSession_t *boot = &bootSession[ent - g_entities];
+	viewAngles[0] = ent->client->ps.viewangles[0];
+	viewAngles[1] = ent->client->ps.viewangles[1];
+
+	//trap_SendServerCommand(-1, va("print \"Angles[0]: %i, angles[1]: %i\n\"", (int)viewAngles[0] - (int)boot->lastViewAngle[0], (int)viewAngles[1] - (int)boot->lastViewAngle[1]));
+	
+	//trap_SendServerCommand(ent - g_entities, va("print \"Horz change:%i \n\"", abs(viewAngles[1] - boot->lastViewAngle[1])));
+
+
+	if ( abs(viewAngles[1] - boot->lastViewAngle[1]) < abs(viewAngles[0] - boot->lastViewAngle[0]) )
+	{
+		return BLOCKED_TOP;
+	}
+
+	if ( (viewAngles[1] - boot->lastViewAngle[1]) > 0)
+	{
+		return BLOCKED_UPPER_LEFT;
+	}
+	else if (viewAngles[1] - boot->lastViewAngle[1] < 0)
+	{
+		return BLOCKED_UPPER_RIGHT;
+	}
+
+	
+	//trap_SendServerCommand(ent->client->ps.clientNum, va("print \"Angles[0]: %i, angles[1]: %i\n\"", (int)viewAngles[0] - (int)boot->lastViewAngle[0], (int)viewAngles[1] - (int)boot->lastViewAngle[1]));
+
+
+	return BLOCKED_TOP;
+}
+
+qboolean BootPort_PM_SomeoneInFront(trace_t *tr)
+{ //Also a very simplified version of the sp counterpart
+	vec3_t flatAng;
+	vec3_t fwd, back;
+	vec3_t trmins = { -15, -15, -8 };
+	vec3_t trmaxs = { 15, 15, 8 };
+
+	VectorCopy(pm->ps->viewangles, flatAng);
+	flatAng[PITCH] = 0;
+
+	AngleVectors(flatAng, fwd, 0, 0);
+
+	back[0] = pm->ps->origin[0] + fwd[0] * 100;
+	back[1] = pm->ps->origin[1] + fwd[1] * 100;
+	back[2] = pm->ps->origin[2] + fwd[2] * 100;
+
+	pm->trace(tr, pm->ps->origin, trmins, trmaxs, back, pm->ps->clientNum, MASK_PLAYERSOLID);
+
+	if (tr->fraction != 1.0 && tr->entityNum >= 0 && tr->entityNum < MAX_CLIENTS)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+//int Boot_GetParryAnimFromMovement(usercmd_t *cmd)
+//{	
+//	if (cmd->forwardmove >= 0)
+//	{
+//		if (cmd->rightmove > 0)
+//		{
+//			return BLOCKED_UPPER_RIGHT;
+//		}
+//		else if (cmd->rightmove < 0)
+//		{
+//			return BLOCKED_UPPER_LEFT;
+//		}
+//	}
+//	else
+//	{
+//		if (cmd->rightmove > 0)	//Switch left and right anims, because looks correct.
+//		{
+//			return BLOCKED_LOWER_LEFT;
+//		}
+//		else if (cmd->rightmove < 0)
+//		{
+//			return BLOCKED_LOWER_RIGHT;
+//		}
+//	}
+//
+//	return BLOCKED_TOP;
+//}

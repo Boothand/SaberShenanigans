@@ -1441,6 +1441,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 			trap_S_StartSound(es->origin, es->number, CHAN_AUTO, trap_S_RegisterSound("sound/weapons/saber/saberhit.wav"));
 			trap_FX_PlayEffectID( trap_FX_RegisterEffect("saber/blood_sparks.efx"), es->origin, fxDir );
+			//Boot
+			if (Q_irand(0, 3) > 2)
+			{
+				trap_FX_PlayEffectID(trap_FX_RegisterEffect("saber/spark.efx"), es->origin, fxDir);
+			}
 		}
 		else
 		{ //hit something else
@@ -1451,7 +1456,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				fxDir[1] = 1;
 			}			
 			trap_S_StartSound(es->origin, es->number, CHAN_AUTO, trap_S_RegisterSound("sound/weapons/saber/saberhit.wav"));
-			trap_FX_PlayEffectID( trap_FX_RegisterEffect("saber/spark.efx"), es->origin, fxDir );
+			
+			trap_FX_PlayEffectID(trap_FX_RegisterEffect("saber/spark.efx"), es->origin, fxDir);
 		}
 		break;
 
@@ -1467,9 +1473,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				fxDir[1] = 1;
 			}
 			trap_S_StartSound(es->origin, es->number, CHAN_AUTO, trap_S_RegisterSound(va( "sound/weapons/saber/saberblock%d.wav", Q_irand(1, 9) )));
-			trap_FX_PlayEffectID( trap_FX_RegisterEffect("saber/saber_block.efx"), es->origin, fxDir );
+			trap_FX_PlayEffectID(trap_FX_RegisterEffect("saber/saber_block.efx"), es->origin, fxDir);
 
-			g_saberFlashTime = cg.time-50;
+			//if (Q_irand(0, 7) > 6)//Boot - saber effect.
+			//{
+			//	trap_FX_PlayEffectID(trap_FX_RegisterEffect("saber/spark_explosion_saber.efx"), es->origin, fxDir);	
+			//}
+
+			g_saberFlashTime = cg.time-30;	//50 Boot
 			VectorCopy( es->origin, g_saberFlashPos );
 		}
 		else
@@ -1788,7 +1799,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			{
 				break;
 			}
-			trap_FX_PlayEffectID(trap_FX_RegisterEffect("mp/spawn.efx"), pos, ang);
+			//trap_FX_PlayEffectID(trap_FX_RegisterEffect("mp/spawn.efx"), pos, ang);
+			trap_FX_PlayEffectID(trap_FX_RegisterEffect("smoke_alot.efx"), pos, ang);
 		}
 		break;
 
