@@ -2300,6 +2300,14 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		knockback = 0;
 	}
 
+	if (targ == attacker)			//Boot - rocket jumping
+	{
+		if (mod == MOD_ROCKET || mod == MOD_ROCKET_SPLASH)
+		{
+			knockback *= 5.5;
+		}
+	}
+
 	// figure momentum add, even if the damage won't be taken
 	if ( knockback && targ->client ) {
 		vec3_t	kvel;
@@ -2422,7 +2430,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// calculated after knockback, so rocket jumping works
 	if ( targ == attacker) {
 		damage *= 0.5;
-	}
+
+		if (mod == MOD_ROCKET || mod == MOD_ROCKET_SPLASH)	//Boot
+		{
+			damage *= 0.5;	//Additional reduction for rocket dmg, to make rocket jumping more viable.
+		}
+	}	
 
 	if ( damage < 1 ) {
 		damage = 1;
