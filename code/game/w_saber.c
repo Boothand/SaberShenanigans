@@ -1099,7 +1099,6 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 		}
 
 		dmg = SABER_HITDAMAGE;//*self->client->ps.fd.saberAnimLevel;
-		trap_SendServerCommand(-1, va("print \"Weapontime = %i.\n\"", self->client->ps.weaponTime));
 
 		//if (self->client->ps.fd.saberAnimLevel == 3)
 		//{
