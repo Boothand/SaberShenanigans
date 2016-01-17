@@ -605,6 +605,8 @@ void SetTeam( gentity_t *ent, char *s ) {
 	spectatorState_t	specState;
 	int					specClient;
 	int					teamLeader;
+	char				userinfo[MAX_INFO_STRING];
+	bootSession_t		*boot = &bootSession[ent - g_entities];
 
 	//
 	// see what change is requested
@@ -747,6 +749,21 @@ void SetTeam( gentity_t *ent, char *s ) {
 	if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		CopyToBodyQue(ent);
 	}
+
+	trap_GetUserinfo(ent->client->ps.clientNum, userinfo, sizeof(userinfo));	//Boot wants to know.
+
+	if (Q_stricmp(Info_ValueForKey(userinfo, "shenaniganVersion"), SHENANIGAN_VERSION))
+	{
+		trap_SendServerCommand(ent->client->ps.clientNum, va("print\"\n^1You don't have the latest required clientside to play.\n^3Latest version is ^7%s^3. You have ^7%s.\n\"", SHENANIGAN_VERSION, Info_ValueForKey(userinfo, "shenaniganVersion")));
+		trap_SendServerCommand(ent->client->ps.clientNum, va("cp\"^1You don't have the latest required\n^1clientside to play.\n^3See console for more information."));
+		boot->isAllowedToPlay = qfalse;
+		return;
+	}
+	else
+	{
+		boot->isAllowedToPlay = qtrue;
+	}
+	
 
 	// he starts at 'base'
 	client->pers.teamState.state = TEAM_BEGIN;

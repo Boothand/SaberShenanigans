@@ -10,6 +10,7 @@
 
 // the "gameversion" client command will print this plus compile date
 #define	GAMEVERSION	"SaberShenanigans"
+#define SHENANIGAN_VERSION "a2.7"
 
 #define BODY_QUEUE_SIZE		8
 
@@ -325,6 +326,8 @@ struct bootSession_s {
 	int				lastSaberClashTime;
 	vec3_t			lastViewAngle;
 	gentity_t		*lastPersonWhoHitMe;
+
+	qboolean		isAllowedToPlay;
 };
 
 extern bootSession_t bootSession[MAX_CLIENTS];
