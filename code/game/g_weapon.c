@@ -12,7 +12,7 @@ static	vec3_t	muzzle;
 
 // Bryar Pistol
 //--------
-#define BRYAR_PISTOL_VEL			1600
+#define BRYAR_PISTOL_VEL			2300	//Boot, 1600
 #define BRYAR_PISTOL_DAMAGE			65	//Boot, 10
 #define BRYAR_CHARGE_UNIT			200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
 #define BRYAR_ALT_SIZE				1.0f
@@ -21,11 +21,11 @@ static	vec3_t	muzzle;
 //---------
 #define BLASTER_SPREAD				1.6f//1.2f
 #define BLASTER_VELOCITY			2300
-#define BLASTER_DAMAGE				20
+#define BLASTER_DAMAGE				65	//Boot, 20
 
 // Tenloss Disruptor
 //----------
-#define DISRUPTOR_MAIN_DAMAGE			30 //40
+#define DISRUPTOR_MAIN_DAMAGE			65 //40	//Boot, 30
 #define DISRUPTOR_NPC_MAIN_DAMAGE_CUT	0.25f
 
 #define DISRUPTOR_ALT_DAMAGE			100 //125
@@ -36,7 +36,7 @@ static	vec3_t	muzzle;
 // Wookiee Bowcaster
 //----------
 #define	BOWCASTER_DAMAGE			100	//50 Boot
-#define	BOWCASTER_VELOCITY			1300
+#define	BOWCASTER_VELOCITY			2100	//Boot, 1300
 #define BOWCASTER_SPLASH_DAMAGE		0
 #define BOWCASTER_SPLASH_RADIUS		0
 #define BOWCASTER_SIZE				2
@@ -82,10 +82,10 @@ static	vec3_t	muzzle;
 
 // Personal Rocket Launcher
 //---------
-#define	ROCKET_VELOCITY				900
+#define	ROCKET_VELOCITY				1500	//Boot, 900
 #define	ROCKET_DAMAGE				100
 #define	ROCKET_SPLASH_DAMAGE		100
-#define	ROCKET_SPLASH_RADIUS		160
+#define	ROCKET_SPLASH_RADIUS		90	//Boot, 160
 #define ROCKET_SIZE					3
 #define ROCKET_ALT_THINK_TIME		100
 
@@ -218,7 +218,7 @@ static void WP_FireBryarPistol( gentity_t *ent, qboolean altFire )
 	{
 		missile->methodOfDeath = MOD_BRYAR_PISTOL;
 	}
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;	//Boot - Don't block automatically, even when it hits box.
 
 	// we don't want it to bounce forever
 	// NOTENOTE These don't bounce yet.
@@ -275,7 +275,7 @@ void WP_FireGenericBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qbo
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 	missile->methodOfDeath = mod;
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;	//Boot - don't block.
 
 	// we don't want it to bounce forever
 	// NOTENOTE These don't bounce yet.
@@ -320,7 +320,7 @@ void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean a
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 	missile->methodOfDeath = MOD_BLASTER;
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;		//Boot - don't block
 
 	// we don't want it to bounce forever
 	// NOTENOTE These don't bounce yet.
@@ -359,7 +359,7 @@ void WP_FireEmplacedMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean 
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 	missile->methodOfDeath = MOD_BLASTER;
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;			Boot, don't block
 
 	if (ignore)
 	{
@@ -775,7 +775,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 	missile->methodOfDeath = MOD_BOWCASTER;
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;		//Boot - don't block
 //	missile->splashDamage = BOWCASTER_SPLASH_DAMAGE;
 //	missile->splashRadius = BOWCASTER_SPLASH_RADIUS;
 
@@ -856,7 +856,7 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 		missile->damage = damage;
 		missile->dflags = DAMAGE_DEATH_KNOCKBACK;
 		missile->methodOfDeath = MOD_BOWCASTER;
-		missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+		missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;		//Boot - don't block
 //		missile->splashDamage = BOWCASTER_SPLASH_DAMAGE;
 //		missile->splashRadius = BOWCASTER_SPLASH_RADIUS;
 
@@ -1212,7 +1212,7 @@ static void WP_DEMP2_AltFire( gentity_t *ent )
 	missile->r.ownerNum = ent->s.number;
 
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
-	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->clipmask = MASK_SHOT;// | CONTENTS_LIGHTSABER;		//Boot - don't block
 
 	// we don't want it to ever bounce
 	missile->bounceCount = 0;
