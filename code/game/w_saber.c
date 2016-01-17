@@ -1091,7 +1091,14 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	if (SaberAttacking(self) &&
 		self->client->ps.saberAttackWound < level.time)
 	{ //this animation is that of the last attack movement, and so it should do full damage
+
+		if (self->client->ps.saberMove == LS_A_T2B && self->client->ps.weaponTime < 300)	//Boot - T2B can't spike that long.
+		{
+			return;
+		}
+
 		dmg = SABER_HITDAMAGE;//*self->client->ps.fd.saberAnimLevel;
+		trap_SendServerCommand(-1, va("print \"Weapontime = %i.\n\"", self->client->ps.weaponTime));
 
 		//if (self->client->ps.fd.saberAnimLevel == 3)
 		//{
@@ -2432,7 +2439,7 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 			VectorMA( boltOrigin, -12, rawAngles, otherOrg );
 			VectorMA( otherOrg, -40, rawAngles, otherEnd );
 
-			self->client->ps.saberIdleWound = 0;			//Boot - this is a problem.
+			self->client->ps.saberIdleWound = 0;			//Boot - this is a problem - setting it enables idle damage EVERY frame (regardless of value), commenting it out removes it altogether.
 			self->client->ps.saberAttackWound = 0;
 
 			CheckSaberDamage(self, otherOrg, otherEnd, qfalse);
