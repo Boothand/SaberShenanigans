@@ -1089,7 +1089,8 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	}
 
 	if (SaberAttacking(self) &&
-		self->client->ps.saberAttackWound < level.time)
+		self->client->ps.saberAttackWound < level.time &&
+		self->client->ps.weaponTime > 200)	//Boot - don't do damage at the very end of the animation. Want to encourage visually sensible hits.
 	{ //this animation is that of the last attack movement, and so it should do full damage
 
 		if (self->client->ps.saberMove == LS_A_T2B && self->client->ps.weaponTime < 300)	//Boot - T2B can't spike that long.
