@@ -10,7 +10,8 @@
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
 // by the server in the server stored userinfos, or stashed in a cvar.
-#define SHENANIGAN_VERSION	"a2.7"
+#define SHENANIGAN_VERSION	"2.6a"
+#define HAS_SHENANIGANS			"1"
 
 #define NULL_HANDLE			((qhandle_t) 0)
 #define NULL_SOUND			((sfxHandle_t) 0)

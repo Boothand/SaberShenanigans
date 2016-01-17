@@ -750,12 +750,23 @@ void SetTeam( gentity_t *ent, char *s ) {
 		CopyToBodyQue(ent);
 	}
 
-	trap_GetUserinfo(ent->client->ps.clientNum, userinfo, sizeof(userinfo));	//Boot wants to know.
+	trap_GetUserinfo(ent->client->ps.clientNum, userinfo, sizeof(userinfo));	//Boot - make sure client has latest clientside
 
 	if (Q_stricmp(Info_ValueForKey(userinfo, "shenaniganVersion"), SHENANIGAN_VERSION))
 	{
-		trap_SendServerCommand(ent->client->ps.clientNum, va("print\"\n^1You don't have the latest required clientside to play.\n^3Latest version is ^7%s^3. You have ^7%s.\n\"", SHENANIGAN_VERSION, Info_ValueForKey(userinfo, "shenaniganVersion")));
+		
+		trap_SendServerCommand(ent->client->ps.clientNum, va("print\"Num: %i\n\"", Q_stricmp(Info_ValueForKey(userinfo, "shenaniganVersion"), SHENANIGAN_VERSION)));
 		trap_SendServerCommand(ent->client->ps.clientNum, va("cp\"^1You don't have the latest required\n^1clientside to play.\n^3See console for more information."));
+
+		if (!Q_stricmp(Info_ValueForKey(userinfo, "hasShenanigans"), "1"))
+		{
+			trap_SendServerCommand(ent->client->ps.clientNum, va("print\"\n^1You don't have the latest required clientside to play.\n^3Latest version is ^7%s^3. You have ^7%s.\n\"", SHENANIGAN_VERSION, Info_ValueForKey(userinfo, "shenaniganVersion")));
+		}
+		else
+		{
+			trap_SendServerCommand(ent->client->ps.clientNum, va("print\"\n^1You don't have the latest required clientside to play.\n^3Latest version is ^7%s^3. You have no version installed.\n\"", SHENANIGAN_VERSION));
+		}
+
 		boot->isAllowedToPlay = qfalse;
 		return;
 	}
