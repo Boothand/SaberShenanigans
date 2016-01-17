@@ -2400,7 +2400,7 @@ void ClientCommand( int clientNum ) {
 	else if (Q_stricmp (cmd, "info") == 0)	//Boot
 		Cmd_Info_Boot( ent );
 	else if (Q_stricmp(cmd, "dualBlade") == 0)	//Boot
-		ent->client->ps.dualBlade = qtrue;
+		ent->client->ps.dualBlade = !ent->client->ps.dualBlade;
 #ifdef _DEBUG
 	else if (Q_stricmp(cmd, "gotocoord") == 0 && CheatsOk( ent ))
 	{
