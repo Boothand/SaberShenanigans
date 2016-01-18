@@ -268,7 +268,9 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 
-vm/
+code/game/vm/
+code/cgame/vm
+code/ui/vm
 base/
 *.blend
 *.bak
