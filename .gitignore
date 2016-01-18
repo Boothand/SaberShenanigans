@@ -269,3 +269,6 @@ _Pvt_Extensions
 .fake/
 
 vm/
+base/
+*.blend
+*.bak
