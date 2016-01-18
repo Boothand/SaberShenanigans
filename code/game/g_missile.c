@@ -545,6 +545,27 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			}
 			else
 			{
+				int hitLoc = G_GetHitLocation(other, trace->endpos);
+				int dmg = ent->damage;
+
+				switch (hitLoc)
+				{
+				case HL_FOOT_RT:
+				case HL_LEG_RT:
+				case HL_FOOT_LT:
+				case HL_LEG_LT:
+					//trap_SendServerCommand(ent->client->ps.clientNum, va("print\"Hit legs.\n\""));
+					dmg /= 3;
+					break;
+				case HL_HEAD:
+					dmg *= 1.5;	//Boot FIXME - usually detects HL_BACK* when aiming for the head. Gotta fix that.
+					//trap_SendServerCommand(ent->client->ps.clientNum, va("print\"Hit head.\n\""));
+					break;
+				default:
+					//trap_SendServerCommand(ent->client->ps.clientNum, va("print\"Hit %i.\n\"", hitLoc));
+					break;
+				}
+
 				G_Damage (other, ent, &g_entities[ent->r.ownerNum], velocity,
 					/*ent->s.origin*/ent->r.currentOrigin, ent->damage, 
 					0, ent->methodOfDeath);
