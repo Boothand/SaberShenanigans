@@ -1,0 +1,112 @@
+Tail
+{
+	spawnFlags			orgOnSphere axisFromSphere
+
+	count				14 20
+
+	life				200 700
+
+	radius				6
+
+	velocity			-200 -80 -40 200 80 20
+
+	gravity				-350 -450
+
+	alpha
+	{
+		end				0
+		parm			60
+		flags			linear
+	}
+
+	size
+	{
+		start			0.3 0.5
+	}
+
+	length
+	{
+		start			4
+		end				16 28
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/spark
+	]
+}
+
+Tail
+{
+	flags				usePhysics
+
+	count				8 12
+
+	life				700 1100
+
+	bounce				0.25 0.4
+
+	velocity			-140 -140 -80 140 140 80
+
+	gravity				-350 -700
+
+	size
+	{
+		start			0.3 0.4
+	}
+
+	length
+	{
+		start			4 10
+		end				0.1 1
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/spark
+	]
+}
+
+Particle
+{
+	count				1 2
+
+	life				300 400
+
+	velocity			8 -12 -12 16 12 12
+
+	alpha
+	{
+		start			0.2 0.4
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			8 12
+		end				2 4
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/steam
+	]
+}
+
+FxRunner
+{
+	count				1 2
+
+	delay				0 100
+
+	playfx
+	[
+		black_smoke
+		smoke
+		spark_explosion
+	]
+}

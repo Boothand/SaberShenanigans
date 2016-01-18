@@ -1,0 +1,7 @@
+Put the SaberShenanigans folder in GameData.
+Run the .bat file to start it locally on your PC. Edit the .bat file if you don't have JK2mv and refuse to use it.
+
+In-game:
+Manual blocking with sabers: bind mouse2 +button14
+
+In console, if you type /ss_ and press tab, you'll see all Saber Shenanigan cvars.

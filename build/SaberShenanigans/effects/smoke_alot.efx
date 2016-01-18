@@ -1,0 +1,169 @@
+Particle
+{
+	flags				usePhysics
+
+	count				4 7
+
+	life				4000 7000
+
+	delay				0 50
+
+	bounce				0.5
+
+	rotation			-20 20
+
+	rotationDelta		-20 20
+
+	velocity			15 -20 2 30 20 20
+
+	gravity				5 16
+
+	alpha
+	{
+		start			0.3 0.4
+		end				0
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			4 7
+		end				50 70
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/steam
+	]
+}
+
+Particle
+{
+	name				Copy of Unnamed Particle 1
+
+	flags				usePhysics
+
+	count				3 6
+
+	life				2000 3000
+
+	bounce				0.5
+
+	rotation			-20 20
+
+	rotationDelta		-20 20
+
+	velocity			80 -10 0 100 10 0
+
+	acceleration		-40 0 0 -60 0 0
+
+	gravity				20 30
+
+	alpha
+	{
+		start			0.3 0.4
+		end				0
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			2 4
+		end				40
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/steam
+	]
+}
+
+Particle
+{
+	name				Copy of Copy of Unnamed Particl
+
+	flags				usePhysics
+
+	count				5 8
+
+	life				3000 4000
+
+	delay				50 100
+
+	bounce				0.5
+
+	rotation			-20 20
+
+	rotationDelta		-20 20
+
+	velocity			60 -10 0 75 10 0
+
+	acceleration		-20 0 0 -30 0 0
+
+	gravity				20 30
+
+	alpha
+	{
+		start			0.3 0.4
+		end				0
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			5 7
+		end				60
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/steam
+	]
+}
+
+Particle
+{
+	name				Copy of Copy of Copy of Unnamed
+
+	flags				usePhysics
+
+	count				3 6
+
+	life				300 5000
+
+	delay				150 200
+
+	bounce				0.5
+
+	rotation			-20 20
+
+	rotationDelta		-20 20
+
+	velocity			30 -10 0 50 10 0
+
+	acceleration		-2 0 0 3 0 0
+
+	gravity				20 30
+
+	alpha
+	{
+		start			0.3 0.4
+		end				0
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			7 9
+		end				60 70
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/steam
+	]
+}
