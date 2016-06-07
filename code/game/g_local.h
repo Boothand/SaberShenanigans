@@ -10,7 +10,7 @@
 
 // the "gameversion" client command will print this plus compile date
 #define	GAMEVERSION	"SaberShenanigans"
-#define SHENANIGAN_VERSION "2.7a"
+#define SHENANIGAN_VERSION "2.8"
 
 #define BODY_QUEUE_SIZE		8
 
@@ -317,7 +317,7 @@ struct bootSession_s {
 	qboolean		didSuccessfulParry;
 	qboolean		usesMouseMovementBlock;
 		//qboolean		saberKnocked;
-	qboolean		blockedProjectile;
+	qboolean		onetimeBlock;
 	//int				attackStartTime;
 	qboolean		blockingLower;
 	int				parryDirection;
@@ -1018,6 +1018,7 @@ extern	vmCvar_t	boot_feintTimer;
 extern	vmCvar_t	boot_trainingMode;
 extern	vmCvar_t	boot_screenShakeOnHeadChop;
 extern	vmCvar_t	boot_noFlips;
+extern	vmCvar_t	boot_locationBasedDamage;
 
 void	trap_Printf( const char *fmt );
 void	trap_Error( const char *fmt );

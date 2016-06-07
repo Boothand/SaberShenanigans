@@ -167,15 +167,13 @@ void WP_InitForcePowers( gentity_t *ent )
 		return;
 	}
 
-	//ent->client->ps.fd.saberAnimLevel = ent->client->sess.saberLevel;	//Boot comment
+	ent->client->ps.fd.saberAnimLevel = ent->client->sess.saberLevel;
 
-	//if (ent->client->ps.fd.saberAnimLevel < FORCE_LEVEL_2/*1 //Boot was here*/ ||
-	//	ent->client->ps.fd.saberAnimLevel > FORCE_LEVEL_3)
-	//{
-	//	ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_2;//1;	//Boot
-	//}
-
-	ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_2;	//Boot - only allow yellow stance for now.
+	if (ent->client->ps.fd.saberAnimLevel < FORCE_LEVEL_1 ||
+		ent->client->ps.fd.saberAnimLevel > FORCE_LEVEL_3)
+	{
+		ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_2;	//Boot - disable blue
+	}
 
 	if (!speedLoopSound)
 	{ //so that the client configstring is already modified with this when we need it
@@ -4341,8 +4339,9 @@ void WP_ForcePowersUpdate( gentity_t *self, usercmd_t *ucmd )
 	}
 	else if (!self->client->ps.fd.saberAnimLevel)
 	{
-		self->client->ps.fd.saberAnimLevel = FORCE_LEVEL_1;
+		self->client->ps.fd.saberAnimLevel = FORCE_LEVEL_2; //Boot - disable blue stance/style
 	}
+
 
 	if (!(self->client->ps.fd.forcePowersKnown & (1 << FP_LEVITATION)))
 	{

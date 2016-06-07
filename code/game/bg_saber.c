@@ -599,7 +599,7 @@ qboolean PM_SaberInTransition( int move )
 
 qboolean PM_SaberKataDone( void )
 {
-	if ( (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_3 && pm->ps->saberAttackChainCount > PM_irand_timesync( 0, 1 )) ||
+	if ( (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_3 && pm->ps->saberAttackChainCount > 2 ) ||//PM_irand_timesync( 0, 1 )) ||
 		( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 && pm->ps->saberAttackChainCount > 3) )//PM_irand_timesync( 2, 5 ) ) )	//Boot - how many chains you can do with yellow
 	{
 		return qtrue;

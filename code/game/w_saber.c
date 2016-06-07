@@ -1089,25 +1089,24 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	}
 
 	if (SaberAttacking(self) &&
-		self->client->ps.saberAttackWound < level.time &&
-		self->client->ps.weaponTime > 200)	//Boot - don't do damage at the very end of the animation. Want to encourage visually sensible hits.
+		self->client->ps.saberAttackWound < level.time)	//Boot - don't do damage at the very end of the animation. Want to encourage visually sensible hits.
 	{ //this animation is that of the last attack movement, and so it should do full damage
 
-		if (self->client->ps.saberMove == LS_A_T2B && self->client->ps.weaponTime < 300)	//Boot - T2B can't spike that long.
-		{
-			return;
-		}
+		//if (self->client->ps.saberMove == LS_A_T2B && self->client->ps.weaponTime < 300)	//Boot - T2B can't spike that long.
+		//{
+		//	return;
+		//}
 
 		dmg = SABER_HITDAMAGE;//*self->client->ps.fd.saberAnimLevel;
 
-		//if (self->client->ps.fd.saberAnimLevel == 3)
-		//{
-		//	dmg = 100;
-		//}
-		//else if (self->client->ps.fd.saberAnimLevel == 2)
-		//{
-		//	dmg = 100;//60; Boot
-		//}
+		if (self->client->ps.fd.saberAnimLevel == 3)
+		{
+			dmg = 100;
+		}
+		else if (self->client->ps.fd.saberAnimLevel == 2)
+		{
+			dmg = 60;//60; Boot
+		}
 
 		attackStr = self->client->ps.fd.saberAnimLevel;
 	}
@@ -1229,6 +1228,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 
 				//Not happening yet, before I fix stuff in manualblockthink: - Boot
 				bootOther->didSuccessfulParry = qtrue;
+				bootOther->onetimeBlock = qtrue;
 				/*g_entities[tr.entityNum].client->ps.weaponTime = 0;
 				g_entities[tr.entityNum].client->ps.weaponstate = WEAPON_READY;
 				g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;*/
@@ -1289,31 +1289,37 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			{
 				bootOther->lastPersonWhoHitMe = self;
 				bootOther->bodyPartIMayLose = G_GetHitLocation(&g_entities[tr.entityNum], saberEnd);
-				switch (bootOther->bodyPartIMayLose) //G_GetHitQuad(&g_entities[tr.entityNum], saberEnd))
+
+				//Location based damage
+				if (boot_locationBasedDamage.integer > 0)
 				{
-				case HL_FOOT_RT:
-				case HL_LEG_RT:
-				case HL_FOOT_LT:
-				case HL_LEG_LT:
-					dmg = 50;
-					break;
-				case HL_WAIST:
-					dmg = 80;
-					break;
-				case HL_HEAD:
-					dmg = 125;
-					
-					if (boot_screenShakeOnHeadChop.integer &&
-						(g_entities[tr.entityNum].health + g_entities[tr.entityNum].client->ps.stats[STAT_ARMOR]) - dmg <= 0 &&
-						!(g_entities[tr.entityNum].flags & FL_GODMODE) &&
-						self->client->ps.saberMove != LS_A_T2B)
+					switch (bootOther->bodyPartIMayLose) //G_GetHitQuad(&g_entities[tr.entityNum], saberEnd))
 					{
-						G_ScreenShake(vec3_origin, self, 1.0f, 800, qfalse);	//Boot
-						G_ScreenShake(vec3_origin, &g_entities[tr.entityNum], 1.0f, 800, qfalse);
+					case HL_FOOT_RT:
+					case HL_LEG_RT:
+					case HL_FOOT_LT:
+					case HL_LEG_LT:
+						dmg = 40 * boot_locationBasedDamage.value * self->client->ps.fd.saberAnimLevel - 1;
+						break;
+					case HL_WAIST:
+						dmg = 60 * boot_locationBasedDamage.value * self->client->ps.fd.saberAnimLevel - 1;
+						break;
+					case HL_HEAD:
+						dmg = 100 * boot_locationBasedDamage.value * self->client->ps.fd.saberAnimLevel - 1;
+						break;
+					default:
+						dmg = 60 * boot_locationBasedDamage.value * self->client->ps.fd.saberAnimLevel - 1;
 					}
-					break;
-				default:
-					dmg = 80;
+				}
+
+				//Screenshake joke
+				if (boot_screenShakeOnHeadChop.integer &&
+					(g_entities[tr.entityNum].health + g_entities[tr.entityNum].client->ps.stats[STAT_ARMOR]) - dmg <= 0 &&
+					!(g_entities[tr.entityNum].flags & FL_GODMODE) &&
+					self->client->ps.saberMove != LS_A_T2B)
+				{
+					G_ScreenShake(vec3_origin, self, 1.0f, 800, qfalse);	//Boot
+					G_ScreenShake(vec3_origin, &g_entities[tr.entityNum], 1.0f, 800, qfalse);
 				}
 
 				if (boot_trainingMode.integer > 0)
@@ -1401,7 +1407,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 		}
 		else// if (dmg > 5)
 		{
-			if (Boot_BlockMatchesAttack(self->client->ps.saberMove, otherOwner->client->ps.saberBlocked))
+			if (boot->isParrying)//if (Boot_BlockMatchesAttack(self->client->ps.saberMove, otherOwner->client->ps.saberBlocked))
 			{
 				WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 2);
 				self->client->ps.weaponTime = 0;
@@ -2944,7 +2950,7 @@ int WP_SaberCanBlock(gentity_t *self, /*Boot:*/gentity_t *other, vec3_t point, i
 		}
 		else if (projectile)
 		{
-			bootSelf->blockedProjectile = qtrue;
+			bootSelf->onetimeBlock = qtrue;
 		}
 		else
 		{
