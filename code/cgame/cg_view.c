@@ -928,7 +928,7 @@ static int CG_CalcFov( void ) {
 	{
 		cgFov = 1;
 	}
-	if (cgFov > 97 && !cg.renderingThirdPerson)	//Boot - unlock fov
+	if (cgFov > 97 && !cg.renderingThirdPerson)
 	{
 		cgFov = 97;
 	}

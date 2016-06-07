@@ -146,20 +146,17 @@ float forceJumpStrength[NUM_FORCE_POWER_LEVELS] =
 
 int PM_GetSaberStance(void)
 {
-	//if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2)	//Boot
-	//{ //medium
-	//	return BOTH_STAND2;
-	//}
-	//if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3)	//Remove red for now
-	//{ //strong
-	//	return BOTH_SABERSLOW_STANCE;
-	//}
-
-	return BOTH_STAND2;		//Boot - remove blue saber stance for players.
-		
+	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2)
+	{ //medium
+		return BOTH_STAND2;
+	}
+	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3)
+	{ //strong
+		return BOTH_SABERSLOW_STANCE;
+	}
 
 	//fast
-	//return BOTH_SABERFAST_STANCE;	//Boot
+	return BOTH_STAND2;//BOTH_SABERFAST_STANCE;	//Boot - disable blue
 }
 
 qboolean PM_DoSlowFall(void)
@@ -736,40 +733,39 @@ static qboolean PM_CheckJump( void )
 							//play flip
 							//FIXME: do this only when they stop the jump (below) or when they're just about to hit the peak of the jump
 
-							//if ((pm->cmd.forwardmove || pm->cmd.rightmove) && //pushing in a dir			//Boot comment - disable flips.
-							//	(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_F &&//not already flipping
-							//	(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_B &&
-							//	(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_R &&
-							//	(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_L)
-							//{//FIXME: this could end up playing twice if the jump is very long...
-							//	int anim = BOTH_FORCEINAIR1;
-							//	int	parts = SETANIM_BOTH;
+							if ((pm->cmd.forwardmove || pm->cmd.rightmove) && //pushing in a dir			//Boot comment - disable flips.
+								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_F &&//not already flipping
+								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_B &&
+								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_R &&
+								(pm->ps->legsAnim&~ANIM_TOGGLEBIT) != BOTH_FLIP_L)
+							{//FIXME: this could end up playing twice if the jump is very long...
+								int anim = BOTH_FORCEINAIR1;
+								int	parts = SETANIM_BOTH;
 
-							//	if ( pm->cmd.forwardmove > 0 )
-							//	{
-							//		anim = BOTH_FLIP_F;
-							//	}
-							//	else if ( pm->cmd.forwardmove < 0 )
-							//	{
-							//		anim = BOTH_FLIP_B;
-							//	}
-							//	else if ( pm->cmd.rightmove > 0 )
-							//	{
-							//		anim = BOTH_FLIP_R;
-							//	}
-							//	else if ( pm->cmd.rightmove < 0 )
-							//	{
-							//		anim = BOTH_FLIP_L;
-							//	}
-							//	if ( pm->ps->weaponTime )
-							//	{//FIXME: really only care if we're in a saber attack anim...
-							//		parts = SETANIM_LEGS;
-							//	}
+								if ( pm->cmd.forwardmove > 0 )
+								{
+									anim = BOTH_FLIP_F;
+								}
+								else if ( pm->cmd.forwardmove < 0 )
+								{
+									anim = BOTH_FLIP_B;
+								}
+								else if ( pm->cmd.rightmove > 0 )
+								{
+									anim = BOTH_FLIP_R;
+								}
+								else if ( pm->cmd.rightmove < 0 )
+								{
+									anim = BOTH_FLIP_L;
+								}
+								if ( pm->ps->weaponTime )
+								{//FIXME: really only care if we're in a saber attack anim...
+									parts = SETANIM_LEGS;
+								}
 
-							//	PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
-							//}
-							//else 
-							if ( pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
+								PM_SetAnim( parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 150 );
+							}
+							else if ( pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 )
 							{//FIXME: really want to know how far off ground we are, probably...
 								vec3_t facingFwd, facingRight, facingAngles;// = {0, pm->ps->viewangles[YAW], 0};
 								int	anim = -1;
@@ -2641,7 +2637,7 @@ static void PM_Footsteps( void ) {
 	}
 	else
 	{
-		if ( !( pm->cmd.buttons & BUTTON_WALKING ) )	//Boot - only fixed brackets, readability.
+		if ( !( pm->cmd.buttons & BUTTON_WALKING ) )
 		{
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN )
@@ -4158,41 +4154,41 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 		}
 	}	
 
-	//if ( BG_SaberInAttack( ps->saberMove ) && cmd->forwardmove < 0 )	//Boot comment.
-	//{//if running backwards while attacking, don't run as fast.
-	//	switch( ps->fd.saberAnimLevel )
-	//	{
-	//	case FORCE_LEVEL_1:
-	//		ps->speed *= 0.75f;
-	//		break;
-	//	case FORCE_LEVEL_2:
-	//		ps->speed *= 0.60f;
-	//		break;
-	//	case FORCE_LEVEL_3:
-	//		ps->speed *= 0.45f;
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//}
-	//else if ( BG_SpinningSaberAnim( ps->legsAnim ) )
-	//{
-	//	ps->speed *= 0.5f;
-	//}
-	//else if ( ps->weapon == WP_SABER && BG_SaberInAttack( ps->saberMove ) )
-	//{//if attacking with saber while running, drop your speed
-	//	switch( ps->fd.saberAnimLevel )
-	//	{
-	//	case FORCE_LEVEL_2:
-	//		ps->speed *= 0.85f;
-	//		break;
-	//	case FORCE_LEVEL_3:
-	//		ps->speed *= 0.70f;
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//}
+	if ( BG_SaberInAttack( ps->saberMove ) && cmd->forwardmove < 0 )	//Boot comment.
+	{//if running backwards while attacking, don't run as fast.
+		switch( ps->fd.saberAnimLevel )
+		{
+		case FORCE_LEVEL_1:
+			ps->speed *= 0.75f;
+			break;
+		case FORCE_LEVEL_2:
+			ps->speed *= 0.60f;
+			break;
+		case FORCE_LEVEL_3:
+			ps->speed *= 0.45f;
+			break;
+		default:
+			break;
+		}
+	}
+	else if ( BG_SpinningSaberAnim( ps->legsAnim ) )
+	{
+		ps->speed *= 0.5f;
+	}
+	else if ( ps->weapon == WP_SABER && BG_SaberInAttack( ps->saberMove ) )
+	{//if attacking with saber while running, drop your speed
+		switch( ps->fd.saberAnimLevel )
+		{
+		case FORCE_LEVEL_2:
+			ps->speed *= 0.85f;
+			break;
+		case FORCE_LEVEL_3:
+			ps->speed *= 0.70f;
+			break;
+		default:
+			break;
+		}
+	}
 
 
 	if ( BG_InRoll( ps, ps->legsAnim ) && ps->speed > 200 )
@@ -4213,10 +4209,10 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 		//Automatically slow down as the roll ends.
 	}
 
-	if (ps->pm_flags == PMF_ROLLING || (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_ROLL_B)
-	{
-		ps->speed *= 0.65f;	//Slower rolls
-	}
+	//if (ps->pm_flags == PMF_ROLLING || (ps->legsAnim&~ANIM_TOGGLEBIT) == BOTH_ROLL_B)
+	//{
+	//	ps->speed *= 0.65f;	//Boot - Slower rolls
+	//}
 
 	//Boot
 	if (!( pm->cmd.buttons & BUTTON_WALKING ))
@@ -4237,7 +4233,7 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 	
 	if (ps->saberBlocked >= BLOCKED_UPPER_RIGHT && !(pm->cmd.buttons & BUTTON_WALKING))
 	{
-		ps->speed *= 0.8f;	//Go slower when parrying
+		ps->speed *= 0.8f;	//Go slower when blocking
 	}
 }
 

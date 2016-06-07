@@ -4,5 +4,5 @@ call game
 cd ..\cgame
 call cgame
 pause
-xcopy /s /y "D:\MEGA\JK2\SaberShenanigans\code\base\vm\jk2mpgame.qvm" "D:\Program Files (x86)\steam\steamapps\common\Jedi Outcast\GameData\SaberShenanigans\vm"
-xcopy /s /y "D:\MEGA\JK2\SaberShenanigans\code\base\vm\cgame.qvm" "D:\Program Files (x86)\steam\steamapps\common\Jedi Outcast\GameData\SaberShenanigans\vm"
+xcopy /s /y "D:\MEGA\JK2\SaberShenanigans\code\base\vm\jk2mpgame.qvm" "C:\Users\Rune\Documents\jk2mv\SaberShenanigans\vm"
+xcopy /s /y "D:\MEGA\JK2\SaberShenanigans\code\base\vm\cgame.qvm" "C:\Users\Rune\Documents\jk2mv\SaberShenanigans\vm"

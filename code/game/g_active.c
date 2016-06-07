@@ -1845,7 +1845,7 @@ void Boot_ManualBlockThink(gentity_t *ent)
 		//If not already holding the button down
 		if (!boot->pressingParry)
 		{
-			if (!boot->usesMouseMovementBlock)
+			/*if (!boot->usesMouseMovementBlock)
 			{
 				boot->parryDirection = BLOCKED_TOP;
 
@@ -1861,14 +1861,15 @@ void Boot_ManualBlockThink(gentity_t *ent)
 			else
 			{
 				boot->parryDirection = Boot_GetDirFromMouseMovement(ent);
-			}
+			}*/
+			boot->parryDirection = BLOCKED_TOP;
 
 
 			boot->pressingParry = qtrue;
 			boot->isParrying = qtrue;
 			boot->didSuccessfulParry = qfalse;
-			boot->blockedProjectile = qfalse;
-			boot->blockingLower = qfalse;
+			boot->onetimeBlock = qfalse;
+			//boot->blockingLower = qfalse;
 
 			//oldDir[ent->client->ps.clientNum] = boot->parryDirection;
 
@@ -1910,28 +1911,50 @@ void Boot_ManualBlockThink(gentity_t *ent)
 	{
 		if (BootPort_PM_SomeoneInFront(&tr) )
 		{
-			switch (boot->parryDirection)
+			/*switch (boot->parryDirection)
 			{
 			case BOOT_BLOCKED_DIAG_LEFT:
 			case BLOCKED_UPPER_LEFT:
-			case BLOCKED_LOWER_LEFT:
+			case BLOCKED_LOWER_LEFT:*/
 				switch (g_entities[tr.entityNum].client->ps.saberMove)
 				{
 				case LS_S_TR2BL:
+				case LS_A_TR2BL:
 					boot->parryDirection = BOOT_BLOCKED_DIAG_LEFT;
 					break;
 				case LS_S_R2L:
+				case LS_A_R2L:
 					boot->parryDirection = BLOCKED_UPPER_LEFT;
 					break;
 				case LS_S_BR2TL:
+				case LS_A_BR2TL:
 					boot->parryDirection = BLOCKED_LOWER_LEFT;
 					break;
+				case LS_S_TL2BR:
+				case LS_A_TL2BR:
+					boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
+					break;
+				case LS_S_L2R:
+				case LS_A_L2R:
+					boot->parryDirection = BLOCKED_UPPER_RIGHT;
+					break;
+				case LS_S_BL2TR:
+				case LS_A_BL2TR:
+					boot->parryDirection = BLOCKED_LOWER_RIGHT;
+					break;
+				case LS_S_T2B:
+				case LS_A_T2B:
+					boot->parryDirection = BLOCKED_TOP;
+					break;
+				default:
+					boot->parryDirection = BLOCKED_TOP;
+					break;
 				}
-				break;
-			case BOOT_BLOCKED_DIAG_RIGHT:
+				//break;
+			/*case BOOT_BLOCKED_DIAG_RIGHT:
 			case BLOCKED_UPPER_RIGHT:
-			case BLOCKED_LOWER_RIGHT:
-				switch (g_entities[tr.entityNum].client->ps.saberMove)
+			case BLOCKED_LOWER_RIGHT:*/
+				/*switch (g_entities[tr.entityNum].client->ps.saberMove)
 				{
 				case LS_S_TL2BR:
 					boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
@@ -1942,15 +1965,15 @@ void Boot_ManualBlockThink(gentity_t *ent)
 				case LS_S_BL2TR:
 					boot->parryDirection = BLOCKED_LOWER_RIGHT;
 					break;
-				}
-				break;
-			}
+				}*/
+				//break;
+			//}
 		}
 	}
 #endif
 
 	//Go into parry with the locked animation.
-	if (boot->allowedToParry && boot->isParrying && !boot->blockedProjectile)// && !boot->didSuccessfulParry)
+	if (boot->allowedToParry && boot->isParrying && !boot->onetimeBlock)// && !boot->didSuccessfulParry)
 	{
 		ent->client->ps.saberBlocked = boot->parryDirection;
 	}
@@ -1967,10 +1990,12 @@ void Boot_ManualBlockThink(gentity_t *ent)
 	//	//boot->saberKnocked = qtrue;
 	//}
 
-	if (boot->blockedProjectile)
+	if (boot->onetimeBlock)
 	{
-		boot->blockedProjectile = qfalse;
+		boot->onetimeBlock = qfalse;
 		boot->isParrying = qfalse;
+		ent->client->ps.saberBlocked = BLOCKED_NONE;
+		pm->ps->weaponTime = 0;
 	}
 }
 

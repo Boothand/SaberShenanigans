@@ -939,8 +939,6 @@ setAnimLegs:
 			Com_Printf("%i\n", pm->ps->legsTimer);
 			*/
 
-			//pm->ps->legsTimer /= 1.3; //Boot. Maybe lessen effectiveness of rolls?
-
 			if (pm->ps->fd.forcePowersActive & (1 << FP_RAGE))
 			{
 				pm->ps->legsTimer /= 1.3;
