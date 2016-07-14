@@ -2386,6 +2386,8 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 	else if (!self->client->ps.saberHolstered)
 	{
 		gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
+		int otherSaberIdleWound = self->client->ps.saberIdleWound;
+		int otherSaberAttackWound = self->client->ps.saberAttackWound;
 
 		if (saberent)
 		{
@@ -2422,8 +2424,10 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 
 		if (self->client->ps.dualBlade)
 		{
-			self->client->ps.saberIdleWound = 0;					//Boot - this is a problem.
-			self->client->ps.saberAttackWound = 0;
+			//self->client->ps.saberIdleWound = 0;
+			//self->client->ps.saberAttackWound = 0;
+			otherSaberIdleWound = self->client->ps.saberIdleWound;
+			otherSaberAttackWound = self->client->ps.saberAttackWound;
 		}
 
 		if (self->client->hasCurrentPosition && g_saberInterpolate.integer)
@@ -2441,12 +2445,17 @@ void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd )
 		if (self->client->ps.dualBlade)
 		{
 			vec3_t otherOrg, otherEnd;
+			
 
 			VectorMA( boltOrigin, -12, rawAngles, otherOrg );
 			VectorMA( otherOrg, -40, rawAngles, otherEnd );
 
 			self->client->ps.saberIdleWound = 0;			//Boot - this is a problem - setting it enables idle damage EVERY frame (regardless of value), commenting it out removes it altogether.
 			self->client->ps.saberAttackWound = 0;
+
+
+			self->client->ps.saberIdleWound = otherSaberIdleWound;
+			self->client->ps.saberAttackWound = otherSaberAttackWound;
 
 			CheckSaberDamage(self, otherOrg, otherEnd, qfalse);
 		}
