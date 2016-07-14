@@ -1920,7 +1920,14 @@ void Boot_ManualBlockThink(gentity_t *ent)
 				{
 				case LS_S_TR2BL:
 				case LS_A_TR2BL:
-					boot->parryDirection = BOOT_BLOCKED_DIAG_LEFT;
+					if (g_entities[tr.entityNum].client->ps.saberAttackChainCount > 1)	//Use this anim if they're chaining
+					{
+						boot->parryDirection = BOOT_BLOCKED_DIAG_LEFT;
+					}
+					else
+					{
+						boot->parryDirection = BLOCKED_UPPER_LEFT;
+					}
 					break;
 				case LS_S_R2L:
 				case LS_A_R2L:
@@ -1932,7 +1939,14 @@ void Boot_ManualBlockThink(gentity_t *ent)
 					break;
 				case LS_S_TL2BR:
 				case LS_A_TL2BR:
-					boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
+					if (g_entities[tr.entityNum].client->ps.saberAttackChainCount > 1)
+					{
+						boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
+					}
+					else
+					{
+						boot->parryDirection = BLOCKED_UPPER_RIGHT;
+					}
 					break;
 				case LS_S_L2R:
 				case LS_A_L2R:
@@ -1946,28 +1960,7 @@ void Boot_ManualBlockThink(gentity_t *ent)
 				case LS_A_T2B:
 					boot->parryDirection = BLOCKED_TOP;
 					break;
-				default:
-					boot->parryDirection = BLOCKED_TOP;
-					break;
 				}
-				//break;
-			/*case BOOT_BLOCKED_DIAG_RIGHT:
-			case BLOCKED_UPPER_RIGHT:
-			case BLOCKED_LOWER_RIGHT:*/
-				/*switch (g_entities[tr.entityNum].client->ps.saberMove)
-				{
-				case LS_S_TL2BR:
-					boot->parryDirection = BOOT_BLOCKED_DIAG_RIGHT;
-					break;
-				case LS_S_L2R:
-					boot->parryDirection = BLOCKED_UPPER_RIGHT;
-					break;
-				case LS_S_BL2TR:
-					boot->parryDirection = BLOCKED_LOWER_RIGHT;
-					break;
-				}*/
-				//break;
-			//}
 		}
 	}
 #endif
