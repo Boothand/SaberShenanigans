@@ -287,7 +287,7 @@ qboolean BG_InDeathAnim( int anim )
 //Called only where pm is valid (not all require pm, but some do):
 qboolean PM_SaberInParry( int move )
 {
-	if ( move >= LS_PARRY_UP && move <= LS_PARRY_LL )
+	if ( move >= LS_PARRY_UP && move <= BOOT_LS_PARRY_DIAG_RIGHT)//LS_PARRY_LL )	//Boot
 	{
 		return qtrue;
 	}
@@ -698,10 +698,10 @@ static void PM_StartLegsAnim( int anim ) {
 		return;
 	}
 
-	if (BG_InSaberStandAnim(anim) && pm->ps->weapon == WP_SABER && pm->ps->dualBlade)
-	{ //a bit of a hack, but dualblade is cheat-only anyway
-		anim = BOTH_STAND1;
-	}
+	//if (BG_InSaberStandAnim(anim) && pm->ps->weapon == WP_SABER && pm->ps->dualBlade)	//Boot - don't glitch when in dual blade.
+	//{ //a bit of a hack, but dualblade is cheat-only anyway
+	//	anim = BOTH_STAND1;
+	//}
 
 	pm->ps->legsAnim = ( ( pm->ps->legsAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
 		| anim;
@@ -759,10 +759,10 @@ void PM_StartTorsoAnim( int anim ) {
 		return;
 	}
 
-	if (BG_InSaberStandAnim(anim) && pm->ps->weapon == WP_SABER && pm->ps->dualBlade)
-	{ //a bit of a hack, but dualblade is cheat-only anyway
-		anim = BOTH_STAND1;
-	}
+	//if (BG_InSaberStandAnim(anim) && pm->ps->weapon == WP_SABER && pm->ps->dualBlade)	//Boot - don't glitch when in dual blade
+	//{ //a bit of a hack, but dualblade is cheat-only anyway
+	//	anim = BOTH_STAND1;
+	//}
 
 	pm->ps->torsoAnim = ( ( pm->ps->torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT )
 		| anim;

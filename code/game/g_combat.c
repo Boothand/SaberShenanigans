@@ -569,10 +569,10 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	int weapon = self->s.weapon;
 	int ammoSub;
 
-	if (weapon <= WP_BRYAR_PISTOL)
-	{ //can't have this
-		return;
-	}
+	//if (weapon <= WP_BRYAR_PISTOL)	//Boot - can totally have this.
+	//{ //can't have this
+	//	return;
+	//}
 
 	if (weapon == WP_EMPLACED_GUN ||
 		weapon == WP_TURRET)
@@ -659,7 +659,7 @@ void TossClientItems( gentity_t *self ) {
 
 	self->s.bolt2 = weapon;
 
-	if ( weapon > WP_BRYAR_PISTOL && 
+	if ( weapon > WP_SABER &&//WP_BRYAR_PISTOL && //Boot - allow dropping of bryar
 		weapon != WP_EMPLACED_GUN &&
 		weapon != WP_TURRET &&
 		self->client->ps.ammo[ weaponData[weapon].ammoIndex ] ) {
@@ -2008,20 +2008,23 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 
 	rightdot = DotProduct(right, diff);
 	zdiff = hitloc[2] - clEye[2];
-	
+
 	if ( zdiff > 0 )
 	{
 		if ( rightdot > 0.3 )
 		{
 			hitLoc = G2_MODELPART_RARM;
+			//trap_SendServerCommand(-1, va("print \"Hit right arm (2017).\n\""));
 		}
 		else if ( rightdot < -0.3 )
 		{
 			hitLoc = G2_MODELPART_LARM;
+			//trap_SendServerCommand(-1, va("print \"Hit left arm (2022).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_HEAD;
+			//trap_SendServerCommand(-1, va("print \"Hit head (2027).\n\""));
 		}
 	}
 	else if ( zdiff > -20 )
@@ -2029,14 +2032,17 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 		if ( rightdot > 0.1 )
 		{
 			hitLoc = G2_MODELPART_RARM;
+			//trap_SendServerCommand(-1, va("print \"Hit right arm (2035).\n\""));
 		}
 		else if ( rightdot < -0.1 )
 		{
 			hitLoc = G2_MODELPART_LARM;
+			//trap_SendServerCommand(-1, va("print \"Hit left arm (2040).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_HEAD;
+			//trap_SendServerCommand(-1, va("print \"Hit head (2045).\n\""));
 		}
 	}
 	else
@@ -2044,10 +2050,12 @@ int G_GetHitQuad( gentity_t *self, vec3_t hitloc )
 		if ( rightdot >= 0 )
 		{
 			hitLoc = G2_MODELPART_RLEG;
+			//trap_SendServerCommand(-1, va("print \"Hit right leg (2053).\n\""));
 		}
 		else
 		{
 			hitLoc = G2_MODELPART_LLEG;
+			//trap_SendServerCommand(-1, va("print \"Hit left leg (2058).\n\""));
 		}
 	}
 
@@ -2059,23 +2067,29 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 	int hitLoc, hitLocUse = -1;
 	vec3_t boltPoint;
 	int dismember = g_dismember.integer;
+	bootSession_t *boot = &bootSession[ent - g_entities];
 
 	if (!dismember)
 	{
 		return;
 	}
 
-	if (Q_irand(0, 100) > dismember)
+	/*if (Q_irand(0, 100) > dismember)	//Boot - if you want dismemberment, you get it consistently. See below
 	{
 		return;
-	}
+	}*/
 
 	if (damage < 20)
 	{
 		return;
 	}
 
-	hitLoc = G_GetHitLocation( ent, point );
+	if (boot->bodyPartIMayLose)
+	{
+		hitLoc = boot->bodyPartIMayLose;
+	}
+
+	//hitLoc = G_GetHitLocation( ent, point );	//Do not need
 
 	switch(hitLoc)
 	{
@@ -2086,7 +2100,7 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 	case HL_FOOT_LT:
 	case HL_LEG_LT:
 		hitLocUse = G2_MODELPART_LLEG;
-		
+		break;	//Boot - they forgot?
 	case HL_WAIST:
 		hitLocUse = G2_MODELPART_WAIST;
 		break;
@@ -2108,11 +2122,19 @@ void G_CheckForDismemberment(gentity_t *ent, vec3_t point, int damage, int death
 		hitLocUse = G2_MODELPART_LARM;
 		break;
 	case HL_HEAD:
-		hitLocUse = G2_MODELPART_HEAD;
+		if (boot->lastPersonWhoHitMe && boot->lastPersonWhoHitMe->client->ps.saberMove != LS_A_T2B)
+		{
+			hitLocUse = G2_MODELPART_HEAD;
+		}
+		break;	//Boot - they forgot?
 	default:
-		hitLocUse = G_GetHitQuad(ent, point);
+		//hitLocUse = G_GetHitQuad(ent, point);
 		break;
 	}
+
+	
+
+	//trap_SendServerCommand(-1, va("print \"g_combat: %s got hit in: %i.\n\"", ent->client->pers.netname, boot->bodyPartIMayLose));
 
 	if (hitLocUse == -1)
 	{
@@ -2278,6 +2300,14 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		knockback = 0;
 	}
 
+	if (targ == attacker)			//Boot - rocket jumping
+	{
+		if (mod == MOD_ROCKET || mod == MOD_ROCKET_SPLASH)
+		{
+			knockback *= 5.5;
+		}
+	}
+
 	// figure momentum add, even if the damage won't be taken
 	if ( knockback && targ->client ) {
 		vec3_t	kvel;
@@ -2400,7 +2430,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// calculated after knockback, so rocket jumping works
 	if ( targ == attacker) {
 		damage *= 0.5;
-	}
+
+		if (mod == MOD_ROCKET || mod == MOD_ROCKET_SPLASH)	//Boot
+		{
+			damage *= 0.5;	//Additional reduction for rocket dmg, to make rocket jumping more viable.
+		}
+	}	
 
 	if ( damage < 1 ) {
 		damage = 1;

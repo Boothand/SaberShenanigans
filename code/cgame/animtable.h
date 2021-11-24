@@ -1232,6 +1232,11 @@ stringID_table_t animTable [MAX_ANIMATIONS+1] =
 	ENUM2STRING(FACE_FROWN),				//# 
 	ENUM2STRING(FACE_DEAD),				//# 
 
+	//Boot
+	ENUM2STRING(BOOT_BLOCK_DIAG_LEFT),	//# Boot - block upper diagonal left
+	ENUM2STRING(BOOT_BLOCK_DIAG_RIGHT),	//# Boot - block upper diagonal right
+	//
+
 	//must be terminated
 	NULL,-1
 };

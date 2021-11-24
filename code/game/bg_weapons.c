@@ -82,11 +82,11 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 //		"Bryar Pistol",			//	char	classname[32];		// Spawning name
 		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
 		15,						//	int		ammoLow;			// Count when ammo is low
-		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		400,					//	int		fireTime;			// Amount of time between firings
+		1,//2, Boot				//	int		energyPerShot;		// Amount of energy used per shot
+		1000,//400,	Boot		//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		2,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		400,					//	int		altFireTime;		// Amount of time between alt-firings
+		1200,//400, Boot		//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 		200,					//	int		altChargeSubTime;	// above for secondary
@@ -100,10 +100,10 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		350,					//	int		fireTime;			// Amount of time between firings
+		750,//350,	Boot		//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		3,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		150,					//	int		altFireTime;		// Amount of time between alt-firings
+		600,//150,	Boot		//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 		0,						//	int		altChargeSubTime;	// above for secondary
