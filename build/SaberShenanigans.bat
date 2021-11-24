@@ -1,1 +1,1 @@
-"jk2mvmp.exe" +mv_serverversion 1.02 +set fs_game SaberShenanigans +dedicated 0 +g_forceRegenTime 0 +sv_fps 100 +devmap ffa_bespin
+"jk2mvmp.exe" +mv_serverversion 1.02 +set fs_game SaberShenanigans +dedicated 0 +g_forceRegenTime 0 +sv_fps 100 +devmap ffa_bespin +g_weaponDisable -2147024901 +forcePowerDisable 262143
