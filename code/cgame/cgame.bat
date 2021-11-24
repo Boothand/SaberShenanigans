@@ -95,8 +95,12 @@ set cc=..\..\..\bin\lcc -DQ3_VM -DMISSIONPACK -DCGAME -S -Wf-target=bytecode -Wf
 ..\..\..\bin\q3asm -f ../cgame
 @if errorlevel 1 goto quit
 
+mkdir "..\..\base\vm"
+copy *.map "..\..\base\vm"
+copy *.qvm "..\..\base\vm"
+
 :quit
 @set path=%savedpath%
 @set savedpath=
 
-cd ..
+

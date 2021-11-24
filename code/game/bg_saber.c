@@ -1,6 +1,7 @@
 #include "q_shared.h"
 #include "bg_public.h"
 #include "bg_local.h"
+#include "g_local.h"
 
 int PM_irand_timesync(int val1, int val2)
 {
@@ -350,6 +351,7 @@ saberMoveName_t PM_AttackMoveForQuad( int quad )
 
 int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 {
+	
 	//FIXME: take FP_SABERATTACK into account here somehow?
 	int retmove = newmove;
 	if ( curmove == LS_READY )
@@ -397,36 +399,89 @@ int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 		case LS_A_R2L:
 		case LS_A_TR2BL:
 		case LS_A_T2B:
-			/*if ( newmove == curmove )
-			{//FIXME: need a spin or something or go to next level, but for now, just play the return
-				retmove = LS_R_TL2BR + (newmove-LS_A_TL2BR);
-			}
-			else */if ( saberMoveData[curmove].endQuad == saberMoveData[newmove].startQuad )
-			{//new move starts from same quadrant
-				retmove = newmove;
-			}
-			else
+			// /*if ( newmove == curmove )
+			// {//FIXME: need a spin or something or go to next level, but for now, just play the return
+			// 	retmove = LS_R_TL2BR + (newmove-LS_A_TL2BR);
+			// }
+			// else */if ( saberMoveData[curmove].endQuad == saberMoveData[newmove].startQuad )
+			// {//new move starts from same quadrant
+			// 	retmove = newmove;
+			// }
+			// else
 			{
 				switch ( curmove )
 				{
 				//transitioning from an attack
-				case LS_A_TL2BR:
+					case LS_R_R2L:
+					case LS_A_R2L:
+						if (newmove == LS_A_L2R)			//Boot added these, to prevent same quad attacks to skip the transition
+						{
+							retmove = LS_S_L2R;	
+							break;
+						}
+				case LS_R_L2R:
 				case LS_A_L2R:
+					if (newmove == LS_A_R2L)
+					{
+						retmove = LS_S_R2L;
+						break;
+					}
+				case LS_R_TL2BR:
+				case LS_A_TL2BR:
+					if (newmove == LS_A_BR2TL)
+					{
+						retmove = LS_S_BR2TL;
+						break;
+					}
+				case LS_R_BL2TR:
 				case LS_A_BL2TR:
+					if (newmove == LS_A_TR2BL)
+					{
+						retmove = LS_S_TR2BL;
+						break;
+					}
+				case LS_R_BR2TL:
 				case LS_A_BR2TL:
-				case LS_A_R2L:
+					if (newmove == LS_A_TL2BR)
+					{
+						retmove = LS_S_TL2BR;
+						break;
+					}
+					else if (saberMoveData[newmove].startQuad == Q_BR)
+					{
+						retmove = LS_T1_TL_BR;
+						break;
+					}
+				case LS_R_TR2BL:
 				case LS_A_TR2BL:
+					if (newmove == LS_A_BL2TR)
+					{
+						retmove = LS_S_BL2TR;
+						break;
+					}
+					else if (newmove == LS_A_TR2BL)
+					{
+						retmove = LS_T1_BL_TR;
+						break;
+					}
 				case LS_A_T2B:
+				case LS_R_T2B:
+
+					
 					retmove = transitionMove[saberMoveData[curmove].endQuad][saberMoveData[newmove].startQuad];
+
+					if (newmove == LS_A_R2L)
+					{
+						retmove = LS_S_R2L;
+					}
+
+					// trap_SendServerCommand( -1, va("print \"curmove: %i, newmove: %i, retmove: %i \n\"", 
+					// 					curmove, newmove, retmove ) );
+					// trap_SendServerCommand( -1, va("print \"1 \n\"") );
 					break;
 				//transitioning from a return
-				case LS_R_TL2BR:
-				case LS_R_L2R:
-				case LS_R_BL2TR:
-				case LS_R_BR2TL:
-				case LS_R_R2L:
-				case LS_R_TR2BL:
-				case LS_R_T2B:
+					// trap_SendServerCommand( -1, va("print \"2 \n\"") );
+
 				//transitioning from a bounce
 				/*
 				case LS_BOUNCE_UL2LL:
@@ -456,6 +511,8 @@ int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 				case LS_REFLECT_LR:
 				case LS_PARRY_LL:
 				case LS_REFLECT_LL:
+					// trap_SendServerCommand( -1, va("print \"3 \n\"") );
+
 					retmove = transitionMove[saberMoveData[curmove].endQuad][saberMoveData[newmove].startQuad];
 					break;
 				//NB: transitioning from transitions is fine
@@ -465,6 +522,9 @@ int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 		//transitioning to any other anim is not supported
 		}
 	}
+
+	
+	
 
 	if ( retmove == LS_NONE )
 	{
@@ -550,7 +610,7 @@ qboolean PM_SaberInTransition( int move )
 
 qboolean PM_SaberKataDone( void )
 {
-	if ( (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_3 && pm->ps->saberAttackChainCount > PM_irand_timesync( 0, 1 )) ||
+	if ( (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_3 && pm->ps->saberAttackChainCount > 2) || //PM_irand_timesync( 0, 3 )) ||
 		( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 && pm->ps->saberAttackChainCount > PM_irand_timesync( 2, 5 ) ) )
 	{
 		return qtrue;
@@ -1083,28 +1143,28 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 		}
 		else if ( pm->cmd.forwardmove < 0 )
 		{//backward= T2B slash//B2T uppercut?
-			if (PM_CanBackstab())
-			{ //BACKSTAB (attack varies by level)
-				if (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_2)
-				{//medium and higher attacks
-					if ( (pm->ps->pm_flags&PMF_DUCKED) || pm->cmd.upmove < 0 )
-					{
-						newmove = LS_A_BACK_CR;
-					}
-					else
-					{
-						newmove = LS_A_BACK;
-					}
-				}
-				else
-				{ //weak attack
-					newmove = LS_A_BACKSTAB;
-				}
-			}
-			else
-			{
+			// if (PM_CanBackstab())
+			// { //BACKSTAB (attack varies by level)
+			// 	if (pm->ps->fd.saberAnimLevel >= FORCE_LEVEL_2)
+			// 	{//medium and higher attacks
+			// 		if ( (pm->ps->pm_flags&PMF_DUCKED) || pm->cmd.upmove < 0 )
+			// 		{
+			// 			newmove = LS_A_BACK_CR;
+			// 		}
+			// 		else
+			// 		{
+			// 			newmove = LS_A_BACK;
+			// 		}
+			// 	}
+			// 	else
+			// 	{ //weak attack
+			// 		newmove = LS_A_BACKSTAB;
+			// 	}
+			// }
+			// else
+			// {
 				newmove = LS_A_T2B;
-			}
+			// }
 		}
 		else if ( PM_SaberInBounce( curmove ) )
 		{//bounces should go to their default attack if you don't specify a direction but are attacking
@@ -1340,19 +1400,19 @@ void PM_WeaponLightsaber(void)
 				{
 					int bounceMove;
 
-					if ( pm->cmd.buttons & BUTTON_ATTACK )
-					{//transition to a new attack
-						int newQuad = PM_SaberMoveQuadrantForMovement( &pm->cmd );
-						while ( newQuad == saberMoveData[pm->ps->saberMove].startQuad )
-						{//player is still in same attack quad, don't repeat that attack because it looks bad, 
-							//FIXME: try to pick one that might look cool?
-							//newQuad = Q_irand( Q_BR, Q_BL );
-							newQuad = PM_irand_timesync( Q_BR, Q_BL );
-							//FIXME: sanity check, just in case?
-						}//else player is switching up anyway, take the new attack dir
-						bounceMove = transitionMove[saberMoveData[pm->ps->saberMove].startQuad][newQuad];
-					}
-					else
+					// if ( pm->cmd.buttons & BUTTON_ATTACK )
+					// {//transition to a new attack
+					// 	int newQuad = PM_SaberMoveQuadrantForMovement( &pm->cmd );
+					// 	while ( newQuad == saberMoveData[pm->ps->saberMove].startQuad )
+					// 	{//player is still in same attack quad, don't repeat that attack because it looks bad, 
+					// 		//FIXME: try to pick one that might look cool?
+					// 		//newQuad = Q_irand( Q_BR, Q_BL );
+					// 		newQuad = PM_irand_timesync( Q_BR, Q_BL );
+					// 		//FIXME: sanity check, just in case?
+					// 	}//else player is switching up anyway, take the new attack dir
+					// 	bounceMove = transitionMove[saberMoveData[pm->ps->saberMove].startQuad][newQuad];
+					// }
+					// else
 					{//return to ready
 						if ( saberMoveData[pm->ps->saberMove].startQuad == Q_T )
 						{

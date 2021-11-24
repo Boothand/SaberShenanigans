@@ -1008,6 +1008,9 @@ qboolean WP_SabersCheckLock( gentity_t *ent1, gentity_t *ent2 )
 	return qfalse;
 }
 
+//Boot
+#define IDLE_SABER_DMG	2
+
 qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, qboolean doInterpolate)
 {
 	trace_t tr;
@@ -1016,6 +1019,10 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	int attackStr = 0;
 	qboolean idleDamage = qfalse;
 	qboolean didHit = qfalse;
+	
+	// Boot:
+	bootSession_t *boot = &bootSession[self - g_entities];
+	bootSession_t *bootOther;
 
 	if (self->client->ps.saberHolstered)
 	{
@@ -1101,7 +1108,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	}
 	else if (self->client->ps.saberIdleWound < level.time)
 	{ //just touching, do minimal damage and only check for it every 200ms (mainly to cut down on network traffic for hit events)
-		dmg = 5;
+		dmg = IDLE_SABER_DMG; // 5 Boot
 		self->client->ps.saberIdleWound = level.time + 200;
 		idleDamage = qtrue;
 	}
@@ -1111,7 +1118,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 		return qfalse;
 	}
 
-	if (dmg > 5 && self->client->ps.isJediMaster)
+	if (dmg > IDLE_SABER_DMG && self->client->ps.isJediMaster)
 	{ //give the Jedi Master more saber attack power
 		dmg *= 2;
 	}
@@ -1131,6 +1138,7 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 	{
 		gentity_t *te;
 		qboolean unblockable = qfalse;
+		bootOther = &bootSession[tr.entityNum];
 
 		if (idleDamage &&
 			g_entities[tr.entityNum].client &&
@@ -1172,55 +1180,64 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 			}
 		}
 
-		if (g_entities[tr.entityNum].client && !unblockable && WP_SaberCanBlock(&g_entities[tr.entityNum], tr.endpos, 0, MOD_SABER, qfalse, attackStr))
+		if (g_entities[tr.entityNum].client && !unblockable && WP_SaberCanBlock(&g_entities[tr.entityNum], self, tr.endpos, 0, MOD_SABER, qfalse, attackStr))
 		{
 			te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 			VectorCopy(tr.endpos, te->s.origin);
 			VectorCopy(tr.plane.normal, te->s.angles);
 			te->s.eventParm = 1;
 
-			if (dmg > 5)
-			{
-				if ((g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERATTACK] - self->client->ps.fd.forcePowerLevel[FP_SABERATTACK]) > 1 &&
-					Q_irand(1, 10) < 9) //used to be < 7
-				{ //Just got blocked by someone with a decently higher attack level, so enter into a lock (where they have the advantage due to a higher attack lev)
-					if (WP_SabersCheckLock(self, &g_entities[tr.entityNum]))
-					{	
-						self->client->ps.saberBlocked = BLOCKED_NONE;
-						g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_NONE;
-						return didHit;
-					}
-				}
-				else if (Q_irand(1, 10) < 3)
-				{ //Just got blocked by someone with a decently higher attack level, so enter into a lock (where they have the advantage due to a higher attack lev)
-					if (WP_SabersCheckLock(self, &g_entities[tr.entityNum]))
-					{	
-						self->client->ps.saberBlocked = BLOCKED_NONE;
-						g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_NONE;
-						return didHit;
-					}
-				}
-			}
+			// Boot comment:
+			// if (dmg > 5)
+			// {
+			// 	if ((g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERATTACK] - self->client->ps.fd.forcePowerLevel[FP_SABERATTACK]) > 1 &&
+			// 		Q_irand(1, 10) < 9) //used to be < 7
+			// 	{ //Just got blocked by someone with a decently higher attack level, so enter into a lock (where they have the advantage due to a higher attack lev)
+			// 		if (WP_SabersCheckLock(self, &g_entities[tr.entityNum]))
+			// 		{	
+			// 			self->client->ps.saberBlocked = BLOCKED_NONE;
+			// 			g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_NONE;
+			// 			return didHit;
+			// 		}
+			// 	}
+			// 	else if (Q_irand(1, 10) < 3)
+			// 	{ //Just got blocked by someone with a decently higher attack level, so enter into a lock (where they have the advantage due to a higher attack lev)
+			// 		if (WP_SabersCheckLock(self, &g_entities[tr.entityNum]))
+			// 		{	
+			// 			self->client->ps.saberBlocked = BLOCKED_NONE;
+			// 			g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_NONE;
+			// 			return didHit;
+			// 		}
+			// 	}
+			// }
 
 			//our attack was blocked, so bounce back?
-			if (dmg > 5)
+			if (dmg > IDLE_SABER_DMG)
 			{
 				self->client->ps.weaponTime = 0;
 				self->client->ps.weaponstate = WEAPON_READY;
 				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+				
+				bootOther->didSuccessfulParry = qtrue;
+				
+				// self->client->ps.weaponTime = 0;
+				// self->client->ps.weaponstate = WEAPON_READY;
+				// self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 
-				self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+				//self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+				g_entities[tr.entityNum].client->ps.saberBlockTime = level.time + (350 - (g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
 			}
 			self->client->ps.saberAttackWound = level.time + 300;
 
-			if (self->client->ps.fd.saberAnimLevel >= FORCE_LEVEL_3 && dmg > 5 && g_entities[tr.entityNum].client->ps.saberMove != LS_READY && g_entities[tr.entityNum].client->ps.saberMove != LS_NONE)
-			{
-				g_entities[tr.entityNum].client->ps.weaponTime = 0;
-				g_entities[tr.entityNum].client->ps.weaponstate = WEAPON_READY;
-				g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+			// if (self->client->ps.fd.saberAnimLevel >= FORCE_LEVEL_3 && dmg > 5 && g_entities[tr.entityNum].client->ps.saberMove != LS_READY && g_entities[tr.entityNum].client->ps.saberMove != LS_NONE)
+			// {
+				
+			// 	g_entities[tr.entityNum].client->ps.weaponTime = 0;
+			// 	g_entities[tr.entityNum].client->ps.weaponstate = WEAPON_READY;
+			// 	g_entities[tr.entityNum].client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 
-				g_entities[tr.entityNum].client->ps.saberBlockTime = level.time + (350 - (g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-			}
+			// 	g_entities[tr.entityNum].client->ps.saberBlockTime = level.time + (350 - (g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+			// }
 
 			//NOTE: Actual blocking is handled in WP_SaberCanBlock
 			/*
@@ -1252,10 +1269,15 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 
 			if (g_entities[tr.entityNum].client && !g_entities[tr.entityNum].client->ps.fd.forcePowerLevel[FP_SABERATTACK])
 			{ //not a "jedi", so make them suffer more
-				if (dmg > 5)
+				if (dmg > IDLE_SABER_DMG)
 				{ //don't bother increasing just for idle touch damage
 					dmg *= 1.5;
 				}
+			}
+			
+			if (boot_trainingMode.integer > 0)
+			{
+				dmg /= 3;
 			}
 
 			G_Damage(&g_entities[tr.entityNum], self, self, dir, tr.endpos, dmg, 0, MOD_SABER);
@@ -1325,66 +1347,92 @@ qboolean CheckSaberDamage(gentity_t *self, vec3_t saberStart, vec3_t saberEnd, q
 		{
 			return qfalse;
 		}
-
-		if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+		
+		//Boot - if you attack at the same time, clash.
+		if (otherOwner->client->ps.saberMove >= LS_A_TL2BR && otherOwner->client->ps.saberMove <= LS_S_T2B)	
 		{
 			self->client->ps.weaponTime = 0;
 			self->client->ps.weaponstate = WEAPON_READY;
 			self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-			self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-
-			if (otherOwner && otherOwner->client)
-			{
-				if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-				{
-					WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1);
-				}
-			}
 		}
-		else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
-		{ //block
-			if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
-			{
-				if (WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
-				{
-					otherOwner->client->ps.weaponTime = 0;
-					otherOwner->client->ps.weaponstate = WEAPON_READY;
-					otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-					otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-				}
-			}
-		}
-
-		self->client->ps.saberAttackWound = level.time + 300;
-
-		if (dmg > 5)
+		else// if (dmg > 5)
 		{
-			if (Q_irand(1, 10) < 9) //used to be < 7
+			if (Boot_BlockMatchesAttack(self->client->ps.saberMove, otherOwner->client->ps.saberBlocked))
 			{
-				if (WP_SabersCheckLock(self, otherOwner))
-				{
-					self->client->ps.saberBlocked = BLOCKED_NONE;
-					otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
-					return didHit;
-				}
+				WP_SaberCanBlock(otherOwner, self, tr.endpos, 0, MOD_SABER, qfalse, 2);
+				self->client->ps.weaponTime = 0;
+				self->client->ps.weaponstate = WEAPON_READY;
+				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
 			}
-		}
-
-		if (dmg > 5)
-		{ //we clashed into this person's saber while attacking, so make them feel it too
-			if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
+			else
 			{
-			//	WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
-
 				otherOwner->client->ps.weaponTime = 0;
 				otherOwner->client->ps.weaponstate = WEAPON_READY;
 				otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
-
-				self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
-
-				otherOwner->client->ps.saberAttackWound = level.time + 300;
 			}
 		}
+
+		// if (self->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+		// {
+		// 	self->client->ps.weaponTime = 0;
+		// 	self->client->ps.weaponstate = WEAPON_READY;
+		// 	self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+		// 	self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+
+		// 	if (otherOwner && otherOwner->client)
+		// 	{
+		// 		if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+		// 		{
+		// 			WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1);
+		// 		}
+		// 	}
+		// }
+		// else if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
+		// { //block
+		// 	if (otherOwner->client->ps.weaponTime < 1 || otherOwner->client->ps.fd.saberAnimLevel < FORCE_LEVEL_3)
+		// 	{
+		// 		if (WP_SaberCanBlock(otherOwner, tr.endpos, 0, MOD_SABER, qfalse, 1) && dmg > 5)
+		// 		{
+		// 			otherOwner->client->ps.weaponTime = 0;
+		// 			otherOwner->client->ps.weaponstate = WEAPON_READY;
+		// 			otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+		// 			otherOwner->client->ps.saberBlockTime = level.time + (350 - (otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+		// 		}
+		// 	}
+		// }
+		
+		boot->lastSaberClashTime = level.time;
+
+		// self->client->ps.saberAttackWound = level.time + 300;
+
+		// if (dmg > 5)
+		// {
+		// 	if (Q_irand(1, 10) < 9) //used to be < 7
+		// 	{
+		// 		if (WP_SabersCheckLock(self, otherOwner))
+		// 		{
+		// 			self->client->ps.saberBlocked = BLOCKED_NONE;
+		// 			otherOwner->client->ps.saberBlocked = BLOCKED_NONE;
+		// 			return didHit;
+		// 		}
+		// 	}
+		// }
+
+		// if (dmg > 5)
+		// { //we clashed into this person's saber while attacking, so make them feel it too
+		// 	if (otherOwner && otherOwner->client && otherOwner->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] <= self->client->ps.fd.saberAnimLevel)
+		// 	{
+		// 	//	WP_SaberBlockNonRandom(otherOwner, tr.endpos, qfalse);
+
+		// 		otherOwner->client->ps.weaponTime = 0;
+		// 		otherOwner->client->ps.weaponstate = WEAPON_READY;
+		// 		otherOwner->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+
+		// 		self->client->ps.saberBlockTime = level.time + (350 - (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND]*100));//300;
+
+		// 		otherOwner->client->ps.saberAttackWound = level.time + 300;
+		// 	}
+		// }
 	}
 
 	return didHit;
@@ -1453,7 +1501,7 @@ qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *saberOwner, gen
 
 			if (tr.fraction == 1 || tr.entityNum == ent->s.number)
 			{ //Slice them
-				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, tr.endpos, 0, MOD_SABER, qfalse, 8))
+				if (!saberOwner->client->ps.isJediMaster && WP_SaberCanBlock(ent, saberent, tr.endpos, 0, MOD_SABER, qfalse, 8))
 				{
 					te = G_TempEntity( tr.endpos, EV_SABER_BLOCK );
 					VectorCopy(tr.endpos, te->s.origin);
@@ -2687,10 +2735,11 @@ void WP_SaberBlock( gentity_t *playerent, vec3_t hitloc, qboolean missileBlock )
 	}
 }
 
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
+int WP_SaberCanBlock(gentity_t *self, /*Boot:*/gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr)
 {
 	qboolean thrownSaber = qfalse;
 	float blockFactor = 0;
+	bootSession_t *bootSelf = &bootSession[self - g_entities];
 
 	if (!self || !self->client || !point)
 	{
@@ -2703,19 +2752,19 @@ int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolea
 		thrownSaber = qtrue;
 	}
 
-	if (BG_SaberInAttack(self->client->ps.saberMove))
-	{
-		return 0;
-	}
+	// if (BG_SaberInAttack(self->client->ps.saberMove))
+	// {
+	// 	return 0;
+	// }
 
-	if (PM_InSaberAnim(self->client->ps.torsoAnim) && !self->client->ps.saberBlocked &&
-		self->client->ps.saberMove != LS_READY && self->client->ps.saberMove != LS_NONE)
-	{
-		if ( self->client->ps.saberMove < LS_PARRY_UP || self->client->ps.saberMove > LS_REFLECT_LL )
-		{
-			return 0;
-		}
-	}
+	// if (PM_InSaberAnim(self->client->ps.torsoAnim) && !self->client->ps.saberBlocked &&
+	// 	self->client->ps.saberMove != LS_READY && self->client->ps.saberMove != LS_NONE)
+	// {
+	// 	if ( self->client->ps.saberMove < LS_PARRY_UP || self->client->ps.saberMove > LS_REFLECT_LL )
+	// 	{
+	// 		return 0;
+	// 	}
+	// }
 
 	if (self->client->ps.saberHolstered)
 	{
@@ -2732,74 +2781,74 @@ int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolea
 		return 0;
 	}
 
-	if (self->client->ps.weaponstate == WEAPON_RAISING)
-	{
-		return 0;
-	}
+	// if (self->client->ps.weaponstate == WEAPON_RAISING)
+	// {
+	// 	return 0;
+	// }
 
 	if (self->client->ps.saberInFlight)
 	{
 		return 0;
 	}
 
-	if ((self->client->pers.cmd.buttons & BUTTON_ATTACK)/* &&
-		(projectile || attackStr == FORCE_LEVEL_3)*/)
-	{ //don't block when the player is trying to slash, if it's a projectile or he's doing a very strong attack
-		return 0;
-	}
+	// if ((self->client->pers.cmd.buttons & BUTTON_ATTACK)/* &&
+	// 	(projectile || attackStr == FORCE_LEVEL_3)*/)
+	// { //don't block when the player is trying to slash, if it's a projectile or he's doing a very strong attack
+	// 	return 0;
+	// }
 
-	if (attackStr == FORCE_LEVEL_3)
-	{
-		if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-		{
-			if (Q_irand(1, 10) < 3)
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			return 0;
-		}
-	}
+	// if (attackStr == FORCE_LEVEL_3)
+	// {
+	// 	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
+	// 	{
+	// 		if (Q_irand(1, 10) < 3)
+	// 		{
+	// 			return 0;
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		return 0;
+	// 	}
+	// }
 
-	if (attackStr == FORCE_LEVEL_2 && Q_irand(1, 10) < 3)
-	{
-		if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
-		{
-			//do nothing for now
-		}
-		else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_2)
-		{
-			if (Q_irand(1, 10) < 5)
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			return 0;
-		}
-	}
+	// if (attackStr == FORCE_LEVEL_2 && Q_irand(1, 10) < 3)
+	// {
+	// 	if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_3)
+	// 	{
+	// 		//do nothing for now
+	// 	}
+	// 	else if (self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] >= FORCE_LEVEL_2)
+	// 	{
+	// 		if (Q_irand(1, 10) < 5)
+	// 		{
+	// 			return 0;
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		return 0;
+	// 	}
+	// }
 	
-	if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] &&
-		Q_irand(1, 40) < 3)
-	{ //if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
-		return 0;
-	}
+	// if (attackStr == FORCE_LEVEL_1 && !self->client->ps.fd.forcePowerLevel[FP_SABERDEFEND] &&
+	// 	Q_irand(1, 40) < 3)
+	// { //if I have no defense level at all then I might be unable to block a level 1 attack (but very rarely)
+	// 	return 0;
+	// }
 
-	if (SaberAttacking(self))
-	{ //attacking, can't block now
+	// if (SaberAttacking(self))
+	// { //attacking, can't block now
 
-		//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
-		return 0;
-	}
+	// 	//FIXME: Do a "saber box" check here to see if the enemy saber hit this guy's saber
+	// 	return 0;
+	// }
 
-	if (self->client->ps.saberMove != LS_READY &&
-		!self->client->ps.saberBlocking)
-	{
-		return 0;
-	}
+	// if (self->client->ps.saberMove != LS_READY &&
+	// 	!self->client->ps.saberBlocking)
+	// {
+	// 	return 0;
+	// }
 
 	if (self->client->ps.saberBlockTime >= level.time)
 	{
@@ -2837,10 +2886,63 @@ int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolea
 	{
 		return 0;
 	}
+	
+	// Boot:
+	if (bootSelf->isParrying)
+	{
+		if (!Boot_BlockMatchesAttack(other->client->ps.saberMove, bootSelf->parryDirection) && !projectile)
+		{
+			return 0;
+		}
+		else if (projectile)
+		{
+			bootSelf->blockedProjectile = qtrue;
+		}
+		else
+		{
+			bootSelf->didSuccessfulParry = qtrue;
+		}
+	}
+	else
+	{
+		return 0;
+	}
 
 	WP_SaberBlockNonRandom(self, point, projectile);
 	return 1;
 }
+
+qboolean Boot_BlockMatchesAttack(int attack, int block)
+{
+	if (attack == LS_A_T2B && block == BLOCKED_TOP) //Forward swing
+	{
+		return qtrue;
+	}
+	else if ((attack == LS_A_L2R || attack == LS_A_TL2BR) &&
+		(block == BLOCKED_UPPER_RIGHT))// || block == BLOCKED_LOWER_RIGHT || block == BOOT_BLOCKED_DIAG_RIGHT))
+	{
+		return qtrue;
+	}
+	else if ((attack == LS_A_R2L || attack == LS_A_TR2BL) &&
+		(block == BLOCKED_UPPER_LEFT))// || block == BLOCKED_LOWER_LEFT || block == BOOT_BLOCKED_DIAG_LEFT))
+	{
+		return qtrue;
+	}
+	else if ((attack == LS_A_BL2TR || attack == LS_A_L2R) &&
+			block == BLOCKED_LOWER_LEFT)
+	{
+		return qtrue;
+	}
+	else if ((attack == LS_A_BR2TL || attack == LS_A_R2L) &&
+			block == BLOCKED_LOWER_RIGHT)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+
 
 qboolean HasSetSaberOnly(void)
 {

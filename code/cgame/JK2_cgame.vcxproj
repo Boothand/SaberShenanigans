@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug JK2|Win32">
       <Configuration>Debug JK2</Configuration>
@@ -16,24 +16,23 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>JK2cgame</ProjectName>
-    <SccProjectName />
-    <SccLocalPath />
-    <ProjectGuid>{DCEABB3F-FA27-4AC4-B0DF-A67576E1790D}</ProjectGuid>
+    <SccProjectName>"$/General/code/cgame", UPCAAAAA</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug JK2|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release JK2|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Final JK2|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -210,6 +209,9 @@
     <ClCompile Include="..\game\bg_saber.c" />
     <ClCompile Include="..\game\bg_slidemove.c" />
     <ClCompile Include="..\game\bg_weapons.c" />
+    <ClCompile Include="..\game\q_math.c" />
+    <ClCompile Include="..\game\q_shared.c" />
+    <ClCompile Include="..\ui\ui_shared.c" />
     <ClCompile Include="cg_consolecmds.c" />
     <ClCompile Include="cg_draw.c" />
     <ClCompile Include="cg_drawtools.c" />
@@ -243,44 +245,41 @@
     <ClCompile Include="fx_force.c" />
     <ClCompile Include="fx_heavyrepeater.c" />
     <ClCompile Include="fx_rocketlauncher.c" />
-    <ClCompile Include="..\game\q_math.c" />
-    <ClCompile Include="..\game\q_shared.c" />
-    <ClCompile Include="..\ui\ui_shared.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\ui\menudef.h" />
     <ClInclude Include="..\game\anims.h" />
-    <ClInclude Include="animtable.h" />
     <ClInclude Include="..\game\bg_local.h" />
     <ClInclude Include="..\game\bg_public.h" />
     <ClInclude Include="..\game\bg_saga.h" />
     <ClInclude Include="..\game\bg_weapons.h" />
+    <ClInclude Include="..\game\q_shared.h" />
+    <ClInclude Include="..\game\surfaceflags.h" />
+    <ClInclude Include="..\ghoul2\G2.h" />
+    <ClInclude Include="..\qcommon\disablewarnings.h" />
+    <ClInclude Include="..\qcommon\qfiles.h" />
+    <ClInclude Include="..\qcommon\tags.h" />
+    <ClInclude Include="..\ui\keycodes.h" />
+    <ClInclude Include="..\ui\ui_shared.h" />
+    <ClInclude Include="animtable.h" />
     <ClInclude Include="cg_lights.h" />
     <ClInclude Include="cg_local.h" />
     <ClInclude Include="cg_public.h" />
-    <ClInclude Include="..\qcommon\disablewarnings.h" />
     <ClInclude Include="fx_local.h" />
-    <ClInclude Include="..\ghoul2\G2.h" />
-    <ClInclude Include="..\ui\keycodes.h" />
-    <ClInclude Include="..\..\ui\menudef.h" />
-    <ClInclude Include="..\game\q_shared.h" />
-    <ClInclude Include="..\qcommon\qfiles.h" />
-    <ClInclude Include="..\game\surfaceflags.h" />
-    <ClInclude Include="..\qcommon\tags.h" />
     <ClInclude Include="tr_types.h" />
-    <ClInclude Include="..\ui\ui_shared.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="JK2_cgame.def">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Final JK2|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release JK2|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug JK2|Win32'">true</ExcludedFromBuild>
-    </CustomBuild>
     <CustomBuild Include="cgame.bat">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Final JK2|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release JK2|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug JK2|Win32'">true</ExcludedFromBuild>
     </CustomBuild>
     <CustomBuild Include="cgame.q3asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Final JK2|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release JK2|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug JK2|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="JK2_cgame.def">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Final JK2|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release JK2|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug JK2|Win32'">true</ExcludedFromBuild>

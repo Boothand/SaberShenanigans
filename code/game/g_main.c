@@ -18,6 +18,11 @@ typedef struct {
 gentity_t		g_entities[MAX_GENTITIES];
 gclient_t		g_clients[MAX_CLIENTS];
 
+//Boot
+bootSession_t	bootSession[MAX_CLIENTS];
+
+
+
 qboolean gDuelExit = qfalse;
 
 vmCvar_t	g_gametype;
@@ -93,6 +98,12 @@ vmCvar_t	g_dismember;
 vmCvar_t	g_forceDodge;
 vmCvar_t	g_timeouttospec;
 
+// Boot:
+vmCvar_t	boot_feintTimer;
+vmCvar_t	boot_trainingMode;
+vmCvar_t	boot_screenShakeOnHeadChop;
+vmCvar_t	boot_noFlips;
+
 int gDuelist1 = -1;
 int gDuelist2 = -1;
 
@@ -123,10 +134,10 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_maxForceRank, "g_maxForceRank", "6", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_forceBasedTeams, "g_forceBasedTeams", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
 	{ &g_privateDuel, "g_privateDuel", "1", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
-	{ &g_saberLocking, "g_saberLocking", "1", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
+	{ &g_saberLocking, "g_saberLocking", "0", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  }, // 1
 	{ &g_forceRegenTime, "g_forceRegenTime", "200", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
 
-	{ &g_spawnInvulnerability, "g_spawnInvulnerability", "3000", CVAR_ARCHIVE, 0, qtrue  },
+	{ &g_spawnInvulnerability, "g_spawnInvulnerability", "500", CVAR_ARCHIVE, 0, qtrue  }, // 3000
 
 	{ &g_forcePowerDisable, "g_forcePowerDisable", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_LATCH, 0, qtrue  },
 	{ &g_weaponDisable, "g_weaponDisable", "0", CVAR_SERVERINFO | CVAR_ARCHIVE | CVAR_LATCH, 0, qtrue  },
@@ -176,7 +187,7 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, qfalse },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, qfalse },
 	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, qfalse },
-	{ &g_motd, "g_motd", "", 0, 0, qfalse },
+	{ &g_motd, "g_motd", "^1Saber Shenanigans", 0, 0, qfalse },
 	{ &g_blood, "com_blood", "1", 0, 0, qfalse },
 
 	{ &g_podiumDist, "g_podiumDist", "80", 0, 0, qfalse },
@@ -207,6 +218,12 @@ static cvarTable_t		gameCvarTable[] = {
 	{ &g_forceDodge, "g_forceDodge", "1", 0, 0, qtrue  },
 
 	{ &g_timeouttospec, "g_timeouttospec", "70", CVAR_ARCHIVE, 0, qfalse },
+	
+	// Boot
+	{ &boot_feintTimer, "ss_feintTimer", "250", 0, 0, qtrue },
+	{ &boot_trainingMode, "ss_trainingMode", "0", 0, 0, qtrue },
+	{ &boot_screenShakeOnHeadChop, "ss_screenShakeOnHeadChop", "1", 0, 0, qtrue },
+	{ &boot_noFlips, "ss_noFlips", "1", 0, 0, qtrue },
 };
 
 // bk001129 - made static to avoid aliasing
@@ -1502,8 +1519,7 @@ void CheckExitRules( void ) {
 
 	if ( g_timelimit.integer && !level.warmupTime ) {
 		if ( level.time - level.startTime >= g_timelimit.integer*60000 ) {
-//			trap_SendServerCommand( -1, "print \"Timelimit hit.\n\"");
-			trap_SendServerCommand( -1, va("print \"%s.\n\"",G_GetStripEdString("SVINGAME", "TIMELIMIT_HIT")));
+			trap_SendServerCommand( -1, "print \"Timelimit hit.\n\"");
 			LogExit( "Timelimit hit." );
 			return;
 		}

@@ -9,7 +9,7 @@
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	"basejk"
+#define	GAMEVERSION	"SaberShenanigans"
 
 #define BODY_QUEUE_SIZE		8
 
@@ -305,6 +305,33 @@ typedef struct {
 	int			updateUITime;		// only update userinfo for FP/SL if < level.time
 	qboolean	teamLeader;			// true when this client is a team leader
 } clientSession_t;
+
+
+//Boot
+
+typedef struct bootSession_s bootSession_t;
+struct bootSession_s {
+	qboolean		pressingParry;
+	qboolean		isParrying;
+	qboolean		allowedToParry;
+	qboolean		didSuccessfulParry;
+	qboolean		usesMouseMovementBlock;
+		//qboolean		saberKnocked;
+	qboolean		blockedProjectile;
+	//int				attackStartTime;
+	qboolean		blockingLower;
+	int				parryDirection;
+	int				parryTimer;
+	int				bodyPartIMayLose;
+	int				lastSaberClashTime;
+	vec3_t			lastViewAngle;
+	float			lerpedViewAngleDiffX;
+	float			lerpedViewAngleDiffY;
+};
+
+extern bootSession_t bootSession[MAX_CLIENTS];
+
+
 
 //
 #define MAX_NETNAME			36
@@ -797,6 +824,9 @@ void ClientThink			( int clientNum );
 void ClientEndFrame			( gentity_t *ent );
 void G_RunClient			( gentity_t *ent );
 
+qboolean BootPort_PM_SomeoneInFront(trace_t *tr);
+int Boot_GetDirFromMouseMovement(gentity_t *ent);
+
 //
 // g_team.c
 //
@@ -846,7 +876,7 @@ void G_PreDefSound(vec3_t org, int pdSound);
 qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+int WP_SaberCanBlock(gentity_t *self, /*Boot:*/ gentity_t *other, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
 void WP_SpawnInitForcePowers( gentity_t *ent );
@@ -864,6 +894,12 @@ void ForceSeeing( gentity_t *self );
 void ForceThrow( gentity_t *self, qboolean pull );
 void ForceTelepathy(gentity_t *self);
 qboolean Jedi_DodgeEvasion( gentity_t *self, gentity_t *shooter, trace_t *tr, int hitLoc );
+// Boot:
+void Boot_ManualBlockThink(gentity_t *ent);
+int Boot_GetParryAnimFromMovement(usercmd_t *cmd);
+qboolean Boot_BlockMatchesAttack(int attack, int block);
+float BootLerp(float a, float b, float factor);
+
 
 // g_log.c
 void QDECL G_LogPrintf( const char *fmt, ... );
@@ -981,6 +1017,12 @@ extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_dismember;
 extern	vmCvar_t	g_forceDodge;
 extern	vmCvar_t	g_timeouttospec;
+
+// Boot:
+extern	vmCvar_t	boot_feintTimer;
+extern	vmCvar_t	boot_trainingMode;
+extern	vmCvar_t	boot_screenShakeOnHeadChop;
+extern	vmCvar_t	boot_noFlips;
 
 void	trap_Printf( const char *fmt );
 void	trap_Error( const char *fmt );

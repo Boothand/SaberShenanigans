@@ -1,5 +1,10 @@
 set include=
 cd game
-call game
+call game.bat
+cd ..\..\cgame
+call cgame.bat
+cd ..
+
+xcopy /s /y "D:\Git\saber-shenanigans\code\base\vm\jk2mpgame.qvm" "C:\Users\Rune\Documents\jk2mv\SaberShenanigans\vm"
+xcopy /s /y "D:\Git\saber-shenanigans\code\base\vm\cgame.qvm" "C:\Users\Rune\Documents\jk2mv\SaberShenanigans\vm"
 pause
-xcopy /s /y "C:\Users\Rune\Desktop\newSaberShenanigans\code\base\vm\jk2mpgame.qvm" "D:\Program Files (x86)\steam\steamapps\common\Jedi Outcast\GameData\SaberShenanigans\vm"

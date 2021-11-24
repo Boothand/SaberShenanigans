@@ -167,13 +167,15 @@ void WP_InitForcePowers( gentity_t *ent )
 		return;
 	}
 
-	ent->client->ps.fd.saberAnimLevel = ent->client->sess.saberLevel;
+	// ent->client->ps.fd.saberAnimLevel = ent->client->sess.saberLevel;
 
-	if (ent->client->ps.fd.saberAnimLevel < FORCE_LEVEL_1 ||
-		ent->client->ps.fd.saberAnimLevel > FORCE_LEVEL_3)
-	{
-		ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_1;
-	}
+	// if (ent->client->ps.fd.saberAnimLevel < FORCE_LEVEL_1 ||
+	// 	ent->client->ps.fd.saberAnimLevel > FORCE_LEVEL_3)
+	// {
+	// 	ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_1;
+	// }
+	
+	ent->client->ps.fd.saberAnimLevel = FORCE_LEVEL_3; //Boot - only allow red stance for now.
 
 	if (!speedLoopSound)
 	{ //so that the client configstring is already modified with this when we need it

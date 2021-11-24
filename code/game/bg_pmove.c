@@ -146,17 +146,18 @@ float forceJumpStrength[NUM_FORCE_POWER_LEVELS] =
 
 int PM_GetSaberStance(void)
 {
-	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2)
-	{ //medium
-		return BOTH_STAND2;
-	}
-	if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3)
-	{ //strong
-		return BOTH_SABERSLOW_STANCE;
-	}
+	// if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2)
+	// { //medium
+	// 	return BOTH_STAND2;
+	// }
+	// if (pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3)
+	// { //strong
+	// 	return BOTH_SABERSLOW_STANCE;
+	// }
 
-	//fast
-	return BOTH_SABERFAST_STANCE;
+	// //fast
+	// return BOTH_SABERFAST_STANCE;
+	return BOTH_STAND2; //Boot - remove blue saber stance for players.
 }
 
 qboolean PM_DoSlowFall(void)
@@ -1193,64 +1194,64 @@ static qboolean PM_CheckJump( void )
 		}
 	}
 
-	if ( pm->cmd.upmove > 0 
-		&& pm->ps->weapon == WP_SABER
-		&& (pm->ps->weaponTime > 0||pm->cmd.buttons&BUTTON_ATTACK) )
-	{//okay, we just jumped and we're in an attack
-		if ( !BG_InRoll( pm->ps, pm->ps->legsAnim )
-			&& !PM_InKnockDown( pm->ps )
-			&& !BG_InDeathAnim(pm->ps->legsAnim)
-			&& !BG_FlippingAnim( pm->ps->legsAnim )
-			&& !PM_SpinningAnim( pm->ps->legsAnim )
-			&& !BG_SaberInSpecialAttack( pm->ps->torsoAnim )
-			&& ( BG_SaberInAttack( pm->ps->saberMove ) )
-			/*&& PM_InAnimForSaberMove( pm->ps->torsoAnim, pm->ps->saberMove )*/ )
-		{//not in an anim we shouldn't interrupt
-			//see if it's not too late to start a special jump-attack
-			float animLength = PM_AnimLength( 0, (animNumber_t)pm->ps->torsoAnim );
-			if ( animLength - pm->ps->torsoTimer < 500 )
-			{//just started the saberMove
-				//check for special-case jump attacks
-				if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 )
-				{//using medium attacks
-					if (/*pm->ps->velocity[2] > 100 &&*/
-						PM_GroundDistance() < 32 &&
-						!BG_InSpecialJump(pm->ps->legsAnim))
-					{ //FLIP AND DOWNWARD ATTACK
-						trace_t tr;
+	// if ( pm->cmd.upmove > 0 
+	// 	&& pm->ps->weapon == WP_SABER
+	// 	&& (pm->ps->weaponTime > 0||pm->cmd.buttons&BUTTON_ATTACK) )
+	// {//okay, we just jumped and we're in an attack
+	// 	if ( !BG_InRoll( pm->ps, pm->ps->legsAnim )
+	// 		&& !PM_InKnockDown( pm->ps )
+	// 		&& !BG_InDeathAnim(pm->ps->legsAnim)
+	// 		&& !BG_FlippingAnim( pm->ps->legsAnim )
+	// 		&& !PM_SpinningAnim( pm->ps->legsAnim )
+	// 		&& !BG_SaberInSpecialAttack( pm->ps->torsoAnim )
+	// 		&& ( BG_SaberInAttack( pm->ps->saberMove ) )
+	// 		/*&& PM_InAnimForSaberMove( pm->ps->torsoAnim, pm->ps->saberMove )*/ )
+	// 	{//not in an anim we shouldn't interrupt
+	// 		//see if it's not too late to start a special jump-attack
+	// 		float animLength = PM_AnimLength( 0, (animNumber_t)pm->ps->torsoAnim );
+	// 		if ( animLength - pm->ps->torsoTimer < 500 )
+	// 		{//just started the saberMove
+	// 			//check for special-case jump attacks
+	// 			if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_2 )
+	// 			{//using medium attacks
+	// 				if (/*pm->ps->velocity[2] > 100 &&*/
+	// 					PM_GroundDistance() < 32 &&
+	// 					!BG_InSpecialJump(pm->ps->legsAnim))
+	// 				{ //FLIP AND DOWNWARD ATTACK
+	// 					trace_t tr;
 
-						if (PM_SomeoneInFront(&tr))
-						{
-							PM_SetSaberMove(PM_SaberFlipOverAttackMove(&tr));
-							pml.groundPlane = qfalse;
-							pml.walking = qfalse;
-							pm->ps->pm_flags |= PMF_JUMP_HELD;
-							pm->ps->groundEntityNum = ENTITYNUM_NONE;
-							VectorClear(pml.groundTrace.plane.normal);
+	// 					if (PM_SomeoneInFront(&tr))
+	// 					{
+	// 						PM_SetSaberMove(PM_SaberFlipOverAttackMove(&tr));
+	// 						pml.groundPlane = qfalse;
+	// 						pml.walking = qfalse;
+	// 						pm->ps->pm_flags |= PMF_JUMP_HELD;
+	// 						pm->ps->groundEntityNum = ENTITYNUM_NONE;
+	// 						VectorClear(pml.groundTrace.plane.normal);
 
-							pm->ps->weaponTime = pm->ps->torsoTimer;
-						}
-					}
-				}
-				else if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3 )
-				{//using strong attacks
-					if ( pm->cmd.forwardmove > 0 && //going forward
-						PM_GroundDistance() < 32 &&
-						!BG_InSpecialJump(pm->ps->legsAnim))
-					{//strong attack: jump-hack
-						PM_SetSaberMove( PM_SaberJumpAttackMove() );
-						pml.groundPlane = qfalse;
-						pml.walking = qfalse;
-						pm->ps->pm_flags |= PMF_JUMP_HELD;
-						pm->ps->groundEntityNum = ENTITYNUM_NONE;
-						VectorClear(pml.groundTrace.plane.normal);
+	// 						pm->ps->weaponTime = pm->ps->torsoTimer;
+	// 					}
+	// 				}
+	// 			}
+	// 			else if ( pm->ps->fd.saberAnimLevel == FORCE_LEVEL_3 )
+	// 			{//using strong attacks
+	// 				if ( pm->cmd.forwardmove > 0 && //going forward
+	// 					PM_GroundDistance() < 32 &&
+	// 					!BG_InSpecialJump(pm->ps->legsAnim))
+	// 				{//strong attack: jump-hack
+	// 					PM_SetSaberMove( PM_SaberJumpAttackMove() );
+	// 					pml.groundPlane = qfalse;
+	// 					pml.walking = qfalse;
+	// 					pm->ps->pm_flags |= PMF_JUMP_HELD;
+	// 					pm->ps->groundEntityNum = ENTITYNUM_NONE;
+	// 					VectorClear(pml.groundTrace.plane.normal);
 
-						pm->ps->weaponTime = pm->ps->torsoTimer;
-					}
-				}
-			}
-		}
-	}
+	// 					pm->ps->weaponTime = pm->ps->torsoTimer;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE )
 	{
 		return qfalse;
@@ -1825,7 +1826,7 @@ static int PM_TryRoll( void )
 
 	if ( BG_SaberInAttack( pm->ps->saberMove ) || BG_SaberInSpecialAttack( pm->ps->torsoAnim ) 
 		|| BG_SpinningSaberAnim( pm->ps->legsAnim ) 
-		|| (!pm->ps->clientNum&&PM_SaberInStart( pm->ps->saberMove )) )
+		/*|| (!pm->ps->clientNum&&PM_SaberInStart( pm->ps->saberMove ))*/ )
 	{//attacking or spinning (or, if player, starting an attack)
 		return 0;
 	}
@@ -4194,6 +4195,11 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 			ps->speed = 600;
 		}
 		//Automatically slow down as the roll ends.
+	}
+	
+	if (ps->saberBlocked >= BLOCKED_UPPER_RIGHT && !(pm->cmd.buttons & BUTTON_WALKING))
+	{
+		ps->speed *= 0.8f;	//Go slower when parrying
 	}
 }
 

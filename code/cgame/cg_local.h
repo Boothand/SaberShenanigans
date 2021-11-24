@@ -76,8 +76,9 @@
 #define TEAM_OVERLAY_MAXNAME_WIDTH	12
 #define TEAM_OVERLAY_MAXLOCATION_WIDTH	16
 
-#define	DEFAULT_MODEL			"kyle"
-#define	DEFAULT_TEAM_MODEL		"kyle"
+#define	DEFAULT_MODEL			"kyle/default"
+#define	DEFAULT_TEAM_MODEL		"kyle/default"
+#define	DEFAULT_TEAM_HEAD		"kyle/default"
 
 #define DEFAULT_FORCEPOWERS		"5-1-000000000000000000"
 //"rank-side-heal.lev.speed.push.pull.tele.grip.lightning.rage.protect.absorb.teamheal.teamforce.drain.see"
@@ -1528,6 +1529,10 @@ extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 
 extern	vmCvar_t		ui_myteam;
+
+// Boot:
+extern vmCvar_t ss_blockingMethod;
+
 /*
 Ghoul2 Insert Start
 */
